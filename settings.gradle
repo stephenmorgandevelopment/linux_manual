@@ -1,0 +1,2 @@
+rootProject.name='The Linux Manual'
+include ':app'

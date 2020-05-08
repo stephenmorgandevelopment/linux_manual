@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="65dp"
+    android:paddingStart="7dp"
+    android:paddingEnd="7dp"
+    android:background="@color/matchListItem"
+    >
+
+    <TextView
+        android:id="@+id/matchListCommand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:text="@string/header"
+        android:textColor="@color/matchListItemFont"
+        />
+
+    <TextView
+        android:id="@+id/matchListDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:lines="2"
+        android:maxLines="2"
+        android:text="@string/text"
+        android:textSize="14sp"
+        android:textColor="@color/matchListItemFont"
+        />
+</LinearLayout>

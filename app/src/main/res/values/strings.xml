@@ -1,0 +1,70 @@
+<resources>
+    <string name="app_name">The Linux Manual</string>
+
+    <!-- Distribution Names -->
+    <array name="distro_names">
+        <string name="ubuntu_name">Ubuntu</string>
+
+    </array>
+
+
+
+    <!-- Menu Button Names -->
+    <string name="refresh_button">Refresh</string>
+    <string name="change_release_button">Change Release</string>
+    <string name="store_pages_offline">Store Offline</string>
+    <string name="sort_button">Sort Order</string>
+
+
+    <!-- Placeholders -->
+    <string name="header">Header</string>
+    <string name="text">text</string>
+
+    <!-- Find Command Strings -->
+    <string name="search_command">Search Command</string>
+    <string name="search_description">Search Description</string>
+
+    <!-- Preference Values -->
+    <string name="default_url">https://manpages.ubuntu.com/manpages/</string>
+
+
+
+    <!-- Error Messages -->
+    <string name="unexpected_error">An unexpected error occurred.</string>
+    <string name="manpage_parse_error">The html response was either null or empty.</string>
+
+
+
+
+    <!-- Man Page Fields -->
+    <String name="name">name</String>
+    <String name="synopsis">synopsis</String>
+    <String name="configuration">configuration</String>
+    <String name="description">description</String>
+    <String name="option">option</String>
+    <String name="exit_status">exit status</String>
+    <String name="return_value">return value</String>
+    <String name="error">error</String>
+    <String name="environment">environment</String>
+    <String name="version">version</String>
+    <String name="conform">conform</String>
+    <String name="notes">notes</String>
+    <String name="bugs">bugs</String>
+    <String name="example">example</String>
+    <String name="author">author</String>
+    <String name="seeAlso">see also</String>
+    <String name="overview">overview</String>
+    <String name="defaults">defaults</String>
+    <String name="history">history</String>
+    <String name="commands">commands</String>
+    <String name="mail">mail</String>
+    <String name="site">site</String>
+    <String name="syntax">syntax</String>
+    <String name="security">security</String>
+    <String name="reporting">reporting</String>
+    <String name="copyright">copyright</String>
+
+
+
+
+</resources>

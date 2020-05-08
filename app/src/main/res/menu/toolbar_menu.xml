@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    >
+
+    <item
+        android:id="@+id/refreshMenuBtn"
+        android:icon="@android:drawable/ic_popup_sync"
+        android:title="@string/refresh_button"
+        app:showAsAction="always"
+        android:iconTint="@color/fontColor"
+        />
+    <item
+        android:id="@+id/sortBtn"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:title="@string/sort_button"
+        app:showAsAction="ifRoom"
+        android:visible="false"
+        />
+    <item
+        android:id="@+id/storeOfflineBtn"
+        android:title="@string/store_pages_offline"
+         />
+    <item
+        android:id="@+id/changeReleaseBtn"
+        android:title="@string/change_release_button"
+
+        />
+</menu>

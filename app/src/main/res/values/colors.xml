@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F5780</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">@color/fontColor</color>
+
+    <color name="fontColor">#cdcdcd</color>
+    <color name="textBubbles">#d586C5E6</color>
+    <color name="textBubblesFont">#2f2f2f</color>
+
+    <color name="matchListItem">#b6dfdfdf</color>
+    <color name="matchListItemFont">@color/textBubblesFont</color>
+
+    <color name="transparent">#00ffffff</color>
+</resources>
