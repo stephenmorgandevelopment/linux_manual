@@ -19,6 +19,7 @@ public class Helpers {
         setApplicationContext(app);
         setFilesDir(app.getFilesDir());
         setCacheDir(app.getCacheDir());
+        setLocal();
     }
 
 
@@ -27,6 +28,14 @@ public class Helpers {
 
         local = "en";
     }
+
+    public static boolean hasInternet() {
+        //TODO Check for internet connection.
+
+        return true;
+    }
+
+
 
     public static String makeUrl(String baseUrl, String... paths) {
         String url = baseUrl;

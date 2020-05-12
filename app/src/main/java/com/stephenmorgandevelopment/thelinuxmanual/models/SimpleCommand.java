@@ -8,7 +8,7 @@ import org.json.JSONObject;
 public class SimpleCommand {
     private String name;
     private String description;
-    private String path;
+    private String url;
 
     public SimpleCommand(String name, String path) {
         this(name, "", path);
@@ -17,12 +17,12 @@ public class SimpleCommand {
     public SimpleCommand(String name, String description, String path) {
         this.name = name;
         this.description = description;
-        this.path = path;
+        this.url = path;
     }
 
     public String getName() {return name;}
     public String getDescription() {return description;}
-    public String getPath() {return path;}
+    public String getUrl() {return url;}
 
     public void addDescription(String description) {
         if(this.description != null || !this.description.isEmpty()) {

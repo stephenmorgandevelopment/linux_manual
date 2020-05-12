@@ -2,8 +2,10 @@
     <string name="app_name">The Linux Manual</string>
 
     <!-- Distribution Names -->
+
+    <string name="ubuntu_name">Ubuntu</string>
     <array name="distro_names">
-        <string name="ubuntu_name">Ubuntu</string>
+<!--        <string name="ubuntu_name">Ubuntu</string>-->
 
     </array>
 
@@ -20,7 +22,7 @@
     <string name="header">Header</string>
     <string name="text">text</string>
 
-    <!-- Find Command Strings -->
+    <!-- Find Command strings -->
     <string name="search_command">Search Command</string>
     <string name="search_description">Search Description</string>
 
@@ -37,32 +39,32 @@
 
 
     <!-- Man Page Fields -->
-    <String name="name">name</String>
-    <String name="synopsis">synopsis</String>
-    <String name="configuration">configuration</String>
-    <String name="description">description</String>
-    <String name="option">option</String>
-    <String name="exit_status">exit status</String>
-    <String name="return_value">return value</String>
-    <String name="error">error</String>
-    <String name="environment">environment</String>
-    <String name="version">version</String>
-    <String name="conform">conform</String>
-    <String name="notes">notes</String>
-    <String name="bugs">bugs</String>
-    <String name="example">example</String>
-    <String name="author">author</String>
-    <String name="seeAlso">see also</String>
-    <String name="overview">overview</String>
-    <String name="defaults">defaults</String>
-    <String name="history">history</String>
-    <String name="commands">commands</String>
-    <String name="mail">mail</String>
-    <String name="site">site</String>
-    <String name="syntax">syntax</String>
-    <String name="security">security</String>
-    <String name="reporting">reporting</String>
-    <String name="copyright">copyright</String>
+    <string name="name">name</string>
+    <string name="synopsis">synopsis</string>
+    <string name="configuration">configuration</string>
+    <string name="description">description</string>
+    <string name="option">option</string>
+    <string name="exit_status">exit status</string>
+    <string name="return_value">return value</string>
+    <string name="error">error</string>
+    <string name="environment">environment</string>
+    <string name="version">version</string>
+    <string name="conform">conform</string>
+    <string name="notes">notes</string>
+    <string name="bugs">bugs</string>
+    <string name="example">example</string>
+    <string name="author">author</string>
+    <string name="seeAlso">see also</string>
+    <string name="overview">overview</string>
+    <string name="defaults">defaults</string>
+    <string name="history">history</string>
+    <string name="commands">commands</string>
+    <string name="mail">mail</string>
+    <string name="site">site</string>
+    <string name="syntax">syntax</string>
+    <string name="security">security</string>
+    <string name="reporting">reporting</string>
+    <string name="copyright">copyright</string>
 
 
 

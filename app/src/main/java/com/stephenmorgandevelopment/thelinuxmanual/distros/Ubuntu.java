@@ -1,10 +1,7 @@
 package com.stephenmorgandevelopment.thelinuxmanual.distros;
 
 
-import android.util.ArrayMap;
 import android.util.Log;
-
-import androidx.core.text.HtmlCompat;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
@@ -17,25 +14,26 @@ import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
-public class Ubuntu implements LinuxDistro {
-    private static final String TAG = Ubuntu.class.getSimpleName();
+public class Ubuntu extends Distribution implements LinuxDistro {
+    public static final String TAG = Ubuntu.class.getSimpleName();
     public static final String NAME = Helpers.getApplicationContext().getString(R.string.ubuntu_name);
 
     public static final String BASE_URL = "https://manpages.ubuntu.com/manpages/";
     private static final String CRAWLER_SELECTOR = "#tableWrapper pre a";
 
-    private Release release;
+
+
+    private static Release release;
     enum Release {
         ARTFUL("artful"), BIONIC("bionic"), COSMIC("cosmic"), DISCO("disco")
         , EOAN("eoan"), FOCAL("focal"), GROOVY("groovy")
         ,PRECISE("precise"), TRUSY("trusty"), XENIAL("xenial");
 
-        String path;
+        String name;
         Release(String path) {
-            this.path = path;
+            this.name = path;
         }
     }
 
@@ -43,8 +41,22 @@ public class Ubuntu implements LinuxDistro {
         this(Release.FOCAL);
     }
 
-    public Ubuntu(Release release) {
-        this.release = release;
+    public Ubuntu(Release version) {
+        release = version;
+        commandsList = new ArrayList<>();
+    }
+
+    public static String getReleaseString() {return release.name;}
+
+    public static synchronized void addToCommandList(List<SimpleCommand> commands) {
+        if(commandsList == null) {
+            commandsList = new ArrayList<>();
+        }
+        commandsList.addAll(commands);
+    }
+
+    public static synchronized List<SimpleCommand> getCommandsList() {
+        return commandsList;
     }
 
     public static synchronized boolean isCommandInManList(int manNum, String manList, String command) {
@@ -92,8 +104,8 @@ public class Ubuntu implements LinuxDistro {
     }
 
     @Override
-    public ArrayList<SimpleCommand> crawlForManPages(String pageHtml, int manN) {
-        String manDir = "man" + manN +"/";
+    public ArrayList<SimpleCommand> crawlForManPages(String pageHtml, String url) {
+        //String manDir = "man" + manN +"/";
 
         Document document = Jsoup.parse(pageHtml);
         Elements anchors = document.select(CRAWLER_SELECTOR);
@@ -101,7 +113,8 @@ public class Ubuntu implements LinuxDistro {
         ArrayList<SimpleCommand> unfinishedCommands = new ArrayList<>();
 
         for(Element a : anchors) {
-            String path = manDir.concat(a.attr("href"));
+            //String path = manDir.concat(a.attr("href"));
+            String path = url.concat(a.attr("href"));
             if(!path.endsWith(".html")) {
                 continue;
             }
@@ -129,4 +142,6 @@ public class Ubuntu implements LinuxDistro {
 
         return dirs;
     }
+
+
 }

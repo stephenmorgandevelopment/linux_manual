@@ -8,12 +8,20 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public interface LinuxDistro {
-    ArrayList<SimpleCommand> crawlForManPages(String pageHtml, int manN);
+    enum Distro{
+        UBUNTU(Ubuntu.TAG);
+
+        String tag;
+        Distro(String tag) {
+            this.tag = tag;
+        }
+    }
+
+    ArrayList<SimpleCommand> crawlForManPages(String pageHtml, String url);
 
     ArrayList<String> crawlForManDirs(String pageHtml);
 
     void addDescriptionToSimpleCommand(SimpleCommand command, String pageHtml);
-
 
     static SimpleCommand searchLocalForSimpleCommand(String search, SearchType searchBy) {
         String baseString = null;
