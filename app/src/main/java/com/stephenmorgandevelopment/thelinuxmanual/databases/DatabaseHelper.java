@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 import android.view.inputmethod.ExtractedTextRequest;
 
@@ -72,9 +73,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         boolean containsFirst = contains(commands.get(0)) != -1;
         boolean containsLast = contains(commands.get(commands.size()-1)) != -1;
 
+        String insertString = "INSERT INTO " + TABLE_NAME + " ("// + "(name, description, url, manN)"
+                + KEY_NAME + ", " + KEY_DESCRIPTION + ", " + KEY_URL + ", " + KEY_MAN_N
+                + ") VALUES (?, ?, ?, ?)";
+
+        SQLiteStatement insertStatement = database.compileStatement(insertString);
+
+//        ContentValues value = new ContentValues();
+        database.beginTransaction();
         if(!containsFirst && !containsLast) {
             for (SimpleCommand command : commands) {
-                addCommand(command);
+
+                insertStatement.bindString(1, command.getName());
+                insertStatement.bindString(2, command.getDescription());
+                insertStatement.bindString(3, command.getUrl());
+                insertStatement.bindString(4, String.valueOf(command.getManN()));
+
+//                long row = insertStatement.executeInsert();
+                command.setId(insertStatement.executeInsert());
+                insertStatement.clearBindings();
+
+//                value.put(KEY_NAME, command.getName());
+//                value.put(KEY_DESCRIPTION, command.getDescription());
+//                value.put(KEY_URL, command.getUrl());
+//                value.put(KEY_MAN_N, command.getManN());
+//
+//                long row = database.insert(TABLE_NAME, null, value);
+//                command.setId(row);
+//                value.clear();
             }
         } else {
             for(SimpleCommand command : commands) {
@@ -85,9 +111,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 addCommand(command);
             }
         }
+        database.setTransactionSuccessful();
+        database.endTransaction();
 
         Log.d(TAG, "Successfully added commands for page " + commands.get(0).getManN() + ".");
-        database.close();
+        //database.close();
+    }
+
+
+    private void addCommand(SimpleCommand command) {
+
     }
 
 //    public void addCommand(SimpleCommand command) {
@@ -97,21 +130,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //    }
 
     //    public void addCommand(SimpleCommand command, SQLiteDatabase db) {
-    private void addCommand(SimpleCommand command) {
-        if (database == null || database.isReadOnly()) {
-            database = getWritableDatabase();
-        }
-
-        ContentValues values = new ContentValues();
-
-        values.put(KEY_NAME, command.getName());
-        values.put(KEY_DESCRIPTION, command.getDescription());
-        values.put(KEY_URL, command.getUrl());
-        values.put(KEY_MAN_N, command.getManN());
-
-        long row = database.insert(TABLE_NAME, null, values);
-        command.setId(row);
-    }
+//    private void addCommand(SimpleCommand command) {
+////        if (database == null || database.isReadOnly()) {
+////            database = getWritableDatabase();
+////        }
+//
+//        ContentValues values = new ContentValues();
+//
+//        values.put(KEY_NAME, command.getName());
+//        values.put(KEY_DESCRIPTION, command.getDescription());
+//        values.put(KEY_URL, command.getUrl());
+//        values.put(KEY_MAN_N, command.getManN());
+//
+//        long row = database.insert(TABLE_NAME, null, values);
+//        command.setId(row);
+//    }
 
     //TODO Update commands.
     public void updateCommand(SimpleCommand command) {
@@ -132,6 +165,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void close() {
         if(database != null) {
             database.close();
+            database = null;
             Log.d(TAG, "Database successfully closed.");
         } else {
             Log.d(TAG, "Database already closed.");

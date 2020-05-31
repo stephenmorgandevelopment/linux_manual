@@ -133,7 +133,7 @@ public class Ubuntu extends Distribution implements LinuxDistro {
                 continue;
             }
             String text = a.html();
-            text = text.substring(0, text.indexOf('.'));
+            text = text.substring(0, text.lastIndexOf('.'));
             unfinishedCommands.add(new SimpleCommand(text, path, manN));
         }
 
@@ -164,30 +164,59 @@ public class Ubuntu extends Distribution implements LinuxDistro {
     public static synchronized void writeSimpleCommandsToDisk(List<SimpleCommand> commands, int page) {
         OutputStream outStream = null;
         File simpleCommandsFile = new File(Helpers.getFilesDir(), "simple_commands_" + page + ".json");
-        Gson gson = new Gson();
+//        Gson gson = new Gson();
 
         Log.d(TAG, "Writing simple commands to disk for page " + page + ".");
 
+        JSONObject rootObject = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+
+        for(SimpleCommand command : commands) {
+            jsonArray.put(command.toJSONObject());
+        }
+
+        try {
+            rootObject.put("commands", jsonArray);
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON error.");
+            e.printStackTrace();
+        }
+
         try {
             outStream = new FileOutputStream(simpleCommandsFile);
+            OutputStreamWriter writer = new OutputStreamWriter(outStream);
 
-            JsonWriter writer = new JsonWriter(new OutputStreamWriter(outStream, "UTF-8"));
-            writer.setIndent("    ");
-
-            writer.beginArray();
-            for(SimpleCommand command : commands) {
-                writeCommand(writer, command);
-            }
-            writer.endArray();
-
+            writer.write(rootObject.toString());
+            writer.flush();
             writer.close();
             outStream.close();
 
-            Log.d(TAG, "Simple commands written successfully for page " + page + ".");
+            Log.d(TAG, "Simple commands written successfully.");
         } catch (IOException ioe) {
-            Log.e(TAG, "IO error writing commands file for page " + page + ".");
+            Log.e(TAG, "IO error writing commands file.");
             ioe.printStackTrace();
         }
+
+//        try {
+//            outStream = new FileOutputStream(simpleCommandsFile);
+//
+//            JsonWriter writer = new JsonWriter(new OutputStreamWriter(outStream, "UTF-8"));
+//            writer.setIndent("    ");
+//
+//            writer.beginArray();
+//            for(SimpleCommand command : commands) {
+//                writeCommand(writer, command);
+//            }
+//            writer.endArray();
+//
+//            writer.close();
+//            outStream.close();
+//
+//            Log.d(TAG, "Simple commands written successfully for page " + page + ".");
+//        } catch (IOException ioe) {
+//            Log.e(TAG, "IO error writing commands file for page " + page + ".");
+//            ioe.printStackTrace();
+//        }
     }
 
     public static synchronized void writeCommand(JsonWriter writer, SimpleCommand command) throws IOException {
@@ -219,7 +248,6 @@ public class Ubuntu extends Distribution implements LinuxDistro {
 
             try {
                 rootObject.put("commands", jsonArray);
-
             } catch (JSONException e) {
                 Log.e(TAG, "JSON error.");
                 e.printStackTrace();

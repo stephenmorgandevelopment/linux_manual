@@ -102,8 +102,6 @@ public class MainActivity extends AppCompatActivity {
                         } catch (InterruptedException e) {
                             Log.e("MainActivity", "Progress thread interrupted while working.");
                         }
-
-
                             runOnUiThread(() -> {
                                 if(!progress.equals(CommandSyncService.getSyncProgress())) {
                                     progress = CommandSyncService.getSyncProgress();

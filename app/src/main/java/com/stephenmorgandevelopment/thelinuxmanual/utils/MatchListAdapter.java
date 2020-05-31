@@ -80,13 +80,15 @@ public class MatchListAdapter extends BaseAdapter {
         if (description.equals("")) {
             Disposable disposable = fetchDescription(matches.get(position))
                     .subscribeOn(Schedulers.computation())
-                    .observeOn(AndroidSchedulers.mainThread())
+                    .observeOn(Schedulers.computation())
                     .flatMapCompletable(response -> {
                         Ubuntu.addDescriptionToSimpleCommand(matches.get(position), response.body().string());
                         return Completable.complete();
                     })
                     .doOnComplete(() -> {
-                        descriptionView.setText(matches.get(position).getDescription());
+                        AndroidSchedulers.mainThread().scheduleDirect(() -> {
+                            descriptionView.setText(matches.get(position).getDescription());
+                        });
                     })
                     .subscribe();
             disposables.add(disposable);
@@ -99,7 +101,7 @@ public class MatchListAdapter extends BaseAdapter {
     Single<Response> fetchDescription(SimpleCommand command) {
         Request request = new Request.Builder().url(command.getUrl()).build();
         try {
-            return Single.just(HttpClient.getClient().newCall(request).execute());
+            return Single.just(HttpClient.getInstance().getClient().newCall(request).execute());
         } catch (IOException ioe) {
             Log.e(TAG, "IO error fetching description.");
             ioe.printStackTrace();

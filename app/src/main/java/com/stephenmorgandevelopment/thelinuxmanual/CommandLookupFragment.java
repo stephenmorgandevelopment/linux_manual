@@ -85,7 +85,7 @@ public class CommandLookupFragment extends Fragment {
                     if(matches != null && matches.size() > 0) {
                         matchListAdapter.setMatches(matches);
                         matchListAdapter.notifyDataSetChanged();
-                        matchListView.setAdapter(matchListAdapter);
+//                        matchListView.setAdapter(matchListAdapter);
                     }
                 }
             }

@@ -66,7 +66,7 @@ public class CommandSyncService extends JobIntentService {
     public static final String SYNC_DESCRIPTIONS = "sync_descriptions";
     public static final int JOB_ID = 5001;
 
-    private static String syncProgress;
+    private static String syncProgress = "Connecting to " + Ubuntu.BASE_URL + ".";
 //    public static final int COMMAND_DESCRIPTION_JOB_ID = 5101;
 
     public static final String TAG = "CommandSyncService";
@@ -102,7 +102,6 @@ public class CommandSyncService extends JobIntentService {
     }
 
     private synchronized void syncSimpleCommands(String baseUrl) throws IOException {
-        syncProgress = "Connecting to " + Ubuntu.BASE_URL + "";
         ioDisposables = new ArrayList<>();
 
         Disposable disposable = HttpClient.fetchDirsHtml()
@@ -130,16 +129,10 @@ public class CommandSyncService extends JobIntentService {
 
                 })
                 .concatMap(request -> Observable.just(HttpClient.getClient().newCall(request).execute()))
-//                .concatMap(request -> {
-//                    return  Observable.just(HttpClient.getClient().newCall(request).execute());
-//                })
                 .doOnComplete(() -> {
                     Log.d(TAG, "Successfully synced commands without descriptions.");
                     MainActivity.working = false;
-
-                    //syncCommandDescriptions();
-
-                    //Ubuntu.writeSimpleCommandsToDisk(true);
+//                    DatabaseHelper.getInstance().close();
                 })
                 .doOnError(response -> {
                     Log.e(TAG, "The following error occurred: " + response.toString());
@@ -148,10 +141,9 @@ public class CommandSyncService extends JobIntentService {
                 .forEach(response -> {
                     if(response.isSuccessful() && response.code() == 200) {
                         String reqUrl = response.request().url().toString();
+
                         Log.d(TAG, "Successful response from: " + reqUrl);
                         syncProgress = "\nPulled data from " + reqUrl + "\nProcessing data.";
-
-//                        Ubuntu.addToCommandList(distribution.crawlForManPages(response.body().string(), reqUrl));
 
                         List<SimpleCommand> pageCommands = distribution.crawlForManPages(response.body().string(), reqUrl);
 
@@ -193,8 +185,6 @@ public class CommandSyncService extends JobIntentService {
         database.addCommands(commands);
 
         Ubuntu.writeSimpleCommandsToDisk(commands, commands.get(0).getManN());
-
-//        return Completable.complete();
     }
 
     private synchronized void syncCommandDescriptions() {
