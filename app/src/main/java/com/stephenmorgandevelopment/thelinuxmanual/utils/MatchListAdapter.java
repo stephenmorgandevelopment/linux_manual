@@ -83,8 +83,10 @@ public class MatchListAdapter extends BaseAdapter {
                     .observeOn(AndroidSchedulers.mainThread())
                     .flatMapCompletable(response -> {
                         Ubuntu.addDescriptionToSimpleCommand(matches.get(position), response.body().string());
-                        descriptionView.setText(matches.get(position).getDescription());
                         return Completable.complete();
+                    })
+                    .doOnComplete(() -> {
+                        descriptionView.setText(matches.get(position).getDescription());
                     })
                     .subscribe();
             disposables.add(disposable);

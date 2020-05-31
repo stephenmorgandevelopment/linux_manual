@@ -86,6 +86,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
 
+        Log.d(TAG, "Successfully added commands for page " + commands.get(0).getManN() + ".");
         database.close();
     }
 

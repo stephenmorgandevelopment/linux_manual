@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.JobIntentService;
 
+import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Distribution;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.LinuxDistro;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
@@ -45,6 +46,7 @@ import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.Disposables;
 import io.reactivex.functions.Consumer;
 import io.reactivex.internal.schedulers.IoScheduler;
 import io.reactivex.schedulers.Schedulers;
@@ -68,6 +70,9 @@ public class CommandSyncService extends JobIntentService {
 //    public static final int COMMAND_DESCRIPTION_JOB_ID = 5101;
 
     public static final String TAG = "CommandSyncService";
+
+    private List<Disposable> ioDisposables;
+    private Disposables disposables;
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
@@ -98,6 +103,7 @@ public class CommandSyncService extends JobIntentService {
 
     private synchronized void syncSimpleCommands(String baseUrl) throws IOException {
         syncProgress = "Connecting to " + Ubuntu.BASE_URL + "";
+        ioDisposables = new ArrayList<>();
 
         Disposable disposable = HttpClient.fetchDirsHtml()
                 .subscribeOn(Schedulers.computation())
@@ -130,6 +136,7 @@ public class CommandSyncService extends JobIntentService {
                 .doOnComplete(() -> {
                     Log.d(TAG, "Successfully synced commands without descriptions.");
                     MainActivity.working = false;
+
                     //syncCommandDescriptions();
 
                     //Ubuntu.writeSimpleCommandsToDisk(true);
@@ -144,13 +151,50 @@ public class CommandSyncService extends JobIntentService {
                         Log.d(TAG, "Successful response from: " + reqUrl);
                         syncProgress = "\nPulled data from " + reqUrl + "\nProcessing data.";
 
-                        Ubuntu.addToCommandList(distribution.crawlForManPages(response.body().string(), reqUrl));
+//                        Ubuntu.addToCommandList(distribution.crawlForManPages(response.body().string(), reqUrl));
 
-                        Ubuntu.writeSimpleCommandsToDisk(true, page++);
+                        List<SimpleCommand> pageCommands = distribution.crawlForManPages(response.body().string(), reqUrl);
+
+                        syncProgress = "\nSaving data locally.";
+
+                        if(pageCommands != null && pageCommands.size() > 0) {
+                            updateLocalCache(pageCommands);
+                        }
+
+//                        Disposable current = Observable.just(updateLocalCache(pageCommands))
+//                                .subscribeOn(Schedulers.io())
+//                                .observeOn(Schedulers.io())
+//                                .doOnComplete(() -> {
+//                                    Log.d(TAG, "Successfully updated local cache with data from " + reqUrl + ".");
+//                                })
+//                                .doOnError(error -> {
+//                                    Log.e(TAG, "IO error updating local cache.");
+//                                    error.printStackTrace();
+//                                })
+//                                .subscribe();
+
+
+//                        Schedulers.io().scheduleDirect(() -> {
+//                            DatabaseHelper database = DatabaseHelper.getInstance();
+//                            database.addCommands(pageCommands);
+//
+//                            Ubuntu.writeSimpleCommandsToDisk(pageCommands, page++);
+//                        });
+
+
                         //Toast.makeText(getBaseContext(), "Successful response from: " + reqUrl, Toast.LENGTH_SHORT).show();
                     }
                 });
 
+    }
+
+    private void updateLocalCache(List<SimpleCommand> commands) {
+        DatabaseHelper database = DatabaseHelper.getInstance();
+        database.addCommands(commands);
+
+        Ubuntu.writeSimpleCommandsToDisk(commands, commands.get(0).getManN());
+
+//        return Completable.complete();
     }
 
     private synchronized void syncCommandDescriptions() {
@@ -194,9 +238,13 @@ public class CommandSyncService extends JobIntentService {
         };
     }
 
+    @Override
+    public boolean onStopCurrentWork() {
 
+        return super.onStopCurrentWork();
+    }
 
-//    public Observable<List<Call>> fetchDirHtml(List<String> paths) {
+    //    public Observable<List<Call>> fetchDirHtml(List<String> paths) {
 //        String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal() + "/";
 //        for(String path : paths) {
 //            Request req = new Request.Builder().url(url + path + "/").build();
