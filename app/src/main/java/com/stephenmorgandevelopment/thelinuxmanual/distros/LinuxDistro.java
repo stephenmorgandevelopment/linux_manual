@@ -21,7 +21,7 @@ public interface LinuxDistro {
 
     ArrayList<String> crawlForManDirs(String pageHtml);
 
-    void addDescriptionToSimpleCommand(SimpleCommand command, String pageHtml);
+    //void addDescriptionToSimpleCommand(SimpleCommand command, String pageHtml);
 
     static SimpleCommand searchLocalForSimpleCommand(String search, SearchType searchBy) {
         String baseString = null;

@@ -1,10 +1,13 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
+import android.app.Application;
 import android.app.IntentService;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.strictmode.IntentReceiverLeakedViolation;
 import android.util.Log;
 import android.widget.Toast;
@@ -53,13 +56,16 @@ import okhttp3.Response;
 
 public class CommandSyncService extends JobIntentService {
     Distribution distribution;
+    private static int page = 1;
 
     public static final String DISTRO = "distro";
     public static final String SYNC_TYPE = "sync_type";
     public static final String SYNC_NAMES = "sync_names";
     public static final String SYNC_DESCRIPTIONS = "sync_descriptions";
-    public static final int COMMAND_NAMES_JOB_ID = 5001;
-    public static final int COMMAND_DESCRIPTION_JOB_ID = 5101;
+    public static final int JOB_ID = 5001;
+
+    private static String syncProgress;
+//    public static final int COMMAND_DESCRIPTION_JOB_ID = 5101;
 
     public static final String TAG = "CommandSyncService";
 
@@ -77,7 +83,12 @@ public class CommandSyncService extends JobIntentService {
         if(distro.equalsIgnoreCase(Ubuntu.NAME)) {
             distribution = new Ubuntu();
             try {
-                syncSimpleCommands(Ubuntu.BASE_URL);
+                if(intent.getStringExtra(SYNC_TYPE).equals(SYNC_NAMES)) {
+                    syncSimpleCommands(Ubuntu.BASE_URL);
+                } else {
+//                    syncCommandDescriptions();
+                }
+
             } catch (IOException ioe) {
                 Log.e("CommandSyncService", "Ioexception in syncSimpleCommands: " + ioe.getMessage());
                 ioe.printStackTrace();
@@ -86,6 +97,8 @@ public class CommandSyncService extends JobIntentService {
     }
 
     private synchronized void syncSimpleCommands(String baseUrl) throws IOException {
+        syncProgress = "Syncing commands from Ubuntu's official site.";
+
         Disposable disposable = HttpClient.fetchDirsHtml()
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.computation())
@@ -97,12 +110,12 @@ public class CommandSyncService extends JobIntentService {
                         List<Request> requests =  new ArrayList<>();
 
                         for(String path : dirPaths) {
-                            Request req = new Request.Builder().url(url + path + "/").build();
+                            Request req = new Request.Builder().url(url + path).build();  //+ "/").build();
                             requests.add(req);
                         }
 
-                        return Observable.fromArray(requests.toArray(new Request[0]));
-
+                        return Observable.fromIterable(requests);
+//                        return Observable.fromArray(requests.toArray(new Request[0]));
                     } else {
                         Log.e(TAG, "Request unsuccessful: " + response.code());
                     }
@@ -110,30 +123,77 @@ public class CommandSyncService extends JobIntentService {
                     return Observable.error(new Throwable());
 
                 })
-                .concatMap(request -> {
-                    return  Observable.just(HttpClient.getClient().newCall(request).execute());
+                .concatMap(request -> Observable.just(HttpClient.getClient().newCall(request).execute()))
+//                .concatMap(request -> {
+//                    return  Observable.just(HttpClient.getClient().newCall(request).execute());
+//                })
+                .doOnComplete(() -> {
+                    Log.d(TAG, "Successfully synced commands without descriptions.");
+                    MainActivity.working = false;
+                    //syncCommandDescriptions();
+
+                    //Ubuntu.writeSimpleCommandsToDisk(true);
+                })
+                .doOnError(response -> {
+                    Log.e(TAG, "The following error occurred: " + response.toString());
+                    response.printStackTrace();
                 })
                 .forEach(response -> {
                     if(response.isSuccessful() && response.code() == 200) {
                         String reqUrl = response.request().url().toString();
                         Log.d(TAG, "Successful response from: " + reqUrl);
+                        syncProgress = "\nPulled data from " + reqUrl + "\nProcessing data.";
+
                         Ubuntu.addToCommandList(distribution.crawlForManPages(response.body().string(), reqUrl));
+
+                        Ubuntu.writeSimpleCommandsToDisk(true, page++);
+                        //Toast.makeText(getBaseContext(), "Successful response from: " + reqUrl, Toast.LENGTH_SHORT).show();
                     }
                 });
 
     }
 
     private synchronized void syncCommandDescriptions() {
+        page = 1;
+
         if(Ubuntu.getCommandsList() != null && Ubuntu.getCommandsList().size() > 0) {
-            Observable<Single<Call>> commandUpdates;
-
+            Log.d(TAG, "Queueing requests for command descriptions.");
             for(SimpleCommand command : Ubuntu.getCommandsList()) {
-
+                Request req = new Request.Builder().url(command.getUrl()).build();
+                HttpClient.getClient().newCall(req).enqueue(updateCommand(command));
             }
+
         } else {
             Log.e(TAG, "Commands list is empty or null.");
         }
+
+        Observable.fromIterable(HttpClient.getClient().dispatcher().queuedCalls())
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnComplete(() -> {
+                    Log.d(TAG, "Successfully synced commands descriptions.  Writing JSON to disk.");
+                    Ubuntu.writeSimpleCommandsToDisk(true, page++);
+                }).subscribe();
     }
+
+    private synchronized Callback updateCommand(final SimpleCommand command) {
+        return new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                Log.e(TAG, "Failed updating command with the following error: " + e.toString());
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if(response.code() == 200 && response.body() != null) {
+                    Log.d(TAG, "Successful Description response for: " + response.request().url().toString());
+                    Ubuntu.addDescriptionToSimpleCommand(command, response.body().string());
+                }
+            }
+        };
+    }
+
 
 
 //    public Observable<List<Call>> fetchDirHtml(List<String> paths) {
@@ -160,13 +220,11 @@ public class CommandSyncService extends JobIntentService {
 //
 //    }
 
-
+    public static String getSyncProgress() {
+        return syncProgress;
+    }
 
     public static void enqueueWork(Context context, Intent work) {
-        final int JOB_ID = work.getStringExtra(SYNC_TYPE).equals(SYNC_NAMES)
-                ? COMMAND_NAMES_JOB_ID
-                : COMMAND_DESCRIPTION_JOB_ID;
-
         enqueueWork(context, CommandSyncService.class, JOB_ID, work);
     }
 

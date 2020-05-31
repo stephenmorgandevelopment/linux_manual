@@ -7,6 +7,6 @@ import java.util.List;
 import io.reactivex.Observable;
 
 public abstract class Distribution implements LinuxDistro {
-    protected static List<SimpleCommand> commandsList;
+    static List<SimpleCommand> commandsList;
 
 }

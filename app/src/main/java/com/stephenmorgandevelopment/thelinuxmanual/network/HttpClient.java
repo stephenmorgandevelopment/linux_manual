@@ -97,7 +97,7 @@ public class HttpClient {
 
         if(Helpers.hasInternet()) {
             //OkHttpClient client = HttpClient.getInstance().getClient();
-            String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal() + "/";
+            String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal();  // + "/";
             Request req = new Request.Builder().url(url).build();
 
             return Single.just(okClient.newCall(req).execute());
