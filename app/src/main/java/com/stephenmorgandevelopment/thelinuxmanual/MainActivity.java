@@ -81,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
             final TextView progressDialog = findViewById(R.id.testCounter);
             progressDialog.setVisibility(View.VISIBLE);
 
+            progressDialog.setText("Running initial sync to build local command database.");
+
             Intent intent = new Intent();
             intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
             intent.putExtra(CommandSyncService.SYNC_TYPE, CommandSyncService.SYNC_NAMES);
@@ -101,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.e("MainActivity", "Progress thread interrupted while working.");
                         }
 
-                        if(Ubuntu.getCommandsList() != null && Ubuntu.getCommandsList().size() > 0) {
+
                             runOnUiThread(() -> {
                                 if(!progress.equals(CommandSyncService.getSyncProgress())) {
                                     progress = CommandSyncService.getSyncProgress();
@@ -114,16 +116,25 @@ public class MainActivity extends AppCompatActivity {
 
 //                                progressDialog.setText("SimpleCommands: " + Ubuntu.getCommandsList().size());
                             });
-                        }
+
                     }
 
-                    runOnUiThread(() -> progressDialog.setText(R.string.finishing_up));
+                    runOnUiThread(() -> progressDialog.append("\nFinishing up..."));
 
                     try {
                         Thread.sleep(350);
                     } catch (InterruptedException e) {
                         Log.e("MainActivity", "Progress thread interrupted while finishing up.");
                     }
+
+                    runOnUiThread(() -> {
+                        progressDialog.setVisibility(View.GONE);
+
+                        FragmentManager manager = getSupportFragmentManager();
+                        Fragment searchFragment = CommandLookupFragment.getInstance();
+
+                        manager.beginTransaction().add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG).commit();
+                    });
                 }
             }.start();
         }

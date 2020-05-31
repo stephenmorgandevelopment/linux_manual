@@ -97,7 +97,7 @@ public class CommandSyncService extends JobIntentService {
     }
 
     private synchronized void syncSimpleCommands(String baseUrl) throws IOException {
-        syncProgress = "Syncing commands from Ubuntu's official site.";
+        syncProgress = "Connecting to " + Ubuntu.BASE_URL + "";
 
         Disposable disposable = HttpClient.fetchDirsHtml()
                 .subscribeOn(Schedulers.computation())
