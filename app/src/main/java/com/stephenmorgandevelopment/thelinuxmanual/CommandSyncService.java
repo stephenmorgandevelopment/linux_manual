@@ -71,7 +71,8 @@ public class CommandSyncService extends JobIntentService {
 
     public static final String TAG = "CommandSyncService";
 
-//    private Disposables disposables;
+    private List<Disposable> ioDisposables;
+    private Disposables disposables;
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
@@ -100,11 +101,12 @@ public class CommandSyncService extends JobIntentService {
         }
     }
 
-    Disposable disposable;
     private synchronized void syncSimpleCommands(String baseUrl) throws IOException {
+        ioDisposables = new ArrayList<>();
 
-        disposable = HttpClient.fetchDirsHtml()
+        Disposable disposable = HttpClient.fetchDirsHtml()
                 .subscribeOn(Schedulers.computation())
+                .observeOn(Schedulers.computation())
                 .flatMapObservable(response -> {
                     if(response.isSuccessful() && response.code() == 200) {
                         String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal() + "/";
@@ -126,8 +128,7 @@ public class CommandSyncService extends JobIntentService {
                     return Observable.error(new Throwable());
 
                 })
-//                .concatMap(request -> Observable.just(HttpClient.getClient().newCall(request).execute()))
-                .flatMap(request -> Observable.just(HttpClient.getClient().newCall(request).execute()))
+                .concatMap(request -> Observable.just(HttpClient.getClient().newCall(request).execute()))
                 .doOnComplete(() -> {
                     Log.d(TAG, "Successfully synced commands without descriptions.");
                     MainActivity.working = false;
@@ -137,7 +138,7 @@ public class CommandSyncService extends JobIntentService {
                     Log.e(TAG, "The following error occurred: " + response.toString());
                     response.printStackTrace();
                 })
-                .subscribe(response -> {
+                .forEach(response -> {
                     if(response.isSuccessful() && response.code() == 200) {
                         String reqUrl = response.request().url().toString();
 
@@ -145,52 +146,37 @@ public class CommandSyncService extends JobIntentService {
                         syncProgress = "\nPulled data from " + reqUrl + "\nProcessing data.";
 
                         List<SimpleCommand> pageCommands = distribution.crawlForManPages(response.body().string(), reqUrl);
+
                         syncProgress = "\nSaving data locally.";
 
-                        if (pageCommands != null && pageCommands.size() > 0) {
+                        if(pageCommands != null && pageCommands.size() > 0) {
                             updateLocalCache(pageCommands);
                         }
+
+//                        Disposable current = Observable.just(updateLocalCache(pageCommands))
+//                                .subscribeOn(Schedulers.io())
+//                                .observeOn(Schedulers.io())
+//                                .doOnComplete(() -> {
+//                                    Log.d(TAG, "Successfully updated local cache with data from " + reqUrl + ".");
+//                                })
+//                                .doOnError(error -> {
+//                                    Log.e(TAG, "IO error updating local cache.");
+//                                    error.printStackTrace();
+//                                })
+//                                .subscribe();
+
+
+//                        Schedulers.io().scheduleDirect(() -> {
+//                            DatabaseHelper database = DatabaseHelper.getInstance();
+//                            database.addCommands(pageCommands);
+//
+//                            Ubuntu.writeSimpleCommandsToDisk(pageCommands, page++);
+//                        });
+
+
+                        //Toast.makeText(getBaseContext(), "Successful response from: " + reqUrl, Toast.LENGTH_SHORT).show();
                     }
                 });
-//                .forEach(response -> {
-//                    if(response.isSuccessful() && response.code() == 200) {
-//                        String reqUrl = response.request().url().toString();
-//
-//                        Log.d(TAG, "Successful response from: " + reqUrl);
-//                        syncProgress = "\nPulled data from " + reqUrl + "\nProcessing data.";
-//
-//                        List<SimpleCommand> pageCommands = distribution.crawlForManPages(response.body().string(), reqUrl);
-//
-//                        syncProgress = "\nSaving data locally.";
-//
-//                        if(pageCommands != null && pageCommands.size() > 0) {
-//                            updateLocalCache(pageCommands);
-//                        }
-//
-////                        Disposable current = Observable.just(updateLocalCache(pageCommands))
-////                                .subscribeOn(Schedulers.io())
-////                                .observeOn(Schedulers.io())
-////                                .doOnComplete(() -> {
-////                                    Log.d(TAG, "Successfully updated local cache with data from " + reqUrl + ".");
-////                                })
-////                                .doOnError(error -> {
-////                                    Log.e(TAG, "IO error updating local cache.");
-////                                    error.printStackTrace();
-////                                })
-////                                .subscribe();
-//
-//
-////                        Schedulers.io().scheduleDirect(() -> {
-////                            DatabaseHelper database = DatabaseHelper.getInstance();
-////                            database.addCommands(pageCommands);
-////
-////                            Ubuntu.writeSimpleCommandsToDisk(pageCommands, page++);
-////                        });
-//
-//
-//                        //Toast.makeText(getBaseContext(), "Successful response from: " + reqUrl, Toast.LENGTH_SHORT).show();
-//                    }
-//                });
 
     }
 
@@ -244,15 +230,8 @@ public class CommandSyncService extends JobIntentService {
 
     @Override
     public boolean onStopCurrentWork() {
-        return super.onStopCurrentWork();
-    }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if(disposable != null) {
-            disposable.dispose();
-        }
+        return super.onStopCurrentWork();
     }
 
     //    public Observable<List<Call>> fetchDirHtml(List<String> paths) {

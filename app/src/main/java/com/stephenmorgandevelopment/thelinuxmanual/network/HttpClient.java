@@ -9,6 +9,8 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Single;
 import okhttp3.Cache;
@@ -31,10 +33,16 @@ public class HttpClient {
     //private static Retrofit retrofit;
 
     private HttpClient() {
+
+
         cache = new okhttp3.Cache(new File(Helpers.getCacheDir(), "http_cache"), 10485760);
 
         okClient = new OkHttpClient.Builder()
                 .cache(cache)
+//                .callTimeout(45, TimeUnit.SECONDS)
+//                .connectTimeout(45, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+//                .writeTimeout(45, TimeUnit.SECONDS)
                 .build();
 
 //        retrofit = new Retrofit.Builder()

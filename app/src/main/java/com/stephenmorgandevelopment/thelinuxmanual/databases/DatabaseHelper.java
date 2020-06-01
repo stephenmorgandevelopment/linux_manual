@@ -60,7 +60,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public synchronized void addCommands(List<SimpleCommand> commands) {
+    public void addCommands(List<SimpleCommand> commands) {
         if (commands == null) {
             Log.e(TAG, "Failed adding commands to database.  commands == null");
             return;
@@ -204,7 +204,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<SimpleCommand> matches = new ArrayList<>();
 
         final String query = searchText.length() >= 4
-            ? "SELECT * FROM " + TABLE_NAME + " WHERE " + KEY_NAME + " LIKE '%" + searchText + "%'"
+                ? "SELECT * FROM " + TABLE_NAME + " WHERE " + KEY_NAME + " LIKE '%" + searchText + "%'"
                 : "SELECT * FROM " + TABLE_NAME + " WHERE " + KEY_NAME + " LIKE '" + searchText + "%'";
 
         Cursor cursor = database.rawQuery(query, null);
