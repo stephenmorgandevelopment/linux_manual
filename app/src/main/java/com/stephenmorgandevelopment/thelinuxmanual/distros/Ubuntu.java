@@ -98,6 +98,8 @@ public class Ubuntu extends Distribution implements LinuxDistro {
 
 
     public static synchronized void addDescriptionToSimpleCommand(SimpleCommand command, String pageHtml) {
+        Log.d(TAG, "Adding description for " + command.getName());
+
         Document document = Jsoup.parse(pageHtml);
         Elements h4List = document.select("#tableWrapper h4");
         Elements preList = document.select("#tableWrapper pre");

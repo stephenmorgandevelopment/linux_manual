@@ -18,9 +18,14 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import io.reactivex.Completable;
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -41,6 +46,7 @@ public class MatchListAdapter extends BaseAdapter {
     public MatchListAdapter(Context ctx) {
         matches = new ArrayList<>();
         this.inflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        disposables = new CompositeDisposable();
     }
 
     public void setMatches(List<SimpleCommand> matches) {
@@ -71,41 +77,56 @@ public class MatchListAdapter extends BaseAdapter {
     public View getView(int position, View view, ViewGroup parent) {
         view = inflater.inflate(R.layout.match_list_item, null);
         final TextView descriptionView = view.findViewById(R.id.matchListDescription);
+        final SimpleCommand match = matches.get(position);
 
-        ((TextView) view.findViewById(R.id.matchListCommand)).setText(matches.get(position).getName());
+        ((TextView) view.findViewById(R.id.matchListCommand)).setText(match.getName());
 
-        String description = matches.get(position).getDescription();
+        String description = match.getDescription();
         descriptionView.setText(description);
 
         if (description.equals("")) {
-            Disposable disposable = fetchDescription(matches.get(position))
+            Disposable disposable = fetchDescription(match)
                     .subscribeOn(Schedulers.computation())
-                    .observeOn(Schedulers.computation())
                     .flatMapCompletable(response -> {
-                        Ubuntu.addDescriptionToSimpleCommand(matches.get(position), response.body().string());
+                        Log.d(TAG, "Inside flatMapCompletable for " + match.getName());
+
+                        Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
                         return Completable.complete();
                     })
-                    .doOnComplete(() -> {
-                        AndroidSchedulers.mainThread().scheduleDirect(() -> {
-                            descriptionView.setText(matches.get(position).getDescription());
-                        });
-                    })
-                    .subscribe();
+                    .observeOn(AndroidSchedulers.mainThread())
+//                    .doOnComplete(() -> {
+//                        descriptionView.setText(matches.get(position).getDescription());
+//                        AndroidSchedulers.mainThread().scheduleDirect(() -> {
+//                           descriptionView.setText(matches.get(position).getDescription());
+//                        });
+//                    })
+                    .subscribe(() -> {
+                                descriptionView.setText(match.getDescription());
+                                Log.d(TAG, "ListItem should now be updated for " + match.getName());
+                            }
+                            , throwable -> {
+                                Log.e(TAG, "Error pulling description for " + match.getName());
+                                throwable.printStackTrace();
+                            });
             disposables.add(disposable);
         }
-
 
         return view;
     }
 
+
     Single<Response> fetchDescription(SimpleCommand command) {
+        Log.d(TAG, "In fetchDescription for " + command.getName());
+
         Request request = new Request.Builder().url(command.getUrl()).build();
-        try {
-            return Single.just(HttpClient.getInstance().getClient().newCall(request).execute());
-        } catch (IOException ioe) {
-            Log.e(TAG, "IO error fetching description.");
-            ioe.printStackTrace();
-        }
-        return Single.error(new Throwable());
+//        try {
+            return Single.defer(() -> Single.just(HttpClient.getClient().newCall(request).execute()));
+//        return Single.create(emitter -> HttpClient.getClient().newCall(request).execute());
+//        } catch (IOException ioe) {
+//            Log.e(TAG, "IO error fetching description.");
+//            ioe.printStackTrace();
+//        }
+
+//        return Single.error(new Throwable());
     }
 }

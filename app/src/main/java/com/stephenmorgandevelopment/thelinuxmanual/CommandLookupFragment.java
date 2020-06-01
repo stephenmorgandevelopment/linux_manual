@@ -104,11 +104,18 @@ public class CommandLookupFragment extends Fragment {
     public void onPause() {
         super.onPause();
 
-        if(MatchListAdapter.disposables != null) {
-            MatchListAdapter.disposables.clear();
-        }
 
         //TODO Store search text and list of matched queries.
 
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if(MatchListAdapter.disposables != null) {
+            MatchListAdapter.disposables.dispose();
+            MatchListAdapter.disposables.clear();
+        }
     }
 }

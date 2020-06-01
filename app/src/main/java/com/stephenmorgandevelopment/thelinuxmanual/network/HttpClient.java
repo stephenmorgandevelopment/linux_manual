@@ -86,6 +86,10 @@ public class HttpClient {
     }
 
     public static OkHttpClient getClient() {
+        if(okClient == null) {
+            getInstance();
+        }
+
         return okClient;
     }
 

@@ -60,7 +60,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public void addCommands(List<SimpleCommand> commands) {
+    public synchronized void addCommands(List<SimpleCommand> commands) {
         if (commands == null) {
             Log.e(TAG, "Failed adding commands to database.  commands == null");
             return;

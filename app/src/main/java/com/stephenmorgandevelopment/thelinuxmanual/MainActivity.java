@@ -146,6 +146,11 @@ public class MainActivity extends AppCompatActivity {
         DatabaseHelper.getInstance().close();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
     private boolean menuCreated = false;
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
