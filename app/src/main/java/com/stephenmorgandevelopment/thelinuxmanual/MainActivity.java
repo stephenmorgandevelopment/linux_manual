@@ -10,6 +10,9 @@ import androidx.fragment.app.FragmentManager;
 
 import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -45,25 +48,9 @@ public class MainActivity extends AppCompatActivity {
 
         fragmentContainer = findViewById(R.id.fragmentContainer);
         toolbar = findViewById(R.id.toolbar);
-//        toolbar = getSupportActionBar();
         setSupportActionBar(toolbar);
 
         toolbar.setTitle(R.string.app_name);
-        //backArrow = findViewById(R.id.backArrow);
-
-//        Button testButton = findViewById(R.id.testButton);
-//        testButton.setOnClickListener((v) -> {
-//            if(!working) {
-//
-//                Intent intent = new Intent();
-//                intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
-//                intent.putExtra(CommandSyncService.SYNC_TYPE, CommandSyncService.SYNC_NAMES);
-//
-//                CommandSyncService.enqueueWork(MainActivity.this, intent);
-//
-//                working = true;
-//            }
-//        });
 
     }
 
@@ -72,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if(checkForFiles()) {
+        if(DatabaseHelper.hasDatabase()) {
             FragmentManager manager = getSupportFragmentManager();
             Fragment searchFragment = CommandLookupFragment.getInstance();
 
@@ -85,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
 
             Intent intent = new Intent();
             intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
-            intent.putExtra(CommandSyncService.SYNC_TYPE, CommandSyncService.SYNC_NAMES);
 
             CommandSyncService.enqueueWork(MainActivity.this, intent);
 
@@ -111,10 +97,7 @@ public class MainActivity extends AppCompatActivity {
                                     progressDialog.append(".");
                                     counter = 0;
                                 }
-
-//                                progressDialog.setText("SimpleCommands: " + Ubuntu.getCommandsList().size());
                             });
-
                     }
 
                     runOnUiThread(() -> progressDialog.append("\nFinishing up..."));
@@ -151,6 +134,16 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
+    //Menu Code to try later.  With the removal of onPrepareOptionsMenu
+    /*
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        return true;
+    }
+
+     */
+
     private boolean menuCreated = false;
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
@@ -159,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
             menuCreated = true;
         }
         return true;
-        //return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -171,13 +163,11 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.refreshMenuBtn:
-                //TODO Search all commands and cache all data in background.
                 if(!working) {
                     working = true;
 
                     Intent intent = new Intent();
                     intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
-                    intent.putExtra(CommandSyncService.SYNC_TYPE, CommandSyncService.SYNC_NAMES);
 
                     CommandSyncService.enqueueWork(MainActivity.this, intent);
                 } else {
@@ -187,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.changeReleaseBtn:
                 //TODO Create a list menu with releases in man pages.
+
 
                 break;
             case R.id.storeOfflineBtn:
@@ -200,25 +191,5 @@ public class MainActivity extends AppCompatActivity {
         }
         return true;
     }
-
-    private void toggleBackArrow() {
-        if(backArrow.getVisibility() == View.VISIBLE) {
-            backArrow.setVisibility(View.GONE);
-        } else {
-            backArrow.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private boolean checkForFiles() {
-        File jsonDir = Helpers.getFilesDir();
-        File[] files = jsonDir.listFiles();
-
-        if(files.length >= 8) {
-            return true;
-        }
-
-        return false;
-    }
-
 
 }

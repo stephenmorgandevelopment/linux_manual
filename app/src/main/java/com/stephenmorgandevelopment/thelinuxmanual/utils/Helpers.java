@@ -16,7 +16,6 @@ public class Helpers {
     private static Context applicationContext;
     private static File filesDir;
     private static File cacheDir;
-//    private static File databaseDir;
     private static String local;
 
     public static void init(Application app) {
@@ -24,12 +23,6 @@ public class Helpers {
         setFilesDir(app.getFilesDir());
         setCacheDir(app.getCacheDir());
         setLocal();
-
-//        File dbDir = new File(app.getFilesDir().getParent(), "database");
-//        if(!dbDir.mkdirs()) {
-//            Log.e(TAG, "Error creating database dir.");
-//        }
-
     }
 
 

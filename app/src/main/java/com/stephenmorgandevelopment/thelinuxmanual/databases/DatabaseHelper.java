@@ -4,11 +4,13 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 import android.view.inputmethod.ExtractedTextRequest;
 
+import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
@@ -23,7 +25,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static DatabaseHelper helperInstance;
 
-    private static final String TABLE_NAME = "SimpleCommands";
+    private static final String TABLE_NAME_POSTFIX = "_SimpleCommands";
+    private static String TABLE_NAME_PREFIX;
 
     private static final String KEY_ID = "id";
     private static final String KEY_NAME = "name";
@@ -44,15 +47,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private DatabaseHelper() {
         super(Helpers.getApplicationContext(), simpleCommandsName, null, version);
 
+        database = getWritableDatabase();
+    }
+
+    public void changeTable(String table) {
+        TABLE_NAME_PREFIX = table;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS SimpleCommands ("
-                + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
-                + "description TEXT, url TEXT, manN TEXT)";
 
-        db.execSQL(CREATE_TABLE);
+        for (Ubuntu.Release release : Ubuntu.Release.values()) {
+            String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS "
+                    + release.getName() + TABLE_NAME_POSTFIX + "("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
+                    + "description TEXT, url TEXT, manN TEXT)";
+
+            db.execSQL(CREATE_TABLE);
+        }
     }
 
     @Override
@@ -70,47 +82,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             database = getWritableDatabase();
         }
 
-        boolean containsFirst = contains(commands.get(0)) != -1;
-        boolean containsLast = contains(commands.get(commands.size()-1)) != -1;
-
-        String insertString = "INSERT INTO " + TABLE_NAME + " ("// + "(name, description, url, manN)"
+        String insertString = "INSERT INTO " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + " ("
                 + KEY_NAME + ", " + KEY_DESCRIPTION + ", " + KEY_URL + ", " + KEY_MAN_N
                 + ") VALUES (?, ?, ?, ?)";
 
         SQLiteStatement insertStatement = database.compileStatement(insertString);
 
-//        ContentValues value = new ContentValues();
         database.beginTransaction();
-        if(!containsFirst && !containsLast) {
-            for (SimpleCommand command : commands) {
 
-                insertStatement.bindString(1, command.getName());
-                insertStatement.bindString(2, command.getDescription());
-                insertStatement.bindString(3, command.getUrl());
-                insertStatement.bindString(4, String.valueOf(command.getManN()));
+        for (SimpleCommand command : commands) {
 
-//                long row = insertStatement.executeInsert();
-                command.setId(insertStatement.executeInsert());
-                insertStatement.clearBindings();
+            insertStatement.bindString(1, command.getName());
+            insertStatement.bindString(2, command.getDescription());
+            insertStatement.bindString(3, command.getUrl());
+            insertStatement.bindString(4, String.valueOf(command.getManN()));
 
-//                value.put(KEY_NAME, command.getName());
-//                value.put(KEY_DESCRIPTION, command.getDescription());
-//                value.put(KEY_URL, command.getUrl());
-//                value.put(KEY_MAN_N, command.getManN());
-//
-//                long row = database.insert(TABLE_NAME, null, value);
-//                command.setId(row);
-//                value.clear();
-            }
-        } else {
-            for(SimpleCommand command : commands) {
-                if(contains(command) != -1) {
-                    continue;
-                }
-
-                addCommand(command);
-            }
+            command.setId(insertStatement.executeInsert());
+            insertStatement.clearBindings();
         }
+
         database.setTransactionSuccessful();
         database.endTransaction();
 
@@ -119,8 +109,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    private void addCommand(SimpleCommand command) {
-
+    private void wipeTable() {
+        database.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX);
+        database.execSQL("CREATE TABLE "
+                + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + "("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
+                + "description TEXT, url TEXT, manN TEXT)");
     }
 
 //    public void addCommand(SimpleCommand command) {
@@ -146,7 +140,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //        command.setId(row);
 //    }
 
-    //TODO Update commands.
     public void updateCommand(SimpleCommand command) {
         if (database == null || database.isReadOnly()) {
             database = getWritableDatabase();
@@ -159,13 +152,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(KEY_URL, command.getUrl());
         values.put(KEY_MAN_N, command.getManN());
 
-        database.update(TABLE_NAME, values, KEY_ID + "=?", new String[] {String.valueOf(command.getId())});
+        database.update(TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX, values, KEY_ID + "=?", new String[]{String.valueOf(command.getId())});
     }
 
     public void close() {
-        if(database != null) {
+        if (database != null) {
             database.close();
             database = null;
+            this.helperInstance = null;
             Log.d(TAG, "Database successfully closed.");
         } else {
             Log.d(TAG, "Database already closed.");
@@ -173,7 +167,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /**
-     *  Searches local database for a match by command name.
+     * Searches local database for a match by command name.
      *
      * @param command
      * @return Returns command's id on match, or -1 if not found.
@@ -183,7 +177,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             database = getReadableDatabase();
         }
 
-        final String query = "SELECT * FROM " + TABLE_NAME
+        final String query = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX
                 + " WHERE " + KEY_NAME + "=?";// + command.getName();
 
         Cursor cursor = database.rawQuery(query, new String[]{command.getName()});
@@ -204,18 +198,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<SimpleCommand> matches = new ArrayList<>();
 
         final String query = searchText.length() >= 4
-                ? "SELECT * FROM " + TABLE_NAME + " WHERE " + KEY_NAME + " LIKE '%" + searchText + "%'"
-                : "SELECT * FROM " + TABLE_NAME + " WHERE " + KEY_NAME + " LIKE '" + searchText + "%'";
+                ? "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + " WHERE " + KEY_NAME + " LIKE '%" + searchText + "%'"
+                : "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + " WHERE " + KEY_NAME + " LIKE '" + searchText + "%'";
 
         Cursor cursor = database.rawQuery(query, null);
 
-        if(!cursor.moveToFirst()) {
+        if (!cursor.moveToFirst()) {
             return null;
         }
 
         do {
             matches.add(new SimpleCommand(cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4)));
-        } while(cursor.moveToNext());
+        } while (cursor.moveToNext());
 
         cursor.close();
         return matches;
@@ -226,16 +220,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             database = getReadableDatabase();
         }
 
-        final String query = "SELECT * FROM " + TABLE_NAME
+        final String query = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX
                 + " WHERE " + KEY_ID + "=?";
 
         Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(id)});
 
-        if(cursor.moveToFirst()) {
+        if (cursor.moveToFirst()) {
             return new SimpleCommand(cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4));
         }
 
         return null;
+    }
+
+    public static boolean hasDatabase() {
+        SQLiteDatabase check = null;
+
+        try {
+            String path = Helpers.getApplicationContext().getDatabasePath(simpleCommandsName).getAbsolutePath();
+            check = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
+        } catch (SQLiteException e) {
+            Log.d(TAG, "Database does not exist yet.");
+        }
+
+        return check != null;
     }
 
 }
