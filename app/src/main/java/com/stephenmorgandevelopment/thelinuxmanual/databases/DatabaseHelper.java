@@ -212,7 +212,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         do {
-            matches.add(new SimpleCommand(cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4)));
+            matches.add(new SimpleCommand(cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4)));
         } while (cursor.moveToNext());
 
         cursor.close();

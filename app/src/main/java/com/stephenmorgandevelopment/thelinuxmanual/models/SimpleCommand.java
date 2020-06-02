@@ -18,6 +18,11 @@ public class SimpleCommand {
 
     }
 
+    public SimpleCommand(long id, String name, String description, String url, int manN) {
+        this(name, description, url, manN);
+        this.id = id;
+    }
+
     public SimpleCommand(String name, String url, int manN) {
         this(name, "", url, manN);
     }
