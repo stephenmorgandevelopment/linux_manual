@@ -3,28 +3,41 @@ package com.stephenmorgandevelopment.thelinuxmanual;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
+import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
 
+import java.io.IOException;
 import java.util.List;
 
+import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.plugins.RxJavaPlugins;
+import io.reactivex.schedulers.Schedulers;
 
 public class CommandLookupFragment extends Fragment {
     public static final String TAG = CommandLookupFragment.class.getSimpleName();
+    Disposable disposable;
 
     private EditText searchText;
     private ImageButton searchBtn;
@@ -97,7 +110,7 @@ public class CommandLookupFragment extends Fragment {
         });
 
         matchListView.setAdapter(matchListAdapter);
-
+        matchListView.setOnItemClickListener(itemClicked);
     }
 
     @Override
@@ -118,4 +131,36 @@ public class CommandLookupFragment extends Fragment {
             MatchListAdapter.disposables.clear();
         }
     }
+
+
+    AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener() {
+        CommandInfoFragment infoFragment;
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            disposable = HttpClient.fetchCommandManPage(matchListAdapter.getItem(position).getUrl())
+                    .subscribeOn(Schedulers.io())
+                    .flatMapCompletable(response -> {
+                        if(response.isSuccessful() && response.code() == 200) {
+                            infoFragment = CommandInfoFragment.getInstance();
+                            infoFragment.setInfo(Ubuntu.crawlForCommandInfo(response.body().string()));
+
+                            return Completable.complete();
+                        }
+
+                       return Completable.error(new Throwable("Response returned with code: " + response.code()));
+                    })
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnComplete(() -> {
+                        FragmentManager manager = getActivity().getSupportFragmentManager();
+                        manager.beginTransaction().add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG).addToBackStack(CommandInfoFragment.TAG).commit();
+                    })
+                    .subscribe(() -> {
+
+                    }, error -> {
+                        Toast.makeText(getContext(), "Error fetching data\n" + error.getMessage(), Toast.LENGTH_LONG).show();
+                        error.printStackTrace();
+                    });
+        }
+    };
 }

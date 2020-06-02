@@ -119,14 +119,14 @@ public class HttpClient {
         }
     }
 
-    public static Single<Call> fetchCommandManPage(String pageUrl) {
+    public static Single<Response> fetchCommandManPage(String pageUrl) {
         if(okClient == null) {
             getInstance();
         }
 
         if(Helpers.hasInternet()) {
             Request req = new Request.Builder().url(pageUrl).build();
-            return Single.just(okClient.newCall(req));
+            return Single.defer(() -> Single.just(okClient.newCall(req).execute()));
         } else {
             return Single.error(new Throwable("No internet.  FetchCommmandManPage failed."));
         }

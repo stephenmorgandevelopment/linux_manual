@@ -1,6 +1,7 @@
 package com.stephenmorgandevelopment.thelinuxmanual.distros;
 
 
+import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.Switch;
 
@@ -16,6 +17,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 
 
 public class Ubuntu implements LinuxDistro {
@@ -81,6 +83,24 @@ public class Ubuntu implements LinuxDistro {
         return jsonString.toString();
     }
 
+    public static Map<String, String> crawlForCommandInfo(String pageHtml) {
+        Log.d(TAG, "Creating info from man page.");
+
+        Map <String, String> info = new ArrayMap<>();
+
+        Document document = Jsoup.parse(pageHtml);
+        Elements h4List = document.select("#tableWrapper h4");
+        Elements preList = document.select("#tableWrapper pre");
+        preList.remove(0);
+
+        for(Element h4 : h4List) {
+            int idx = h4List.indexOf(h4);
+            info.put(h4.text(), preList.get(idx).text());
+        }
+
+        return info;
+    }
+
 
     public static synchronized void addDescriptionToSimpleCommand(SimpleCommand command, String pageHtml) {
         Log.d(TAG, "Adding description for " + command.getName());
@@ -94,11 +114,13 @@ public class Ubuntu implements LinuxDistro {
         for(Element h4 : h4List) {
             if(h4.text().equalsIgnoreCase("DESCRIPTION")) {
                 int idx = h4List.indexOf(h4);
-                if(h4.equals(h4List.get(idx))) {
-                    command.setDescription(preList.get(idx).text());
-                } else {
-                    Log.e(TAG, "Error matching indexes while adding descriprtion.");
-                }
+                command.setDescription(preList.get(idx).text());
+
+//                if(h4.equals(h4List.get(idx))) {
+//                    command.setDescription(preList.get(idx).text());
+//                } else {
+//                    Log.e(TAG, "Error matching indexes while adding descriprtion.");
+//                }
             }
         }
     }
@@ -106,12 +128,12 @@ public class Ubuntu implements LinuxDistro {
     public static ArrayList<SimpleCommand> crawlForManPages(String pageHtml, String url) {
         String[] tmpArr = url.split("/");
         int manN = Integer.parseInt(tmpArr[tmpArr.length-1].replaceAll("man", ""));
+        String filter = "." + manN;
 
         Document document = Jsoup.parse(pageHtml);
         Elements anchors = document.select(CRAWLER_SELECTOR);
 
         ArrayList<SimpleCommand> unfinishedCommands = new ArrayList<>();
-
         for(Element a : anchors) {
             //String path = manDir.concat(a.attr("href"));
             String path = url.concat(a.attr("href"));
@@ -119,7 +141,14 @@ public class Ubuntu implements LinuxDistro {
                 continue;
             }
             String text = a.html();
-            text = text.substring(0, text.lastIndexOf('.'));
+//            text = text.substring(0, text.lastIndexOf('.'));
+            try {
+                text = text.substring(0, text.lastIndexOf(filter));
+            } catch (Exception e) {
+                text = a.html();
+                text = text.substring(0, text.lastIndexOf('.'));
+                Log.e(TAG, "String parsing error caught for " + text);
+            }
             unfinishedCommands.add(new SimpleCommand(text, path, manN));
         }
 

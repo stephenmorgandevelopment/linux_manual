@@ -65,13 +65,13 @@ public class MatchListAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
+    public SimpleCommand getItem(int position) {
         return matches.get(position);
     }
 
     @Override
     public long getItemId(int position) {
-        return position;
+        return matches.get(position).getId();
     }
 
     @Override
@@ -88,27 +88,53 @@ public class MatchListAdapter extends BaseAdapter {
         if (description.equals("")) {
             Disposable disposable = fetchDescription(match)
                     .subscribeOn(Schedulers.computation())
-                    .flatMapCompletable(response -> {
-                        Log.d(TAG, "Inside flatMapCompletable for " + match.getName());
-
+                    .flatMap(response -> {
+                        Log.d(TAG, "Inside flatMap for " + match.getName());
                         Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
-                        return Completable.complete();
+
+                        return Single.just(match);
                     })
-                    .doOnComplete(() -> {
-                        Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
-                        DatabaseHelper.getInstance().updateCommand(match);
-                        Log.i(TAG, "Successfully updated database for " + match.getName());
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnSuccess(success -> {
+                        descriptionView.setText(match.getDescription());
+                        Log.d(TAG, "ListItem should now be updated for " + match.getName());
+                    })
+                    .doOnError(error -> {
+                        Log.e(TAG, "Error pulling description for " + match.getName());
+                        error.printStackTrace();
                     })
                     .observeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(() -> {
-                                descriptionView.setText(match.getDescription());
-                                Log.d(TAG, "ListItem should now be updated for " + match.getName());
-                            }
-                            , throwable -> {
-                                Log.e(TAG, "Error pulling description for " + match.getName());
-                                throwable.printStackTrace();
-                            });
+                    .doFinally(() -> {
+                        Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
+                        DatabaseHelper.getInstance().updateCommand(match);
+                        Log.i(TAG, "Running on thread: " + Thread.currentThread().getName() + " : pid-" + Thread.currentThread().getId());
+                    })
+                    .subscribe();
+
+
+//            Disposable disposable = fetchDescription(match)
+//                    .subscribeOn(Schedulers.computation())
+//                    .flatMapCompletable(response -> {
+//                        Log.d(TAG, "Inside flatMapCompletable for " + match.getName());
+//
+//                        Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
+//                        return Completable.complete();
+//                    })
+//                    .observeOn(Schedulers.io())
+//                    .doOnComplete(() -> {
+//                        Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
+//                        DatabaseHelper.getInstance().updateCommand(match);
+//                        Log.i(TAG, "Running on thread: " + Thread.currentThread().getName() + " : pid-" + Thread.currentThread().getId());
+//                    })
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(() -> {
+//                                descriptionView.setText(match.getDescription());
+//                                Log.d(TAG, "ListItem should now be updated for " + match.getName());
+//                            }
+//                            , throwable -> {
+//                                Log.e(TAG, "Error pulling description for " + match.getName());
+//                                throwable.printStackTrace();
+//                            });
             disposables.add(disposable);
         }
 

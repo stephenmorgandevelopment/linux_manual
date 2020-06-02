@@ -120,29 +120,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "description TEXT, url TEXT, manN TEXT)");
     }
 
-//    public void addCommand(SimpleCommand command) {
-//        SQLiteDatabase db = getWritableDatabase();
-//        addCommand(command, db);
-//        db.close();
-//    }
-
-    //    public void addCommand(SimpleCommand command, SQLiteDatabase db) {
-//    private void addCommand(SimpleCommand command) {
-////        if (database == null || database.isReadOnly()) {
-////            database = getWritableDatabase();
-////        }
-//
-//        ContentValues values = new ContentValues();
-//
-//        values.put(KEY_NAME, command.getName());
-//        values.put(KEY_DESCRIPTION, command.getDescription());
-//        values.put(KEY_URL, command.getUrl());
-//        values.put(KEY_MAN_N, command.getManN());
-//
-//        long row = database.insert(TABLE_NAME, null, values);
-//        command.setId(row);
-//    }
-
     public synchronized void updateCommand(SimpleCommand command) {
         if (database == null || database.isReadOnly()) {
             database = getWritableDatabase();
@@ -155,7 +132,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(KEY_URL, command.getUrl());
         values.put(KEY_MAN_N, command.getManN());
 
-        int rowsUpdated = database.update(TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX, values, KEY_NAME + "=?", new String[]{command.getName()});
+        int rowsUpdated = database.update(TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX, values, KEY_ID + "=?", new String[]{String.valueOf(command.getId())});
         Log.i(TAG, "Rows updated: " + rowsUpdated);
     }
 
@@ -237,16 +214,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public static boolean hasDatabase() {
-//        SQLiteDatabase check = null;
-//
-//        try {
-//            String path = Helpers.getApplicationContext().getDatabasePath(simpleCommandsName).getAbsolutePath();
-//            check = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
-//        } catch (Exception e) {
-//            Log.d(TAG, "Database does not exist yet.");
-//        }
-//
-//        return check != null;
         File dbFile = Helpers.getApplicationContext().getDatabasePath(simpleCommandsName);
         return dbFile.exists();
     }
