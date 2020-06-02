@@ -9,6 +9,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
+import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
@@ -93,13 +94,13 @@ public class MatchListAdapter extends BaseAdapter {
                         Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
                         return Completable.complete();
                     })
+                    .doOnComplete(() -> {
+                        Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
+                        DatabaseHelper.getInstance().updateCommand(match);
+                        Log.i(TAG, "Successfully updated database for " + match.getName());
+                    })
+                    .observeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-//                    .doOnComplete(() -> {
-//                        descriptionView.setText(matches.get(position).getDescription());
-//                        AndroidSchedulers.mainThread().scheduleDirect(() -> {
-//                           descriptionView.setText(matches.get(position).getDescription());
-//                        });
-//                    })
                     .subscribe(() -> {
                                 descriptionView.setText(match.getDescription());
                                 Log.d(TAG, "ListItem should now be updated for " + match.getName());
@@ -120,7 +121,7 @@ public class MatchListAdapter extends BaseAdapter {
 
         Request request = new Request.Builder().url(command.getUrl()).build();
 //        try {
-            return Single.defer(() -> Single.just(HttpClient.getClient().newCall(request).execute()));
+        return Single.defer(() -> Single.just(HttpClient.getClient().newCall(request).execute()));
 //        return Single.create(emitter -> HttpClient.getClient().newCall(request).execute());
 //        } catch (IOException ioe) {
 //            Log.e(TAG, "IO error fetching description.");

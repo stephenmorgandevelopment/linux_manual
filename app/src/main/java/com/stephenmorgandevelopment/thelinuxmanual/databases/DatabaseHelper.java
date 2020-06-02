@@ -14,6 +14,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static DatabaseHelper helperInstance;
 
     private static final String TABLE_NAME_POSTFIX = "_SimpleCommands";
-    private static String TABLE_NAME_PREFIX;
+    private static String TABLE_NAME_PREFIX = Ubuntu.getReleaseString();;
 
     private static final String KEY_ID = "id";
     private static final String KEY_NAME = "name";
@@ -73,6 +74,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void addCommands(List<SimpleCommand> commands) {
+        TABLE_NAME_PREFIX = Ubuntu.getReleaseString();
+
         if (commands == null) {
             Log.e(TAG, "Failed adding commands to database.  commands == null");
             return;
@@ -140,7 +143,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //        command.setId(row);
 //    }
 
-    public void updateCommand(SimpleCommand command) {
+    public synchronized void updateCommand(SimpleCommand command) {
         if (database == null || database.isReadOnly()) {
             database = getWritableDatabase();
         }
@@ -152,7 +155,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(KEY_URL, command.getUrl());
         values.put(KEY_MAN_N, command.getManN());
 
-        database.update(TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX, values, KEY_ID + "=?", new String[]{String.valueOf(command.getId())});
+        int rowsUpdated = database.update(TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX, values, KEY_NAME + "=?", new String[]{command.getName()});
+        Log.i(TAG, "Rows updated: " + rowsUpdated);
     }
 
     public void close() {
@@ -233,16 +237,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public static boolean hasDatabase() {
-        SQLiteDatabase check = null;
-
-        try {
-            String path = Helpers.getApplicationContext().getDatabasePath(simpleCommandsName).getAbsolutePath();
-            check = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
-        } catch (SQLiteException e) {
-            Log.d(TAG, "Database does not exist yet.");
-        }
-
-        return check != null;
+//        SQLiteDatabase check = null;
+//
+//        try {
+//            String path = Helpers.getApplicationContext().getDatabasePath(simpleCommandsName).getAbsolutePath();
+//            check = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
+//        } catch (Exception e) {
+//            Log.d(TAG, "Database does not exist yet.");
+//        }
+//
+//        return check != null;
+        File dbFile = Helpers.getApplicationContext().getDatabasePath(simpleCommandsName);
+        return dbFile.exists();
     }
 
 }

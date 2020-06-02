@@ -7,6 +7,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 
 import java.io.File;
 
@@ -23,6 +24,8 @@ public class Helpers {
         setFilesDir(app.getFilesDir());
         setCacheDir(app.getCacheDir());
         setLocal();
+
+        Ubuntu.setRelease(Preferences.getRelease());
     }
 
 

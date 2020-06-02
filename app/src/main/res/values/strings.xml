@@ -66,6 +66,16 @@
     <string name="reporting">reporting</string>
     <string name="copyright">copyright</string>
     <string name="finishing_up">Finishing up...</string>
+    <string name="artful">artful</string>
+    <string name="bionic">bionic</string>
+    <string name="cosmic">cosmic</string>
+    <string name="disco">disco</string>
+    <string name="eoan">eoan</string>
+    <string name="focal">focal</string>
+    <string name="groovy">groovy</string>
+    <string name="precise">precise</string>
+    <string name="trusty">trusty</string>
+    <string name="xenial">xenial</string>
 
 
 </resources>

@@ -2,6 +2,7 @@ package com.stephenmorgandevelopment.thelinuxmanual.distros;
 
 
 import android.util.Log;
+import android.widget.Switch;
 
 import com.google.gson.stream.JsonWriter;
 import com.stephenmorgandevelopment.thelinuxmanual.R;
@@ -40,12 +41,12 @@ public class Ubuntu implements LinuxDistro {
         public String getName() {return name;}
     }
 
-    public Ubuntu() {
-        this(Release.FOCAL);
-    }
-
-    public Ubuntu(Release version) {
-        release = version;
+    public static void setRelease(String releaseString) {
+        for(Release release : Release.values()) {
+            if(releaseString.equalsIgnoreCase(release.getName())) {
+                Ubuntu.release = release;
+            }
+        }
     }
 
     public static String getReleaseString() {return release.getName();}

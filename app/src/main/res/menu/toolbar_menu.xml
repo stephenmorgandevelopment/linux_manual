@@ -18,13 +18,29 @@
 <!--        app:showAsAction="ifRoom"-->
 <!--        android:visible="false"-->
 <!--        />-->
-    <item
-        android:id="@+id/storeOfflineBtn"
-        android:title="@string/store_pages_offline"
-         />
+<!--    <item-->
+<!--        android:id="@+id/storeOfflineBtn"-->
+<!--        android:title="@string/store_pages_offline"-->
+<!--         />-->
+
     <item
         android:id="@+id/changeReleaseBtn"
         android:title="@string/change_release_button"
+        >
+        <menu>
+            <group android:id="@+id/releaseSubMenu">
+                <item android:id="@+id/artful" android:title="@string/artful"/>
+                <item android:id="@+id/bionic" android:title="@string/bionic"/>
+                <item android:id="@+id/cosmic" android:title="@string/cosmic"/>
+                <item android:id="@+id/disco" android:title="@string/disco"/>
+                <item android:id="@+id/eoan" android:title="@string/eoan"/>
+                <item android:id="@+id/focal" android:title="@string/focal"/>
+                <item android:id="@+id/groovy" android:title="@string/groovy"/>
+                <item android:id="@+id/precise" android:title="@string/precise"/>
+                <item android:id="@+id/trusty" android:title="@string/trusty"/>
+                <item android:id="@+id/xenial" android:title="@string/xenial"/>
+            </group>
+        </menu>
 
-        />
+    </item>
 </menu>

@@ -7,9 +7,17 @@ import com.stephenmorgandevelopment.thelinuxmanual.R;
 
 public class Preferences {
     private static final String DEFAULT_URL = "DEFAULT_URL";
+    private static final String RELEASE = "RELEASE";
 
-    private static String defaultUrl;
+    public static void setRelease(String release) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext()).edit();
+        editor.putString(RELEASE, release).commit();
+    }
 
+    public static String getRelease() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext());
+        return prefs.getString(RELEASE, Helpers.getApplicationContext().getString(R.string.focal));
+    }
 
     public static String getDefaultUrl() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext());
@@ -18,7 +26,7 @@ public class Preferences {
 
     public static void setDefaultUrl(String url) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext()).edit();
-        editor.putString(DEFAULT_URL, url).apply();
+        editor.putString(DEFAULT_URL, url).commit();
     }
 
 }

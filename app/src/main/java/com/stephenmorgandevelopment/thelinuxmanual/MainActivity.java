@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentManager;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private ConstraintLayout fragmentContainer;
     private Toolbar toolbar;
 //    private ActionBar toolbar;
-    private ImageButton backArrow;
+//    private ImageButton backArrow;
 
     public static volatile boolean working = false;
 
@@ -177,14 +178,14 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.changeReleaseBtn:
                 //TODO Create a list menu with releases in man pages.
-
+                Toast.makeText(this, "Has sub-menu: "+item.hasSubMenu(), Toast.LENGTH_LONG).show();
 
                 break;
-            case R.id.storeOfflineBtn:
+//            case R.id.storeOfflineBtn:
                 //TODO Begin by pulling all commands and caching them in database with description.
                 //TODO Download all data in background and cache as Json String.
 
-                break;
+//                break;
             default:
 
                 break;
