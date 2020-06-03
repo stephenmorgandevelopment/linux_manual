@@ -111,30 +111,6 @@ public class MatchListAdapter extends BaseAdapter {
                     })
                     .subscribe();
 
-
-//            Disposable disposable = fetchDescription(match)
-//                    .subscribeOn(Schedulers.computation())
-//                    .flatMapCompletable(response -> {
-//                        Log.d(TAG, "Inside flatMapCompletable for " + match.getName());
-//
-//                        Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
-//                        return Completable.complete();
-//                    })
-//                    .observeOn(Schedulers.io())
-//                    .doOnComplete(() -> {
-//                        Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
-//                        DatabaseHelper.getInstance().updateCommand(match);
-//                        Log.i(TAG, "Running on thread: " + Thread.currentThread().getName() + " : pid-" + Thread.currentThread().getId());
-//                    })
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe(() -> {
-//                                descriptionView.setText(match.getDescription());
-//                                Log.d(TAG, "ListItem should now be updated for " + match.getName());
-//                            }
-//                            , throwable -> {
-//                                Log.e(TAG, "Error pulling description for " + match.getName());
-//                                throwable.printStackTrace();
-//                            });
             disposables.add(disposable);
         }
 
@@ -146,14 +122,6 @@ public class MatchListAdapter extends BaseAdapter {
         Log.d(TAG, "In fetchDescription for " + command.getName());
 
         Request request = new Request.Builder().url(command.getUrl()).build();
-//        try {
         return Single.defer(() -> Single.just(HttpClient.getClient().newCall(request).execute()));
-//        return Single.create(emitter -> HttpClient.getClient().newCall(request).execute());
-//        } catch (IOException ioe) {
-//            Log.e(TAG, "IO error fetching description.");
-//            ioe.printStackTrace();
-//        }
-
-//        return Single.error(new Throwable());
     }
 }

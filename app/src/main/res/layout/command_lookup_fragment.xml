@@ -17,6 +17,7 @@
         android:layout_height="wrap_content"
         android:hint="@string/search_command"
         android:textSize="20sp"
+        android:layout_marginBottom="15dp"
         app:layout_constraintEnd_toStartOf="@+id/searchBtn"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -36,7 +37,7 @@
         android:id="@+id/matchList"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="15dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/searchText" />

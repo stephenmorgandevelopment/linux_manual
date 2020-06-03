@@ -66,8 +66,10 @@ public class MainActivity extends AppCompatActivity {
 
             manager.beginTransaction().add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG).commit();
         } else {
-            final TextView progressDialog = findViewById(R.id.testCounter);
+            final TextView progressDialog = findViewById(R.id.progressTextView);
+            final ScrollView progressScroller = findViewById(R.id.progressScroller);
             progressDialog.setVisibility(View.VISIBLE);
+            progressScroller.setVisibility(View.VISIBLE);
 
             progressDialog.setText("Running initial sync to build local command database.");
 
@@ -111,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
                     runOnUiThread(() -> {
                         progressDialog.setVisibility(View.GONE);
+                        progressScroller.setVisibility(View.GONE);
 
                         FragmentManager manager = getSupportFragmentManager();
                         Fragment searchFragment = CommandLookupFragment.getInstance();
@@ -178,9 +181,40 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.changeReleaseBtn:
                 //TODO Create a list menu with releases in man pages.
-                Toast.makeText(this, "Has sub-menu: "+item.hasSubMenu(), Toast.LENGTH_LONG).show();
+
 
                 break;
+            case R.id.artful:
+                changeRelease(Ubuntu.Release.ARTFUL);
+                break;
+            case R.id.bionic:
+                changeRelease(Ubuntu.Release.BIONIC);
+                break;
+            case R.id.cosmic:
+                changeRelease(Ubuntu.Release.COSMIC);
+                break;
+            case R.id.disco:
+                changeRelease(Ubuntu.Release.DISCO);
+                break;
+            case R.id.eoan:
+                changeRelease(Ubuntu.Release.EOAN);
+                break;
+            case R.id.focal:
+                changeRelease(Ubuntu.Release.FOCAL);
+                break;
+            case R.id.groovy:
+                changeRelease(Ubuntu.Release.GROOVY);
+                break;
+            case R.id.precise:
+                changeRelease(Ubuntu.Release.PRECISE);
+                break;
+            case R.id.trusty:
+                changeRelease(Ubuntu.Release.TRUSY);
+                break;
+            case R.id.xenial:
+                changeRelease(Ubuntu.Release.XENIAL);
+                break;
+
 //            case R.id.storeOfflineBtn:
                 //TODO Begin by pulling all commands and caching them in database with description.
                 //TODO Download all data in background and cache as Json String.
@@ -200,5 +234,9 @@ public class MainActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    private void changeRelease(Ubuntu.Release release) {
+
     }
 }

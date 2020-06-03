@@ -62,20 +62,29 @@
         app:layout_constraintVertical_bias="1.0">
 
 
-        <TextView
-            android:id="@+id/testCounter"
+        <ScrollView
+            android:id="@+id/progressScroller"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="18sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginTop="12dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:layout_height="match_parent"
             android:visibility="gone"
-             />
+            >
+
+            <TextView
+                android:id="@+id/progressTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginTop="12dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"
+                />
+        </ScrollView>
+
 
 <!--        <Button-->
 <!--            android:id="@+id/testButton"-->

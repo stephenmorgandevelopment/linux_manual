@@ -1,6 +1,7 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.ArrayMap;
 import android.util.Log;
@@ -34,9 +35,6 @@ public class CommandInfoFragment extends Fragment {
     private boolean firstRun = false;
 
     public static CommandInfoFragment getInstance() {
-//        if(instance == null) {
-//            instance = new CommandInfoFragment();
-//        }
         return new CommandInfoFragment();
     }
 
@@ -85,11 +83,21 @@ public class CommandInfoFragment extends Fragment {
 
 
     private void addTextBubble(String header, String description) {
-        View view = (ViewGroup) ((LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, null);
+        ViewGroup view = (ViewGroup) ((LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, null);
 //        View view = (ViewGroup) ((LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, scrollContainer, true);
+
+
         ((TextView)view.findViewById(R.id.headerText)).setText(header);
         ((TextView)view.findViewById(R.id.descriptionText)).setText(description);
         scrollContainer.addView(view);
+        scrollContainer.addView(getDivider());
+    }
+
+    private View getDivider() {
+        View divider = new View(getContext());
+        divider.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 12));
+        divider.setBackgroundColor(Color.TRANSPARENT);
+        return divider;
     }
 
 }
