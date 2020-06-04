@@ -29,6 +29,7 @@ import android.widget.Toast;
 import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 
 import java.io.File;
 
@@ -237,6 +238,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void changeRelease(Ubuntu.Release release) {
-
+        Preferences.setRelease(release.getName());
+        Ubuntu.setRelease(release.getName());
+        DatabaseHelper.changeTable(release.getName());
+        if(DatabaseHelper.getInstance().getCommandById(1) == null) {
+            
+        }
     }
 }

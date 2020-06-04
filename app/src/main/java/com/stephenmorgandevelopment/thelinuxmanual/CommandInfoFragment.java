@@ -95,7 +95,7 @@ public class CommandInfoFragment extends Fragment {
 
     private View getDivider() {
         View divider = new View(getContext());
-        divider.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 12));
+        divider.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 16));
         divider.setBackgroundColor(Color.TRANSPARENT);
         return divider;
     }

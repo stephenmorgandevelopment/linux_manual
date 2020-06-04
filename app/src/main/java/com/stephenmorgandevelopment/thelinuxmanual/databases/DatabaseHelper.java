@@ -51,7 +51,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         database = getWritableDatabase();
     }
 
-    public void changeTable(String table) {
+    public static void changeTable(String table) {
         TABLE_NAME_PREFIX = table;
     }
 
@@ -207,7 +207,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(id)});
 
         if (cursor.moveToFirst()) {
-            return new SimpleCommand(cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4));
+            return new SimpleCommand(id, cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4));
         }
 
         return null;
