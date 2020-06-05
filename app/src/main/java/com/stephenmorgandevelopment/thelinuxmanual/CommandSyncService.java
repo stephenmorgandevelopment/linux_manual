@@ -176,6 +176,9 @@ public class CommandSyncService extends JobIntentService {
     public void onDestroy() {
         super.onDestroy();
 
+        if(Helpers.getApplicationContext() == null) {
+            DatabaseHelper.getInstance().close();
+        }
 //        if(globalDisposable != null && globalDisposable.size() > 0) {
 //            globalDisposable.clear();
 //        }

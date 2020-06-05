@@ -40,9 +40,6 @@ public class CommandLookupFragment extends Fragment {
     Disposable disposable;
 
     private EditText searchText;
-    private ImageButton searchBtn;
-    private String searchString;
-    private List<SimpleCommand> matchedCommands;
     private ListView matchListView;
     private MatchListAdapter matchListAdapter;
 
@@ -62,7 +59,6 @@ public class CommandLookupFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         searchText = view.findViewById(R.id.searchText);
-        searchBtn = view.findViewById(R.id.searchBtn);
         matchListView = view.findViewById(R.id.matchList);
     }
 

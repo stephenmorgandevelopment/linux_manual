@@ -28,18 +28,22 @@ import android.widget.Toast;
 
 import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 
 import java.io.File;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private ConstraintLayout fragmentContainer;
     private Toolbar toolbar;
-//    private ActionBar toolbar;
-//    private ImageButton backArrow;
+    private TextView progressDialog;
+    private ScrollView progressScroller;
 
     public static volatile boolean working = false;
+
+    private SyncDialogMonitor syncDialogMonitor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +56,11 @@ public class MainActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        toolbar.setTitle(R.string.app_name);
+        String title = getString(R.string.app_name).concat(Ubuntu.getReleaseString());
+        toolbar.setTitle(title);
+
+        progressDialog = findViewById(R.id.progressTextView);
+        progressScroller = findViewById(R.id.progressScroller);
 
     }
 
@@ -61,14 +69,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if(DatabaseHelper.hasDatabase()) {
+        if(DatabaseHelper.hasDatabase()  && DatabaseHelper.getInstance().getCommandById(1) != null) {
             FragmentManager manager = getSupportFragmentManager();
             Fragment searchFragment = CommandLookupFragment.getInstance();
 
             manager.beginTransaction().add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG).commit();
         } else {
-            final TextView progressDialog = findViewById(R.id.progressTextView);
-            final ScrollView progressScroller = findViewById(R.id.progressScroller);
             progressDialog.setVisibility(View.VISIBLE);
             progressScroller.setVisibility(View.VISIBLE);
 
@@ -80,58 +86,27 @@ public class MainActivity extends AppCompatActivity {
             CommandSyncService.enqueueWork(MainActivity.this, intent);
 
             working = true;
-            new Thread() {
-                int counter = 0;
-                String progress = "";
-
-                @Override
-                public void run() {
-                    while(working) {
-                        try {
-                            Thread.sleep(20);
-                        } catch (InterruptedException e) {
-                            Log.e("MainActivity", "Progress thread interrupted while working.");
-                        }
-                            runOnUiThread(() -> {
-                                if(!progress.equals(CommandSyncService.getSyncProgress())) {
-                                    progress = CommandSyncService.getSyncProgress();
-                                    progressDialog.append(progress);
-                                }
-                                if(++counter == 10) {
-                                    progressDialog.append(".");
-                                    counter = 0;
-                                }
-                            });
-                    }
-
-                    runOnUiThread(() -> progressDialog.append("\nFinishing up..."));
-
-                    try {
-                        Thread.sleep(350);
-                    } catch (InterruptedException e) {
-                        Log.e("MainActivity", "Progress thread interrupted while finishing up.");
-                    }
-
-                    runOnUiThread(() -> {
-                        progressDialog.setVisibility(View.GONE);
-                        progressScroller.setVisibility(View.GONE);
-
-                        FragmentManager manager = getSupportFragmentManager();
-                        Fragment searchFragment = CommandLookupFragment.getInstance();
-
-                        manager.beginTransaction().add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG).commit();
-                    });
-                }
-            }.start();
+            syncDialogMonitor = new SyncDialogMonitor();
+            syncDialogMonitor.start();
         }
-        //toolbar.inflateMenu(R.menu.toolbar_menu);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if(syncDialogMonitor != null && syncDialogMonitor.isAlive()) {
+            syncDialogMonitor.interrupt();
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        DatabaseHelper.getInstance().close();
+        if(!working) {
+            DatabaseHelper.getInstance().close();
+        }
     }
 
     @Override
@@ -241,8 +216,57 @@ public class MainActivity extends AppCompatActivity {
         Preferences.setRelease(release.getName());
         Ubuntu.setRelease(release.getName());
         DatabaseHelper.changeTable(release.getName());
-        if(DatabaseHelper.getInstance().getCommandById(1) == null) {
-            
+
+        FragmentManager fragMan = getSupportFragmentManager();
+        List<Fragment> fragments = fragMan.getFragments();
+        for(Fragment frag : fragments) {
+            fragMan.popBackStack();
+        }
+
+        MainActivity.this.recreate();
+    }
+
+    private class SyncDialogMonitor extends Thread {
+        int counter = 0;
+        String progress = "";
+
+        @Override
+        public void run() {
+            while(working) {
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    Log.e("MainActivity", "Progress dialog thread interrupted while working.");
+                }
+
+                if(!progress.equals(CommandSyncService.getSyncProgress())) {
+                    progress = CommandSyncService.getSyncProgress();
+                    runOnUiThread(() -> progressDialog.append(progress));
+                }
+
+                if(++counter == 20) {
+                    runOnUiThread(() -> progressDialog.append("."));
+                    counter = 0;
+                }
+            }
+
+            runOnUiThread(() -> progressDialog.append("\nFinishing up..."));
+
+            try {
+                Thread.sleep(350);
+            } catch (InterruptedException e) {
+                Log.e("MainActivity", "Progress thread interrupted while finishing up.");
+            }
+
+            runOnUiThread(() -> {
+                progressDialog.setVisibility(View.GONE);
+                progressScroller.setVisibility(View.GONE);
+
+                FragmentManager manager = getSupportFragmentManager();
+                Fragment searchFragment = CommandLookupFragment.getInstance();
+
+                manager.beginTransaction().add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG).commit();
+            });
         }
     }
 }
