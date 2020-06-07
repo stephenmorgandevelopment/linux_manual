@@ -70,7 +70,25 @@ public class CommandInfoFragment extends Fragment {
 
         if(firstRun) {
             addTextBubble("NAME", infoMap.remove("NAME"));
-            addTextBubble("DESCRIPTION", infoMap.remove("DESCRIPTION"));
+
+            if(infoMap.containsKey("SYNOPSIS")) {
+                addTextBubble("SYNOPSIS", infoMap.remove("SYNOPSIS"));
+            }
+
+            if(infoMap.containsKey("EXAMPLE")) {
+                addTextBubble("EXAMPLE", infoMap.remove("EXAMPLE"));
+            }
+            if(infoMap.containsKey("EXAMPLES")) {
+                addTextBubble("EXAMPLES", infoMap.remove("EXAMPLES"));
+            }
+
+            if(infoMap.containsKey("OPTIONS")) {
+                addTextBubble("OPTIONS", infoMap.remove("OPTIONS"));
+            }
+
+            if(infoMap.containsKey("DESCRIPTION")) {
+                addTextBubble("DESCRIPTION", infoMap.remove("DESCRIPTION"));
+            }
 
             Set<String> keys = infoMap.keySet();
             for(String key : keys) {

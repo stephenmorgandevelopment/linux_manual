@@ -56,8 +56,8 @@ public class MainActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        String title = getString(R.string.app_name).concat(Ubuntu.getReleaseString());
-        toolbar.setTitle(title);
+//        String title = getString(R.string.app_name) + " - " + Ubuntu.getReleaseString();     //.concat(Ubuntu.getReleaseString());
+//        toolbar.setTitle(title);
 
         progressDialog = findViewById(R.id.progressTextView);
         progressScroller = findViewById(R.id.progressScroller);
@@ -73,7 +73,10 @@ public class MainActivity extends AppCompatActivity {
             FragmentManager manager = getSupportFragmentManager();
             Fragment searchFragment = CommandLookupFragment.getInstance();
 
-            manager.beginTransaction().add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG).commit();
+            manager.beginTransaction()
+                    .add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG)
+                    .addToBackStack(CommandLookupFragment.TAG)
+                    .commit();
         } else {
             progressDialog.setVisibility(View.VISIBLE);
             progressScroller.setVisibility(View.VISIBLE);
@@ -89,6 +92,9 @@ public class MainActivity extends AppCompatActivity {
             syncDialogMonitor = new SyncDialogMonitor();
             syncDialogMonitor.start();
         }
+
+        String title = getString(R.string.app_name) + " - " + Ubuntu.getReleaseString();
+        toolbar.setTitle(title);
     }
 
     @Override
@@ -205,11 +211,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(getSupportFragmentManager().getFragments().size() > 1) {
-            getSupportFragmentManager().popBackStack();
-        } else {
-            super.onBackPressed();
-        }
+        super.onBackPressed();
+//        if(getSupportFragmentManager().getFragments().size() > 2) {
+//            getSupportFragmentManager().popBackStack();
+//        } else {
+//            super.onBackPressed();
+//        }
     }
 
     private void changeRelease(Ubuntu.Release release) {
@@ -222,6 +229,8 @@ public class MainActivity extends AppCompatActivity {
         for(Fragment frag : fragments) {
             fragMan.popBackStack();
         }
+
+//        fragmentContainer.removeAllViews();
 
         MainActivity.this.recreate();
     }

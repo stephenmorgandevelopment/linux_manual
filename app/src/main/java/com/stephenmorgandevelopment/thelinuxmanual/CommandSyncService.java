@@ -99,9 +99,8 @@ public class CommandSyncService extends JobIntentService {
                     Log.e(TAG, "The following error occurred: " + response.toString());
                     response.printStackTrace();
                 })
-                .forEach(response -> {
-                    if(response.isSuccessful() && response.code() == 200) {
-                        String reqUrl = response.request().url().toString();
+                .subscribe(response -> {
+                            String reqUrl = response.request().url().toString();
 
                         Log.d(TAG, "Successful response from: " + reqUrl);
                         syncProgress = "\nPulled data from " + reqUrl + "\nProcessing data.";
@@ -114,8 +113,28 @@ public class CommandSyncService extends JobIntentService {
                             DatabaseHelper database = DatabaseHelper.getInstance();
                             database.addCommands(pageCommands);
                         }
-                    }
-                });
+                }
+                , error -> {
+                    Log.d(TAG, "Block attempting to stop crash.");
+                        });
+
+//                .forEach(response -> {
+//                    if(response.isSuccessful() && response.code() == 200) {
+//                        String reqUrl = response.request().url().toString();
+//
+//                        Log.d(TAG, "Successful response from: " + reqUrl);
+//                        syncProgress = "\nPulled data from " + reqUrl + "\nProcessing data.";
+//
+//                        List<SimpleCommand> pageCommands = Ubuntu.crawlForManPages(response.body().string(), reqUrl);
+//
+//                        syncProgress = "\nSaving data locally.";
+//
+//                        if(pageCommands.size() > 0) {
+//                            DatabaseHelper database = DatabaseHelper.getInstance();
+//                            database.addCommands(pageCommands);
+//                        }
+//                    }
+//                });
 
         globalDisposable.add(disposable);
     }

@@ -97,19 +97,25 @@ public class MatchListAdapter extends BaseAdapter {
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSuccess(success -> {
                         descriptionView.setText(match.getDescription());
-                        Log.d(TAG, "ListItem should now be updated for " + match.getName());
                     })
                     .doOnError(error -> {
                         Log.e(TAG, "Error pulling description for " + match.getName());
                         error.printStackTrace();
                     })
                     .observeOn(Schedulers.io())
-                    .doFinally(() -> {
-                        Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
-                        DatabaseHelper.getInstance().updateCommand(match);
-                        Log.i(TAG, "Running on thread: " + Thread.currentThread().getName() + " : pid-" + Thread.currentThread().getId());
-                    })
-                    .subscribe();
+//                    .doFinally(() -> {
+//                        Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
+//                        DatabaseHelper.getInstance().updateCommand(match);
+//                        Log.i(TAG, "Running on thread: " + Thread.currentThread().getName() + " : pid-" + Thread.currentThread().getId());
+//                    })
+                    .subscribe(response -> {
+                                Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
+                                DatabaseHelper.getInstance().updateCommand(match);
+                                Log.i(TAG, "Running on thread: " + Thread.currentThread().getName() + " : pid-" + Thread.currentThread().getId());
+                            }
+                            , error -> {
+                                Log.e(TAG, error.toString());
+                            });
 
             disposables.add(disposable);
         }
