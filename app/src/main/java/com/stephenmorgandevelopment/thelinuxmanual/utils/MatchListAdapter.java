@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
@@ -33,11 +34,15 @@ public class MatchListAdapter extends BaseAdapter {
 
     private List<SimpleCommand> matches;
     private LayoutInflater inflater;
+    private LinearLayout.LayoutParams layoutParams;
 
     public MatchListAdapter(Context ctx) {
         matches = new ArrayList<>();
         this.inflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         disposables = new CompositeDisposable();
+
+        layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.bottomMargin = 5;
     }
 
     public void setMatches(List<SimpleCommand> matches) {
@@ -70,6 +75,8 @@ public class MatchListAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View view, ViewGroup parent) {
         view = inflater.inflate(R.layout.match_list_item, null);
+        view.setLayoutParams(layoutParams);
+
         final TextView descriptionView = view.findViewById(R.id.matchListDescription);
         final SimpleCommand match = matches.get(position);
 
@@ -85,7 +92,6 @@ public class MatchListAdapter extends BaseAdapter {
             Disposable disposable = fetchDescription(match)
                     .subscribeOn(Schedulers.computation())
                     .flatMap(response -> {
-                        Log.d(TAG, "Inside flatMap for " + match.getName());
                         Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
 
                         return Single.just(match);
@@ -113,8 +119,6 @@ public class MatchListAdapter extends BaseAdapter {
 
 
     Single<Response> fetchDescription(SimpleCommand command) {
-        Log.d(TAG, "In fetchDescription for " + command.getName());
-
         Request request = new Request.Builder().url(command.getUrl()).build();
         return Single.defer(() -> Single.just(HttpClient.getClient().newCall(request).execute()));
     }

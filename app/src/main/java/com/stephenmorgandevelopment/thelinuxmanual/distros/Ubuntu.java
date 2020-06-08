@@ -112,16 +112,16 @@ public class Ubuntu implements LinuxDistro {
         preList.remove(0);
 
         for(Element h4 : h4List) {
-            if(h4.text().equalsIgnoreCase("DESCRIPTION")) {
-                int idx = h4List.indexOf(h4);
-                command.setDescription(preList.get(idx).text());
-
-//                if(h4.equals(h4List.get(idx))) {
-//                    command.setDescription(preList.get(idx).text());
-//                } else {
-//                    Log.e(TAG, "Error matching indexes while adding descriprtion.");
-//                }
+            if(h4.text().toUpperCase().contains("DESCRIPTION")) {
+                command.setDescription(preList.get(h4List.indexOf(h4)).text());
+                if(h4.text().equals("DESCRIPTION")) {
+                    break;
+                }
             }
+        }
+
+        if(command.getDescription().equals("")) {
+            command.setDescription("No description available.");
         }
     }
 

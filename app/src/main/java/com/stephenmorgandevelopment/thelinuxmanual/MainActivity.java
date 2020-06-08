@@ -128,6 +128,14 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Already working on it.", Toast.LENGTH_LONG).show();
                 }
+
+                FragmentManager fragMan = getSupportFragmentManager();
+                List<Fragment> fragments = fragMan.getFragments();
+                for(Fragment frag : fragments) {
+                    fragMan.popBackStack();
+                }
+
+                MainActivity.this.recreate();
                 return true;
             case R.id.artful:
                 changeRelease(Ubuntu.Release.ARTFUL);

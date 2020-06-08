@@ -64,6 +64,8 @@ public class CommandLookupFragment extends Fragment {
         searchText = view.findViewById(R.id.searchText);
         matchListView = view.findViewById(R.id.matchList);
         fetchingDataDialog = view.findViewById(R.id.fetchingDataDialog);
+
+        matchListView.setDividerHeight(5);
     }
 
     @Override
