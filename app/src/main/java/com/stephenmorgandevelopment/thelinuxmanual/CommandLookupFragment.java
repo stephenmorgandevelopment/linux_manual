@@ -1,5 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
+import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -13,6 +14,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -42,6 +44,7 @@ public class CommandLookupFragment extends Fragment {
     private EditText searchText;
     private ListView matchListView;
     private MatchListAdapter matchListAdapter;
+    private TextView fetchingDataDialog;
 
     public static CommandLookupFragment getInstance() {
         return new CommandLookupFragment();
@@ -60,6 +63,7 @@ public class CommandLookupFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         searchText = view.findViewById(R.id.searchText);
         matchListView = view.findViewById(R.id.matchList);
+        fetchingDataDialog = view.findViewById(R.id.fetchingDataDialog);
     }
 
     @Override
@@ -88,13 +92,19 @@ public class CommandLookupFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(count >= 2) {
-                    String searchText = String.valueOf(s);
-                    List<SimpleCommand> matches = DatabaseHelper.getInstance().partialMatches(searchText);
+                    String searchText = String.valueOf(s).replaceAll("'", "");
+                    searchText = searchText.replaceAll("%", "");
+                    List<SimpleCommand> matches = null;
+                    try {
+                        matches = DatabaseHelper.getInstance().partialMatches(searchText);
+                    } catch (SQLiteException sqle) {
+                        Log.d(TAG, "SQL error: " + sqle.toString());
+                        Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
+                    }
 
                     if(matches != null && matches.size() > 0) {
                         matchListAdapter.setMatches(matches);
                         matchListAdapter.notifyDataSetChanged();
-//                        matchListView.setAdapter(matchListAdapter);
                     }
                 }
             }
@@ -134,6 +144,8 @@ public class CommandLookupFragment extends Fragment {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            fetchingDataDialog.setVisibility(View.VISIBLE);
+
             disposable = HttpClient.fetchCommandManPage(matchListAdapter.getItem(position).getUrl())
                     .subscribeOn(Schedulers.io())
                     .flatMapCompletable(response -> {
@@ -150,10 +162,12 @@ public class CommandLookupFragment extends Fragment {
                     .doOnComplete(() -> {
                         FragmentManager manager = getActivity().getSupportFragmentManager();
                         manager.beginTransaction().add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG).addToBackStack(CommandInfoFragment.TAG).commit();
+                        fetchingDataDialog.setVisibility(View.GONE);
                     })
                     .subscribe(() -> {
 
                     }, error -> {
+                        fetchingDataDialog.setVisibility(View.GONE);
                         Toast.makeText(getContext(), "Error fetching data\n" + error.getMessage(), Toast.LENGTH_LONG).show();
                         error.printStackTrace();
                     });

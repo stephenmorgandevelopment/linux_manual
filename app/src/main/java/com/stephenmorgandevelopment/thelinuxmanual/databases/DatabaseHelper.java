@@ -171,16 +171,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return id;
     }
 
-    public List<SimpleCommand> partialMatches(String searchText) {
+    public List<SimpleCommand> partialMatches(String searchText) throws SQLiteException {
         if (database == null) {
             database = getReadableDatabase();
         }
 
         List<SimpleCommand> matches = new ArrayList<>();
+        final String queryStart = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + " WHERE " + KEY_NAME;
+        final String queryEnd =  searchText + "%' ORDER BY (" + KEY_NAME + " = '" + searchText + "') desc";
 
         final String query = searchText.length() >= 4
-                ? "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + " WHERE " + KEY_NAME + " LIKE '%" + searchText + "%'"
-                : "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + " WHERE " + KEY_NAME + " LIKE '" + searchText + "%'";
+                ? queryStart + " LIKE '%" + queryEnd
+                : queryStart + " LIKE '" + queryEnd;
 
         Cursor cursor = database.rawQuery(query, null);
 
@@ -195,6 +197,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return matches;
     }
+
+    public List<SimpleCommand> getCommandsByName(String name) {
+        if (database == null) {
+            database = getReadableDatabase();
+        }
+
+        final String query = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX
+                + " WHERE " + KEY_NAME + "=?";
+
+        Cursor cursor = database.rawQuery(query, new String[]{name});
+
+        List<SimpleCommand> exactMatches = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                exactMatches.add(new SimpleCommand(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4)));
+            } while(cursor.moveToNext());
+
+            return exactMatches;
+        }
+
+        return null;
+    }
+
 
     public SimpleCommand getCommandById(long id) {
         if (database == null) {

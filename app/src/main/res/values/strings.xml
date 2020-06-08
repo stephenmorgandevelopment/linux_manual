@@ -76,6 +76,13 @@
     <string name="precise">precise</string>
     <string name="trusty">trusty</string>
     <string name="xenial">xenial</string>
+    <string name="fetching_data">Fetching data...</string>
+    <string name="info_key_name">NAME</string>
+    <string name="info_key_synopsis">SYNOPSIS</string>
+    <string name="info_key_example">EXAMPLE</string>
+    <string name="info_key_examples">EXAMPLES</string>
+    <string name="info_key_options">OPTIONS</string>
+    <string name="info_key_description">DESCRIPTION</string>
 
 
 </resources>

@@ -8,20 +8,9 @@
         android:id="@+id/refreshMenuBtn"
         android:icon="@android:drawable/ic_popup_sync"
         android:title="@string/refresh_button"
-        app:showAsAction="always"
+        app:showAsAction="never"
         android:iconTint="@color/fontColor"
         />
-<!--    <item-->
-<!--        android:id="@+id/sortBtn"-->
-<!--        android:icon="@android:drawable/ic_menu_sort_by_size"-->
-<!--        android:title="@string/sort_button"-->
-<!--        app:showAsAction="ifRoom"-->
-<!--        android:visible="false"-->
-<!--        />-->
-<!--    <item-->
-<!--        android:id="@+id/storeOfflineBtn"-->
-<!--        android:title="@string/store_pages_offline"-->
-<!--         />-->
 
     <item
         android:id="@+id/changeReleaseBtn"

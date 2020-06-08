@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
 
      */
 
-    private boolean menuCreated = false;
+    static boolean menuCreated = false;
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         if(!menuCreated) {
@@ -159,67 +159,56 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Already working on it.", Toast.LENGTH_LONG).show();
                 }
-
-                break;
-            case R.id.changeReleaseBtn:
-                //TODO Create a list menu with releases in man pages.
-
-
-                break;
+                return true;
             case R.id.artful:
                 changeRelease(Ubuntu.Release.ARTFUL);
-                break;
+                return true;
             case R.id.bionic:
                 changeRelease(Ubuntu.Release.BIONIC);
-                break;
+                return true;
             case R.id.cosmic:
                 changeRelease(Ubuntu.Release.COSMIC);
-                break;
+                return true;
             case R.id.disco:
                 changeRelease(Ubuntu.Release.DISCO);
-                break;
+                return true;
             case R.id.eoan:
                 changeRelease(Ubuntu.Release.EOAN);
-                break;
+                return true;
             case R.id.focal:
                 changeRelease(Ubuntu.Release.FOCAL);
-                break;
+                return true;
             case R.id.groovy:
                 changeRelease(Ubuntu.Release.GROOVY);
-                break;
+                return true;
             case R.id.precise:
                 changeRelease(Ubuntu.Release.PRECISE);
-                break;
+                return true;
             case R.id.trusty:
                 changeRelease(Ubuntu.Release.TRUSY);
-                break;
+                return true;
             case R.id.xenial:
                 changeRelease(Ubuntu.Release.XENIAL);
-                break;
-
-//            case R.id.storeOfflineBtn:
-                //TODO Begin by pulling all commands and caching them in database with description.
-                //TODO Download all data in background and cache as Json String.
-
-//                break;
+                return true;
             default:
 
                 break;
         }
-        return true;
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onBackPressed() {
+        FragmentManager fragMan = getSupportFragmentManager();
+
+        if(fragMan.getFragments().size() == 1) {
+            fragMan.popBackStack();
+        }
+
         super.onBackPressed();
-//        if(getSupportFragmentManager().getFragments().size() > 2) {
-//            getSupportFragmentManager().popBackStack();
-//        } else {
-//            super.onBackPressed();
-//        }
     }
 
-    private void changeRelease(Ubuntu.Release release) {
+    protected void changeRelease(Ubuntu.Release release) {
         Preferences.setRelease(release.getName());
         Ubuntu.setRelease(release.getName());
         DatabaseHelper.changeTable(release.getName());
@@ -229,8 +218,6 @@ public class MainActivity extends AppCompatActivity {
         for(Fragment frag : fragments) {
             fragMan.popBackStack();
         }
-
-//        fragmentContainer.removeAllViews();
 
         MainActivity.this.recreate();
     }

@@ -17,21 +17,39 @@
         android:layout_height="wrap_content"
         android:hint="@string/search_command"
         android:textSize="20sp"
-        android:layout_marginBottom="15dp"
-        app:layout_constraintEnd_toStartOf="@+id/searchBtn"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageButton
-        android:id="@+id/searchBtn"
+<!--    <ImageButton-->
+<!--        android:id="@+id/searchBtn"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:adjustViewBounds="true"-->
+<!--        android:scaleType="fitXY"-->
+<!--        android:src="?android:attr/actionModeWebSearchDrawable"-->
+<!--        app:layout_constraintBottom_toBottomOf="@id/searchText"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="@id/searchText" />-->
+
+    <TextView
+        android:id="@+id/fetchingDataDialog"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:adjustViewBounds="true"
-        android:scaleType="fitXY"
-        android:src="?android:attr/actionModeWebSearchDrawable"
-        app:layout_constraintBottom_toBottomOf="@id/searchText"
+        android:layout_height="wrap_content"
+        android:text="@string/fetching_data"
+        android:background="@color/colorAccent"
+        android:textColor="@color/textBubblesFont"
+        android:textStyle="italic"
+        android:textSize="36dp"
+        android:fontFamily="sans-serif-condensed-medium"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/searchText" />
+        android:padding="16dp"
+        android:translationZ="20dp"
+        android:visibility="gone"
+        />
 
     <ListView
         android:id="@+id/matchList"

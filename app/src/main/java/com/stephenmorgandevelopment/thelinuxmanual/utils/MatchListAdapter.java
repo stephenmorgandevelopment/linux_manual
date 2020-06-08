@@ -83,9 +83,12 @@ public class MatchListAdapter extends BaseAdapter {
         ((TextView) view.findViewById(R.id.matchListCommand)).setText(match.getName());
 
         String description = match.getDescription();
-        descriptionView.setText(description);
 
-        if (description.equals("")) {
+        if(!description.equals("")) {
+            descriptionView.setText(description);
+        } else {
+            descriptionView.setText(R.string.fetching_data);
+
             Disposable disposable = fetchDescription(match)
                     .subscribeOn(Schedulers.computation())
                     .flatMap(response -> {

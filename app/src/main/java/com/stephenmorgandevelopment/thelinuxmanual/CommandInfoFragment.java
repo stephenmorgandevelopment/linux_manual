@@ -6,22 +6,26 @@ import android.os.Bundle;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuItemCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModel;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
-import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,8 +35,16 @@ public class CommandInfoFragment extends Fragment {
     private CommandInfoFragment instance;
 
     private LinearLayout scrollContainer;
+    private ScrollView rootScrollView;
     private Map<String, String> infoMap;
-    private boolean firstRun = false;
+    private List<String> jumpToList;
+
+    private static final String INFO_KEY_NAME = Helpers.getApplicationContext().getString(R.string.info_key_name);
+    private static final String INFO_KEY_SYNOPSIS = Helpers.getApplicationContext().getString(R.string.info_key_synopsis);
+    private static final String INFO_KEY_EXAMPLE = Helpers.getApplicationContext().getString(R.string.info_key_example);
+    private static final String INFO_KEY_EXAMPLES = Helpers.getApplicationContext().getString(R.string.info_key_examples);
+    private static final String INFO_KEY_OPTIONS = Helpers.getApplicationContext().getString(R.string.info_key_options);
+    private static final String INFO_KEY_DESCRIPTION = Helpers.getApplicationContext().getString(R.string.info_key_description);
 
     public static CommandInfoFragment getInstance() {
         return new CommandInfoFragment();
@@ -48,6 +60,7 @@ public class CommandInfoFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.command_info_fragment, null);
         view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
         return view;
     }
 
@@ -55,47 +68,88 @@ public class CommandInfoFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         scrollContainer = view.findViewById(R.id.scrollContainer);
-    }
+        rootScrollView = view.findViewById(R.id.rootScrollView);
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        if(infoMap != null) {
+            scrollContainer.addView(getDivider());
 
-        firstRun = true;
-    }
+            addTextBubble(INFO_KEY_NAME, infoMap.remove(INFO_KEY_NAME));
 
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        if(firstRun) {
-            addTextBubble("NAME", infoMap.remove("NAME"));
-
-            if(infoMap.containsKey("SYNOPSIS")) {
-                addTextBubble("SYNOPSIS", infoMap.remove("SYNOPSIS"));
+            if(infoMap.containsKey(INFO_KEY_SYNOPSIS)) {
+                addTextBubble(INFO_KEY_SYNOPSIS, infoMap.remove(INFO_KEY_SYNOPSIS));
             }
 
-            if(infoMap.containsKey("EXAMPLE")) {
-                addTextBubble("EXAMPLE", infoMap.remove("EXAMPLE"));
+            if(infoMap.containsKey(INFO_KEY_EXAMPLE)) {
+                addTextBubble(INFO_KEY_EXAMPLE, infoMap.remove(INFO_KEY_EXAMPLE));
             }
-            if(infoMap.containsKey("EXAMPLES")) {
-                addTextBubble("EXAMPLES", infoMap.remove("EXAMPLES"));
-            }
-
-            if(infoMap.containsKey("OPTIONS")) {
-                addTextBubble("OPTIONS", infoMap.remove("OPTIONS"));
+            if(infoMap.containsKey(INFO_KEY_EXAMPLES)) {
+                addTextBubble(INFO_KEY_EXAMPLES, infoMap.remove(INFO_KEY_EXAMPLES));
             }
 
-            if(infoMap.containsKey("DESCRIPTION")) {
-                addTextBubble("DESCRIPTION", infoMap.remove("DESCRIPTION"));
+            if(infoMap.containsKey(INFO_KEY_OPTIONS)) {
+                addTextBubble(INFO_KEY_OPTIONS, infoMap.remove(INFO_KEY_OPTIONS));
+            }
+
+            if(infoMap.containsKey(INFO_KEY_DESCRIPTION)) {
+                addTextBubble(INFO_KEY_DESCRIPTION, infoMap.remove(INFO_KEY_DESCRIPTION));
             }
 
             Set<String> keys = infoMap.keySet();
             for(String key : keys) {
                 addTextBubble(key, infoMap.get(key));
             }
-            firstRun = false;
+
+            scrollContainer.requestLayout();
+            scrollContainer.invalidate();
         }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setHasOptionsMenu(true);
+
+        jumpToList = new ArrayList<>();
+    }
+    
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+
+        for(String title : jumpToList) {
+            menu.add(Menu.NONE, Menu.NONE, Menu.NONE, title);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if(jumpToList.contains(item.getTitle())) {
+
+            View v = scrollContainer.findViewWithTag(item.getTitle());
+            int top = v.getTop();
+
+            rootScrollView.scrollTo(0, v.getTop() -12);
+
+            Log.i(TAG, item.getTitle() + " - scroll to " + v.getTop());
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDestroyOptionsMenu() {
+        super.onDestroyOptionsMenu();
+
+        jumpToList.clear();
+        infoMap.clear();
+
+        jumpToList = null;
+        infoMap = null;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
 
@@ -104,11 +158,17 @@ public class CommandInfoFragment extends Fragment {
         ViewGroup view = (ViewGroup) ((LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, null);
 //        View view = (ViewGroup) ((LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, scrollContainer, true);
 
+        view.setTag(header);
 
         ((TextView)view.findViewById(R.id.headerText)).setText(header);
         ((TextView)view.findViewById(R.id.descriptionText)).setText(description);
         scrollContainer.addView(view);
         scrollContainer.addView(getDivider());
+
+        scrollContainer.requestLayout();
+        scrollContainer.invalidate();
+
+        jumpToList.add(header);
     }
 
     private View getDivider() {
@@ -117,5 +177,6 @@ public class CommandInfoFragment extends Fragment {
         divider.setBackgroundColor(Color.TRANSPARENT);
         return divider;
     }
+
 
 }
