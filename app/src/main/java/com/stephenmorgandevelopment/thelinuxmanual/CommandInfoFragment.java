@@ -101,6 +101,9 @@ public class CommandInfoFragment extends Fragment {
 
             scrollContainer.requestLayout();
             scrollContainer.invalidate();
+
+            infoMap.clear();
+            infoMap = null;
         }
     }
 
@@ -115,7 +118,6 @@ public class CommandInfoFragment extends Fragment {
     
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-
         for(String title : jumpToList) {
             menu.add(Menu.NONE, Menu.NONE, Menu.NONE, title);
         }
@@ -124,27 +126,22 @@ public class CommandInfoFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(jumpToList.contains(item.getTitle())) {
-
             View v = scrollContainer.findViewWithTag(item.getTitle());
-            int top = v.getTop();
-
             rootScrollView.scrollTo(0, v.getTop() -12);
 
-            Log.i(TAG, item.getTitle() + " - scroll to " + v.getTop());
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
+    public void onOptionsMenuClosed(@NonNull Menu menu) {
+        super.onOptionsMenuClosed(menu);
+    }
+
+    @Override
     public void onDestroyOptionsMenu() {
         super.onDestroyOptionsMenu();
-
-        jumpToList.clear();
-        infoMap.clear();
-
-        jumpToList = null;
-        infoMap = null;
     }
 
     @Override
@@ -152,7 +149,10 @@ public class CommandInfoFragment extends Fragment {
         super.onResume();
     }
 
-
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
 
     private void addTextBubble(String header, String description) {
         ViewGroup view = (ViewGroup) ((LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, null);
@@ -164,9 +164,6 @@ public class CommandInfoFragment extends Fragment {
         ((TextView)view.findViewById(R.id.descriptionText)).setText(description);
         scrollContainer.addView(view);
         scrollContainer.addView(getDivider());
-
-        scrollContainer.requestLayout();
-        scrollContainer.invalidate();
 
         jumpToList.add(header);
     }

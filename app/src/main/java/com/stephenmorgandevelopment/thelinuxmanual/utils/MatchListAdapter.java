@@ -14,25 +14,15 @@ import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
-import io.reactivex.Completable;
-import io.reactivex.Observable;
+
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.SingleOnSubscribe;
-import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -58,6 +48,9 @@ public class MatchListAdapter extends BaseAdapter {
         this.matches.addAll(matches);
     }
 
+    public void clear() {
+        this.matches.clear();
+    }
 
     @Override
     public int getCount() {
@@ -102,19 +95,11 @@ public class MatchListAdapter extends BaseAdapter {
                         descriptionView.setText(match.getDescription());
                     })
                     .doOnError(error -> {
-                        Log.e(TAG, "Error pulling description for " + match.getName());
-                        error.printStackTrace();
+                        descriptionView.setText("Unable to fetch data at this time.");
                     })
                     .observeOn(Schedulers.io())
-//                    .doFinally(() -> {
-//                        Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
-//                        DatabaseHelper.getInstance().updateCommand(match);
-//                        Log.i(TAG, "Running on thread: " + Thread.currentThread().getName() + " : pid-" + Thread.currentThread().getId());
-//                    })
                     .subscribe(response -> {
-                                Log.i(TAG, "Updating database for " + match.getName() + "id=" + match.getId());
                                 DatabaseHelper.getInstance().updateCommand(match);
-                                Log.i(TAG, "Running on thread: " + Thread.currentThread().getName() + " : pid-" + Thread.currentThread().getId());
                             }
                             , error -> {
                                 Log.e(TAG, error.toString());

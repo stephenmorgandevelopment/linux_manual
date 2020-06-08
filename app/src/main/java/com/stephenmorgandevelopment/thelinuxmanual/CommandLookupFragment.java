@@ -81,8 +81,6 @@ public class CommandLookupFragment extends Fragment {
             matchListAdapter = new MatchListAdapter(getContext());
         }
 
-        //TODO Repopulate search text and list of matched queries.
-
         searchText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -106,6 +104,9 @@ public class CommandLookupFragment extends Fragment {
                         matchListAdapter.setMatches(matches);
                         matchListAdapter.notifyDataSetChanged();
                     }
+                } else {
+                    matchListAdapter.clear();
+                    matchListAdapter.notifyDataSetChanged();
                 }
             }
 
@@ -123,9 +124,6 @@ public class CommandLookupFragment extends Fragment {
     public void onPause() {
         super.onPause();
 
-
-        //TODO Store search text and list of matched queries.
-
     }
 
     @Override
@@ -133,8 +131,8 @@ public class CommandLookupFragment extends Fragment {
         super.onDestroy();
 
         if(MatchListAdapter.disposables != null) {
-            MatchListAdapter.disposables.dispose();
             MatchListAdapter.disposables.clear();
+            matchListAdapter = null;
         }
     }
 

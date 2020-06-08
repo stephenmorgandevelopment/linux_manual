@@ -41,6 +41,8 @@ public class CommandSyncService extends JobIntentService {
 
     private static CompositeDisposable globalDisposable;
 
+    static volatile boolean working = false;
+
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
         if(globalDisposable == null) {
@@ -93,7 +95,7 @@ public class CommandSyncService extends JobIntentService {
                 .concatMap(request -> Observable.just(HttpClient.getClient().newCall(request).execute()))
                 .doOnComplete(() -> {
                     Log.d(TAG, "Successfully synced commands without descriptions.");
-                    MainActivity.working = false;
+                    working = false;
                 })
                 .doOnError(response -> {
                     Log.e(TAG, "The following error occurred: " + response.toString());
@@ -118,76 +120,12 @@ public class CommandSyncService extends JobIntentService {
                     Log.d(TAG, "Block attempting to stop crash.");
                         });
 
-//                .forEach(response -> {
-//                    if(response.isSuccessful() && response.code() == 200) {
-//                        String reqUrl = response.request().url().toString();
-//
-//                        Log.d(TAG, "Successful response from: " + reqUrl);
-//                        syncProgress = "\nPulled data from " + reqUrl + "\nProcessing data.";
-//
-//                        List<SimpleCommand> pageCommands = Ubuntu.crawlForManPages(response.body().string(), reqUrl);
-//
-//                        syncProgress = "\nSaving data locally.";
-//
-//                        if(pageCommands.size() > 0) {
-//                            DatabaseHelper database = DatabaseHelper.getInstance();
-//                            database.addCommands(pageCommands);
-//                        }
-//                    }
-//                });
-
         globalDisposable.add(disposable);
-    }
-
-//    private void updateLocalCache(List<SimpleCommand> commands) {
-//        DatabaseHelper database = DatabaseHelper.getInstance();
-//        database.addCommands(commands);
-//    }
-
-//    private synchronized void syncCommandDescriptions() {
-//        page = 1;
-//
-//        if(Ubuntu.getCommandsList() != null && Ubuntu.getCommandsList().size() > 0) {
-//            Log.d(TAG, "Queueing requests for command descriptions.");
-//            for(SimpleCommand command : Ubuntu.getCommandsList()) {
-//                Request req = new Request.Builder().url(command.getUrl()).build();
-//                HttpClient.getClient().newCall(req).enqueue(updateCommand(command));
-//            }
-//
-//        } else {
-//            Log.e(TAG, "Commands list is empty or null.");
-//        }
-//
-//        Observable.fromIterable(HttpClient.getClient().dispatcher().queuedCalls())
-//                .subscribeOn(Schedulers.newThread())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .doOnComplete(() -> {
-//                    Log.d(TAG, "Successfully synced commands descriptions.  Writing JSON to disk.");
-//                    Ubuntu.writeSimpleCommandsToDisk(true, page++);
-//                }).subscribe();
-//    }
-
-    private synchronized Callback updateCommand(final SimpleCommand command) {
-        return new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                Log.e(TAG, "Failed updating command with the following error: " + e.toString());
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                if(response.code() == 200 && response.body() != null) {
-                    Log.d(TAG, "Successful Description response for: " + response.request().url().toString());
-                    Ubuntu.addDescriptionToSimpleCommand(command, response.body().string());
-                }
-            }
-        };
     }
 
     @Override
     public boolean onStopCurrentWork() {
-
+        working = false;
         return super.onStopCurrentWork();
     }
 
@@ -198,9 +136,6 @@ public class CommandSyncService extends JobIntentService {
         if(Helpers.getApplicationContext() == null) {
             DatabaseHelper.getInstance().close();
         }
-//        if(globalDisposable != null && globalDisposable.size() > 0) {
-//            globalDisposable.clear();
-//        }
     }
 
     public static String getSyncProgress() {
@@ -208,6 +143,7 @@ public class CommandSyncService extends JobIntentService {
     }
 
     public static void enqueueWork(Context context, Intent work) {
+        working = true;
         enqueueWork(context, CommandSyncService.class, JOB_ID, work);
     }
 

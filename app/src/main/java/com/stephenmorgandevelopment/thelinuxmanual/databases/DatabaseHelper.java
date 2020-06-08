@@ -112,7 +112,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    private void wipeTable() {
+    public void wipeTable() {
         database.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX);
         database.execSQL("CREATE TABLE "
                 + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + "("
@@ -241,6 +241,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static boolean hasDatabase() {
         File dbFile = Helpers.getApplicationContext().getDatabasePath(simpleCommandsName);
         return dbFile.exists();
+    }
+
+    public boolean hasData() {
+        return getCommandById(1) != null;
     }
 
 }

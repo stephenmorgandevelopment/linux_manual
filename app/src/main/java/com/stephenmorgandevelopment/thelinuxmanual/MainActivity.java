@@ -1,38 +1,27 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import android.content.BroadcastReceiver;
 import android.content.Intent;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteCantOpenDatabaseException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
-import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 
-import java.io.File;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,8 +29,6 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private TextView progressDialog;
     private ScrollView progressScroller;
-
-    public static volatile boolean working = false;
 
     private SyncDialogMonitor syncDialogMonitor;
 
@@ -56,9 +43,6 @@ public class MainActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-//        String title = getString(R.string.app_name) + " - " + Ubuntu.getReleaseString();     //.concat(Ubuntu.getReleaseString());
-//        toolbar.setTitle(title);
-
         progressDialog = findViewById(R.id.progressTextView);
         progressScroller = findViewById(R.id.progressScroller);
 
@@ -69,26 +53,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if(DatabaseHelper.hasDatabase()  && DatabaseHelper.getInstance().getCommandById(1) != null) {
-            FragmentManager manager = getSupportFragmentManager();
-            Fragment searchFragment = CommandLookupFragment.getInstance();
-
-            manager.beginTransaction()
-                    .add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG)
-                    .addToBackStack(CommandLookupFragment.TAG)
-                    .commit();
+        if(DatabaseHelper.hasDatabase() && DatabaseHelper.getInstance().hasData() && !CommandSyncService.working) {
+            addLookupFragment();
         } else {
             progressDialog.setVisibility(View.VISIBLE);
             progressScroller.setVisibility(View.VISIBLE);
 
             progressDialog.setText("Running initial sync to build local command database.");
 
-            Intent intent = new Intent();
-            intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
+            if(!CommandSyncService.working) {
+                Intent intent = new Intent();
+                intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
 
-            CommandSyncService.enqueueWork(MainActivity.this, intent);
+                CommandSyncService.enqueueWork(MainActivity.this, intent);
+            }
 
-            working = true;
             syncDialogMonitor = new SyncDialogMonitor();
             syncDialogMonitor.start();
         }
@@ -110,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
-        if(!working) {
+        if(!CommandSyncService.working) {
             DatabaseHelper.getInstance().close();
         }
     }
@@ -120,23 +99,13 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    //Menu Code to try later.  With the removal of onPrepareOptionsMenu
-    /*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
-        return true;
-    }
-
-     */
-
     static boolean menuCreated = false;
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        if(!menuCreated) {
+        if(toolbar.getMenu().findItem(R.id.refreshMenuBtn) == null){
             getMenuInflater().inflate(R.menu.toolbar_menu, menu);
-            menuCreated = true;
         }
+
         return true;
     }
 
@@ -149,8 +118,8 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.refreshMenuBtn:
-                if(!working) {
-                    working = true;
+                if(!CommandSyncService.working) {
+                    DatabaseHelper.getInstance().wipeTable();
 
                     Intent intent = new Intent();
                     intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
@@ -222,13 +191,25 @@ public class MainActivity extends AppCompatActivity {
         MainActivity.this.recreate();
     }
 
+    private void addLookupFragment() {
+        if(getSupportFragmentManager().findFragmentByTag(CommandLookupFragment.TAG) == null) {
+            FragmentManager manager = getSupportFragmentManager();
+            Fragment searchFragment = CommandLookupFragment.getInstance();
+
+            manager.beginTransaction()
+                    .add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG)
+                    .addToBackStack(CommandLookupFragment.TAG)
+                    .commit();
+        }
+    }
+
     private class SyncDialogMonitor extends Thread {
         int counter = 0;
         String progress = "";
 
         @Override
         public void run() {
-            while(working) {
+            while(CommandSyncService.working) {
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
@@ -258,10 +239,7 @@ public class MainActivity extends AppCompatActivity {
                 progressDialog.setVisibility(View.GONE);
                 progressScroller.setVisibility(View.GONE);
 
-                FragmentManager manager = getSupportFragmentManager();
-                Fragment searchFragment = CommandLookupFragment.getInstance();
-
-                manager.beginTransaction().add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG).commit();
+                addLookupFragment();
             });
         }
     }
