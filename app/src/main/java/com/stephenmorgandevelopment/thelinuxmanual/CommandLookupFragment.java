@@ -85,25 +85,34 @@ public class CommandLookupFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (count >= 2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() >= 2) {
+                    if(disposable != null && !disposable.isDisposed()) {
+                        disposable.dispose();
+                    }
+
                     String searchText = String.valueOf(s).replaceAll("'", "");
                     searchText = searchText.replaceAll("%", "");
-                    List<SimpleCommand> matches = new ArrayList<>();
+//                    List<SimpleCommand> matches = new ArrayList<>();
 
                     disposable = Single.just(DatabaseHelper.getInstance().partialMatches(searchText))
                             .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
                             .delay(125, TimeUnit.MILLISECONDS)
-                            .observeOn(Schedulers.computation())
-                            .flatMap(list -> {
-                                matches.clear();
-                                matches.addAll(list);
-
-                                return Single.just(list);
-                            })
+//                            .flatMap(list -> {
+//                                matches.clear();
+//                                matches.addAll(list);
+//
+//                                return Single.just(list);
+//                            })
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(list -> {
-                                        if (matches.size() > 0) {
-                                            matchListAdapter.setMatches(matches);
+                                        if (list.size() > 0) {
+                                            matchListAdapter.setMatches(list);
                                             matchListAdapter.notifyDataSetChanged();
                                         }
                                     },
@@ -115,11 +124,6 @@ public class CommandLookupFragment extends Fragment {
                     matchListAdapter.clear();
                     matchListAdapter.notifyDataSetChanged();
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
             }
         });
 
@@ -158,7 +162,12 @@ public class CommandLookupFragment extends Fragment {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if(disposable != null && !disposable.isDisposed()) {
+                disposable.dispose();
+            }
+
             fetchingDataDialog.setVisibility(View.VISIBLE);
+            fetchingDataDialog.setZ(100);
 
             disposable = HttpClient.fetchCommandManPage(matchListAdapter.getItem(position).getUrl())
                     .subscribeOn(Schedulers.io())
@@ -175,6 +184,10 @@ public class CommandLookupFragment extends Fragment {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(() -> {
                         FragmentManager manager = getActivity().getSupportFragmentManager();
+                        if(manager.findFragmentByTag(CommandInfoFragment.TAG) != null) {
+                            manager.popBackStack();
+                        }
+
                         manager.beginTransaction()
                                 .add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG)
                                 .addToBackStack(CommandInfoFragment.TAG)
