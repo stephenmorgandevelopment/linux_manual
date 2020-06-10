@@ -114,10 +114,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public synchronized void updateCommand(SimpleCommand command) {
-        if (database == null || database.isReadOnly()) {
-            database = getWritableDatabase();
-        }
-
         ContentValues values = new ContentValues();
 
         values.put(KEY_NAME, command.getName());
@@ -125,8 +121,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(KEY_URL, command.getUrl());
         values.put(KEY_MAN_N, command.getManN());
 
-        int rowsUpdated = database.update(TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX, values, KEY_ID + "=?", new String[]{String.valueOf(command.getId())});
-        Log.i(TAG, "Rows updated: " + rowsUpdated);
+        database.update(TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX, values, KEY_ID + "=?", new String[]{String.valueOf(command.getId())});
     }
 
     public void close() {

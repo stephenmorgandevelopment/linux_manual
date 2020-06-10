@@ -84,6 +84,7 @@
     <string name="info_key_options">OPTIONS</string>
     <string name="info_key_description">DESCRIPTION</string>
     <string name="initial_sync_message">Running initial sync to build local command database.</string>
+    <string name="unable_to_fetch">Unable to fetch data at this time.</string>
 
 
 </resources>

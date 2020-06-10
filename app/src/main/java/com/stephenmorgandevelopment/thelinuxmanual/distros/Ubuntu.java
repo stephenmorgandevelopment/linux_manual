@@ -120,7 +120,6 @@ public class Ubuntu {
             } catch (Exception e) {
                 text = a.html();
                 text = text.substring(0, text.lastIndexOf('.'));
-                Log.e(TAG, "String parsing error caught for " + text);
             }
 
             unfinishedCommands.add(new SimpleCommand(text, path, manN));

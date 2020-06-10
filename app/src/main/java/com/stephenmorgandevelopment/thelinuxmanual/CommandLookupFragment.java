@@ -92,11 +92,16 @@ public class CommandLookupFragment extends Fragment {
 
                     disposable = Single.just(DatabaseHelper.getInstance().partialMatches(searchText))
                             .subscribeOn(Schedulers.io())
-                            .delay(200, TimeUnit.MILLISECONDS)
+                            .delay(125, TimeUnit.MILLISECONDS)
+                            .observeOn(Schedulers.computation())
+                            .flatMap(list -> {
+                                matches.clear();
+                                matches.addAll(list);
+
+                                return Single.just(list);
+                            })
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(list -> {
-                                        matches.clear();
-                                        matches.addAll(list);
                                         if (matches.size() > 0) {
                                             matchListAdapter.setMatches(matches);
                                             matchListAdapter.notifyDataSetChanged();

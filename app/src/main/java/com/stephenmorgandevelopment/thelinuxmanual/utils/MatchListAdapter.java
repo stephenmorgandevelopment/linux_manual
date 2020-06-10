@@ -17,6 +17,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 import io.reactivex.Single;
@@ -37,6 +38,8 @@ public class MatchListAdapter extends BaseAdapter {
     private LayoutInflater inflater;
     private LinearLayout.LayoutParams layoutParams;
 
+    private static String unableToFetch = Helpers.getApplicationContext().getString(R.string.unable_to_fetch);
+
     public MatchListAdapter(Context ctx) {
         matches = new ArrayList<>();
         this.inflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -49,9 +52,6 @@ public class MatchListAdapter extends BaseAdapter {
     }
 
     public void setMatches(List<SimpleCommand> matches) {
-        if (this.matches == null) {
-            this.matches = new ArrayList<>();
-        }
         this.matches.clear();
         this.matches.addAll(matches);
     }
@@ -77,7 +77,8 @@ public class MatchListAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View view, ViewGroup parent) {
-        view = inflater.inflate(R.layout.match_list_item, null);
+        view = inflater.inflate(R.layout.match_list_item, parent, false);
+
         view.setLayoutParams(layoutParams);
 
         final TextView descriptionView = view.findViewById(R.id.matchListDescription);
@@ -109,16 +110,17 @@ public class MatchListAdapter extends BaseAdapter {
                 .flatMap(response -> {
                     Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
 
-                    return Single.just(match);
+                    String desc = match.getDescription().length() < 151
+                            ? match.getDescription()
+                            : match.getDescription().substring(0, 150);
+
+                    return Single.just(desc);
                 })
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSuccess(success -> {
-                    descriptionView.setText(match.getDescription().substring(0, 150));
-                })
-                .doOnError(error -> {
-                    descriptionView.setText("Unable to fetch data at this time.");
-                })
-                .observeOn(Schedulers.io())
+                .delay(3, TimeUnit.MILLISECONDS)
+                .doOnSuccess(descriptionView::setText)
+                .doOnError(error -> descriptionView.setText(unableToFetch))
+                .observeOn(Schedulers.computation())
                 .subscribe(response -> {
                             DatabaseHelper.getInstance().updateCommand(match);
                         }
