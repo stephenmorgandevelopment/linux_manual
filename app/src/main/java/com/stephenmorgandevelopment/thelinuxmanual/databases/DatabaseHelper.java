@@ -1,6 +1,5 @@
 package com.stephenmorgandevelopment.thelinuxmanual.databases;
 
-import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -8,7 +7,6 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
-import android.view.inputmethod.ExtractedTextRequest;
 
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
@@ -20,22 +18,20 @@ import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TAG = DatabaseHelper.class.getSimpleName();
-
-    public static final String simpleCommandsName = "simple_commands";
+    private static final String simpleCommandsName = "simple_commands";
     private final static int version = 1;
 
+    private SQLiteDatabase database;
     private static DatabaseHelper helperInstance;
 
     private static final String TABLE_NAME_POSTFIX = "_SimpleCommands";
-    private static String TABLE_NAME_PREFIX = Ubuntu.getReleaseString();;
+    private static String TABLE_NAME_PREFIX = Ubuntu.getReleaseString();
 
     private static final String KEY_ID = "id";
     private static final String KEY_NAME = "name";
     private static final String KEY_DESCRIPTION = "description";
     private static final String KEY_URL = "url";
     private static final String KEY_MAN_N = "manN";
-
-    private SQLiteDatabase database;
 
     public static DatabaseHelper getInstance() {
         if (helperInstance == null) {
@@ -57,7 +53,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
         for (Ubuntu.Release release : Ubuntu.Release.values()) {
             String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS "
                     + release.getName() + TABLE_NAME_POSTFIX + "("
@@ -90,7 +85,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + ") VALUES (?, ?, ?, ?)";
 
         SQLiteStatement insertStatement = database.compileStatement(insertString);
-
         database.beginTransaction();
 
         for (SimpleCommand command : commands) {
@@ -108,7 +102,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         database.endTransaction();
 
         Log.d(TAG, "Successfully added commands for page " + commands.get(0).getManN() + ".");
-        //database.close();
     }
 
 
@@ -140,7 +133,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (database != null) {
             database.close();
             database = null;
-            this.helperInstance = null;
+            helperInstance = null;
             Log.d(TAG, "Database successfully closed.");
         } else {
             Log.d(TAG, "Database already closed.");
@@ -247,5 +240,4 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean hasData() {
         return getCommandById(1) != null;
     }
-
 }

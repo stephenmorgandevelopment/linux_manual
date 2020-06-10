@@ -2,8 +2,6 @@ package com.stephenmorgandevelopment.thelinuxmanual.models;
 
 import android.util.Log;
 
-import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,8 +21,9 @@ public class SimpleCommand {
         this.id = id;
     }
 
+    private static String empty = "";
     public SimpleCommand(String name, String url, int manN) {
-        this(name, "", url, manN);
+        this(name, empty, url, manN);
     }
 
     public SimpleCommand(String name, String description, String url, int manN) {
@@ -46,14 +45,6 @@ public class SimpleCommand {
     public void setDescription(String description) {this.description = description;}
     public void setUrl(String url) {this.url = url;}
     public void setManN(int manN) {this.manN = manN;}
-
-
-
-
-
-
-
-
 
     public static SimpleCommand fromJsonString(String json) {
         try {

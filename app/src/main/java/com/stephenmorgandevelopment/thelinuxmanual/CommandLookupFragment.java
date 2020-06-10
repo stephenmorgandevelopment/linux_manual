@@ -1,6 +1,5 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
-import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -8,12 +7,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +24,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +32,6 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 
 public class CommandLookupFragment extends Fragment {
@@ -74,8 +68,6 @@ public class CommandLookupFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
     }
 
     @Override
@@ -97,7 +89,7 @@ public class CommandLookupFragment extends Fragment {
                     String searchText = String.valueOf(s).replaceAll("'", "");
                     searchText = searchText.replaceAll("%", "");
                     List<SimpleCommand> matches = new ArrayList<>();
-//                    try {
+
                     disposable = Single.just(DatabaseHelper.getInstance().partialMatches(searchText))
                             .subscribeOn(Schedulers.io())
                             .delay(200, TimeUnit.MILLISECONDS)
@@ -114,10 +106,6 @@ public class CommandLookupFragment extends Fragment {
                                         Log.d(TAG, "SQL error: " + error.toString());
                                         Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
                                     });
-//                    } catch (SQLiteException sqle) {
-//                        Log.d(TAG, "SQL error: " + sqle.toString());
-//                        Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
-//                    }
                 } else {
                     matchListAdapter.clear();
                     matchListAdapter.notifyDataSetChanged();
@@ -137,15 +125,14 @@ public class CommandLookupFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        if(matchListAdapter.helperThreads != null) {
-            for(Thread thread : matchListAdapter.helperThreads) {
+        if (MatchListAdapter.helperThreads != null) {
+            for (Thread thread : MatchListAdapter.helperThreads) {
                 thread.interrupt();
                 thread = null;
             }
@@ -159,9 +146,7 @@ public class CommandLookupFragment extends Fragment {
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
-
     }
-
 
     AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener() {
         CommandInfoFragment infoFragment;
@@ -183,13 +168,13 @@ public class CommandLookupFragment extends Fragment {
                         return Completable.error(new Throwable("Response returned with code: " + response.code()));
                     })
                     .observeOn(AndroidSchedulers.mainThread())
-                    .doOnComplete(() -> {
-                        FragmentManager manager = getActivity().getSupportFragmentManager();
-                        manager.beginTransaction().add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG).addToBackStack(CommandInfoFragment.TAG).commit();
-                        fetchingDataDialog.setVisibility(View.GONE);
-                    })
                     .subscribe(() -> {
-
+                        FragmentManager manager = getActivity().getSupportFragmentManager();
+                        manager.beginTransaction()
+                                .add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG)
+                                .addToBackStack(CommandInfoFragment.TAG)
+                                .commit();
+                        fetchingDataDialog.setVisibility(View.GONE);
                     }, error -> {
                         fetchingDataDialog.setVisibility(View.GONE);
                         Toast.makeText(getContext(), "Error fetching data\n" + error.getMessage(), Toast.LENGTH_LONG).show();

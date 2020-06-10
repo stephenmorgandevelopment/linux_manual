@@ -13,8 +13,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,14 +21,9 @@ import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.Request;
-import okhttp3.Response;
 
 public class CommandSyncService extends JobIntentService {
-    private static int page = 1;
-
     public static final String DISTRO = "distro";
 
     public static final int JOB_ID = 5001;
@@ -90,16 +83,10 @@ public class CommandSyncService extends JobIntentService {
                     }
 
                     return Observable.error(new Throwable());
-
                 })
                 .concatMap(request -> Observable.just(HttpClient.getClient().newCall(request).execute()))
                 .doOnComplete(() -> {
-                    Log.d(TAG, "Successfully synced commands without descriptions.");
                     working = false;
-                })
-                .doOnError(response -> {
-                    Log.e(TAG, "The following error occurred: " + response.toString());
-                    response.printStackTrace();
                 })
                 .subscribe(response -> {
                             String reqUrl = response.request().url().toString();
@@ -116,12 +103,12 @@ public class CommandSyncService extends JobIntentService {
                             syncProgress = "\nSaving data locally.";
 
                             if (pageCommands.size() > 0) {
-                                DatabaseHelper database = DatabaseHelper.getInstance();
-                                database.addCommands(pageCommands);
+                                DatabaseHelper.getInstance().addCommands(pageCommands);
                             }
                         }
                         , error -> {
-                            Log.d(TAG, "Block attempting to stop crash.");
+                            Log.d(TAG, "Command sync error block.");
+                            Log.d(TAG, error.toString());
                         });
 
         globalDisposable.add(disposable);
@@ -150,5 +137,4 @@ public class CommandSyncService extends JobIntentService {
         working = true;
         enqueueWork(context, CommandSyncService.class, JOB_ID, work);
     }
-
 }

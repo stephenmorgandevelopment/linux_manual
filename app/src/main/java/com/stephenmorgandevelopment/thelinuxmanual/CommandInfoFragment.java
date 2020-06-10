@@ -4,24 +4,19 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.ArrayMap;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.view.MenuItemCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModel;
 
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
@@ -70,32 +65,33 @@ public class CommandInfoFragment extends Fragment {
         scrollContainer = view.findViewById(R.id.scrollContainer);
         rootScrollView = view.findViewById(R.id.rootScrollView);
 
-        if(infoMap != null) {
+        if (infoMap != null) {
             scrollContainer.addView(getDivider());
 
             addTextBubble(INFO_KEY_NAME, infoMap.remove(INFO_KEY_NAME));
 
-            if(infoMap.containsKey(INFO_KEY_SYNOPSIS)) {
+            if (infoMap.containsKey(INFO_KEY_SYNOPSIS)) {
                 addTextBubble(INFO_KEY_SYNOPSIS, infoMap.remove(INFO_KEY_SYNOPSIS));
             }
 
-            if(infoMap.containsKey(INFO_KEY_EXAMPLE)) {
+            if (infoMap.containsKey(INFO_KEY_EXAMPLE)) {
                 addTextBubble(INFO_KEY_EXAMPLE, infoMap.remove(INFO_KEY_EXAMPLE));
             }
-            if(infoMap.containsKey(INFO_KEY_EXAMPLES)) {
+
+            if (infoMap.containsKey(INFO_KEY_EXAMPLES)) {
                 addTextBubble(INFO_KEY_EXAMPLES, infoMap.remove(INFO_KEY_EXAMPLES));
             }
 
-            if(infoMap.containsKey(INFO_KEY_OPTIONS)) {
+            if (infoMap.containsKey(INFO_KEY_OPTIONS)) {
                 addTextBubble(INFO_KEY_OPTIONS, infoMap.remove(INFO_KEY_OPTIONS));
             }
 
-            if(infoMap.containsKey(INFO_KEY_DESCRIPTION)) {
+            if (infoMap.containsKey(INFO_KEY_DESCRIPTION)) {
                 addTextBubble(INFO_KEY_DESCRIPTION, infoMap.remove(INFO_KEY_DESCRIPTION));
             }
 
             Set<String> keys = infoMap.keySet();
-            for(String key : keys) {
+            for (String key : keys) {
                 addTextBubble(key, infoMap.get(key));
             }
 
@@ -115,30 +111,25 @@ public class CommandInfoFragment extends Fragment {
 
         jumpToList = new ArrayList<>();
     }
-    
+
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.info_dropdown, menu);
 
-        MenuItem dropDownMenuItem = menu.findItem(R.id.dropDown);
-        Menu dropDownMenu = dropDownMenuItem.getSubMenu();
+        Menu dropDownMenu = menu.findItem(R.id.dropDown).getSubMenu();
 
-        if(dropDownMenu != null) {
-            for(String title : jumpToList) {
+        if (dropDownMenu != null) {
+            for (String title : jumpToList) {
                 dropDownMenu.add(R.id.jumpTo, Menu.NONE, Menu.NONE, title);
             }
         }
-
-//        for(String title : jumpToList) {
-//            menu.add(Menu.NONE, Menu.NONE, Menu.NONE, title);
-//        }
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if(jumpToList.contains(item.getTitle())) {
+        if (jumpToList.contains(item.getTitle().toString())) {
             View v = scrollContainer.findViewWithTag(item.getTitle());
-            rootScrollView.scrollTo(0, v.getTop() -12);
+            rootScrollView.scrollTo(0, v.getTop() - 12);
 
             return true;
         }
@@ -166,13 +157,11 @@ public class CommandInfoFragment extends Fragment {
     }
 
     private void addTextBubble(String header, String description) {
-        ViewGroup view = (ViewGroup) ((LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, null);
-//        View view = (ViewGroup) ((LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, scrollContainer, true);
-
+        ViewGroup view = (ViewGroup) ((LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, null);
         view.setTag(header);
 
-        ((TextView)view.findViewById(R.id.headerText)).setText(header);
-        ((TextView)view.findViewById(R.id.descriptionText)).setText(description);
+        ((TextView) view.findViewById(R.id.headerText)).setText(header);
+        ((TextView) view.findViewById(R.id.descriptionText)).setText(description);
         scrollContainer.addView(view);
         scrollContainer.addView(getDivider());
 
@@ -185,6 +174,4 @@ public class CommandInfoFragment extends Fragment {
         divider.setBackgroundColor(Color.TRANSPARENT);
         return divider;
     }
-
-
 }

@@ -1,32 +1,23 @@
 package com.stephenmorgandevelopment.thelinuxmanual.network;
 
-import android.util.Log;
-
-import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Single;
 import okhttp3.Cache;
-import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import retrofit2.Converter;
-import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 public class HttpClient {
     private static final String TAG = HttpClient.class.getSimpleName();
 
     private static HttpClient httpClient;
-    private static HttpClientService httpClientService;
     private static String clientUrl;
     private static Cache cache;
     private static OkHttpClient okClient;
@@ -53,36 +44,6 @@ public class HttpClient {
         return httpClient;
     }
 
-    public static HttpClient getInstance(String url) {
-        if(httpClient == null) {
-            clientUrl = url;
-            httpClient = new HttpClient();
-        }
-
-        try {
-            if (!clientUrl.equals(url)) {
-                httpClient = null;
-                clientUrl = url;
-                httpClient = new HttpClient();
-            }
-        } catch (NullPointerException e) {
-            if(clientUrl == null) {
-                clientUrl = url;
-                return getInstance();
-            } else {
-                Log.e(TAG, Helpers.getApplicationContext().getString(R.string.unexpected_error));
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        return httpClient;
-    }
-
-    private static void setUrl(String url) {
-        clientUrl = url;
-    }
-
     public static OkHttpClient getClient() {
         if(okClient == null) {
             getInstance();
@@ -90,7 +51,6 @@ public class HttpClient {
 
         return okClient;
     }
-
 
     public static Single<Response> fetchDirsHtml() throws IOException {
         if(okClient == null) {
@@ -117,7 +77,7 @@ public class HttpClient {
             Request req = new Request.Builder().url(pageUrl).build();
             return Single.defer(() -> Single.just(okClient.newCall(req).execute()));
         } else {
-            return Single.error(new Throwable("No internet.  FetchCommmandManPage failed."));
+            return Single.error(new Throwable("No internet.  Fetch Command ManPage failed."));
         }
     }
 }

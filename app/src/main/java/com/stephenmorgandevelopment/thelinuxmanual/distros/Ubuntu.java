@@ -3,7 +3,6 @@ package com.stephenmorgandevelopment.thelinuxmanual.distros;
 
 import android.util.ArrayMap;
 import android.util.Log;
-import android.widget.Switch;
 
 import com.google.gson.stream.JsonWriter;
 import com.stephenmorgandevelopment.thelinuxmanual.R;
@@ -23,45 +22,55 @@ import java.util.Map;
 public class Ubuntu {
     public static final String TAG = Ubuntu.class.getSimpleName();
     public static final String NAME = Helpers.getApplicationContext().getString(R.string.ubuntu_name);
-
     public static final String BASE_URL = "https://manpages.ubuntu.com/manpages/";
     private static final String CRAWLER_SELECTOR = "#tableWrapper pre a";
 
     private static Release release;
+
     public enum Release {
-        ARTFUL("artful"), BIONIC("bionic"), COSMIC("cosmic"), DISCO("disco")
-        , EOAN("eoan"), FOCAL("focal"), GROOVY("groovy")
-        ,PRECISE("precise"), TRUSY("trusty"), XENIAL("xenial");
+        ARTFUL("artful"), BIONIC("bionic"), COSMIC("cosmic"), DISCO("disco"), EOAN("eoan"), FOCAL("focal"), GROOVY("groovy"), PRECISE("precise"), TRUSY("trusty"), XENIAL("xenial");
 
         private String name;
+
         Release(String path) {
             this.name = path;
         }
 
-        public String getName() {return name;}
-    }
+        public String getName() {
+            return name;
+        }
 
-    public static void setRelease(String releaseString) {
-        for(Release release : Release.values()) {
-            if(releaseString.equalsIgnoreCase(release.getName())) {
-                Ubuntu.release = release;
+        public static Release fromString(String releaseString) {
+            for (Release release : Release.values()) {
+                if (releaseString.equalsIgnoreCase(release.getName())) {
+                    return release;
+                }
             }
+
+            Log.d(TAG, "Error matching release string: " + releaseString);
+            return FOCAL;
         }
     }
 
-    public static String getReleaseString() {return release.getName();}
+    public static void setRelease(Release release) {
+        Ubuntu.release = release;
+    }
+
+    public static String getReleaseString() {
+        return release.getName();
+    }
 
     public static Map<String, String> crawlForCommandInfo(String pageHtml) {
         Log.d(TAG, "Creating info from man page.");
 
-        Map <String, String> info = new ArrayMap<>();
+        Map<String, String> info = new ArrayMap<>();
 
         Document document = Jsoup.parse(pageHtml);
         Elements h4List = document.select("#tableWrapper h4");
         Elements preList = document.select("#tableWrapper pre");
         preList.remove(0);
 
-        for(Element h4 : h4List) {
+        for (Element h4 : h4List) {
             int idx = h4List.indexOf(h4);
             info.put(h4.text(), preList.get(idx).text());
         }
@@ -70,40 +79,38 @@ public class Ubuntu {
     }
 
     public static synchronized void addDescriptionToSimpleCommand(SimpleCommand command, String pageHtml) {
-        Log.d(TAG, "Adding description for " + command.getName());
-
         Document document = Jsoup.parse(pageHtml);
         Elements h4List = document.select("#tableWrapper h4");
         Elements preList = document.select("#tableWrapper pre");
 
         preList.remove(0);
 
-        for(Element h4 : h4List) {
-            if(h4.text().toUpperCase().contains("DESCRIPTION")) {
+        for (Element h4 : h4List) {
+            if (h4.text().toUpperCase().contains("DESCRIPTION")) {
                 command.setDescription(preList.get(h4List.indexOf(h4)).text());
-                if(h4.text().equals("DESCRIPTION")) {
+                if (h4.text().equals("DESCRIPTION")) {
                     break;
                 }
             }
         }
 
-        if(command.getDescription().equals("")) {
+        if (command.getDescription().equals("")) {
             command.setDescription("No description available.");
         }
     }
 
     public static ArrayList<SimpleCommand> crawlForManPages(String pageHtml, String url) {
         String[] tmpArr = url.split("/");
-        int manN = Integer.parseInt(tmpArr[tmpArr.length-1].replaceAll("man", ""));
+        int manN = Integer.parseInt(tmpArr[tmpArr.length - 1].replaceAll("man", ""));
         String filter = "." + manN;
 
         Document document = Jsoup.parse(pageHtml);
         Elements anchors = document.select(CRAWLER_SELECTOR);
 
         ArrayList<SimpleCommand> unfinishedCommands = new ArrayList<>();
-        for(Element a : anchors) {
+        for (Element a : anchors) {
             String path = url.concat(a.attr("href"));
-            if(!path.endsWith(".html")) {
+            if (!path.endsWith(".html")) {
                 continue;
             }
 
@@ -129,9 +136,9 @@ public class Ubuntu {
 
         ArrayList<String> dirs = new ArrayList<>();
 
-        for(Element a : anchors) {
+        for (Element a : anchors) {
             String path = a.attr("href");
-            if(path.startsWith("man")) {
+            if (path.startsWith("man")) {
                 dirs.add(path);
             }
         }

@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 
 public class Preferences {
     private static final String DEFAULT_URL = "DEFAULT_URL";
@@ -16,7 +17,7 @@ public class Preferences {
 
     public static String getRelease() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext());
-        return prefs.getString(RELEASE, Helpers.getApplicationContext().getString(R.string.focal));
+        return prefs.getString(RELEASE, Ubuntu.Release.FOCAL.getName());
     }
 
     public static String getDefaultUrl() {
