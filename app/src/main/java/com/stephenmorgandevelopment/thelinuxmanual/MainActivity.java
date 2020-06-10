@@ -25,7 +25,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private ConstraintLayout fragmentContainer;
     private Toolbar toolbar;
     private TextView progressDialog;
     private ScrollView progressScroller;
@@ -39,13 +38,11 @@ public class MainActivity extends AppCompatActivity {
 
         Helpers.init(MainActivity.this.getApplication());
 
-        fragmentContainer = findViewById(R.id.fragmentContainer);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         progressDialog = findViewById(R.id.progressTextView);
         progressScroller = findViewById(R.id.progressScroller);
-
     }
 
 
@@ -126,6 +123,8 @@ public class MainActivity extends AppCompatActivity {
 
                         CommandSyncService.enqueueWork(MainActivity.this, intent);
 
+                        clearFragments();
+                        MainActivity.this.recreate();
                     } else {
                         Toast.makeText(MainActivity.this, "Must be connected to the internet.", Toast.LENGTH_LONG).show();
                     }
@@ -133,13 +132,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Already working on it.", Toast.LENGTH_LONG).show();
                 }
 
-                FragmentManager fragMan = getSupportFragmentManager();
-                List<Fragment> fragments = fragMan.getFragments();
-                for(Fragment frag : fragments) {
-                    fragMan.popBackStack();
-                }
-
-                MainActivity.this.recreate();
                 return true;
             case R.id.artful:
                 changeRelease(Ubuntu.Release.ARTFUL);
@@ -194,12 +186,7 @@ public class MainActivity extends AppCompatActivity {
         Ubuntu.setRelease(release.getName());
         DatabaseHelper.changeTable(release.getName());
 
-        FragmentManager fragMan = getSupportFragmentManager();
-        List<Fragment> fragments = fragMan.getFragments();
-        for(Fragment frag : fragments) {
-            fragMan.popBackStack();
-        }
-
+        clearFragments();
         MainActivity.this.recreate();
     }
 
@@ -212,6 +199,14 @@ public class MainActivity extends AppCompatActivity {
                     .add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG)
                     .addToBackStack(CommandLookupFragment.TAG)
                     .commit();
+        }
+    }
+
+    private void clearFragments() {
+        FragmentManager fragMan = getSupportFragmentManager();
+        List<Fragment> fragments = fragMan.getFragments();
+        for(Fragment frag : fragments) {
+            fragMan.popBackStack();
         }
     }
 
