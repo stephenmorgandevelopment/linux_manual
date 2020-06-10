@@ -118,9 +118,20 @@ public class CommandInfoFragment extends Fragment {
     
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        for(String title : jumpToList) {
-            menu.add(Menu.NONE, Menu.NONE, Menu.NONE, title);
+        inflater.inflate(R.menu.info_dropdown, menu);
+
+        MenuItem dropDownMenuItem = menu.findItem(R.id.dropDown);
+        Menu dropDownMenu = dropDownMenuItem.getSubMenu();
+
+        if(dropDownMenu != null) {
+            for(String title : jumpToList) {
+                dropDownMenu.add(R.id.jumpTo, Menu.NONE, Menu.NONE, title);
+            }
         }
+
+//        for(String title : jumpToList) {
+//            menu.add(Menu.NONE, Menu.NONE, Menu.NONE, title);
+//        }
     }
 
     @Override

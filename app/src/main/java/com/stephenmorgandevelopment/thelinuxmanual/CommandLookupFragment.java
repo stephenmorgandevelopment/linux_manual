@@ -29,9 +29,12 @@ import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.plugins.RxJavaPlugins;
@@ -73,13 +76,12 @@ public class CommandLookupFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
 
-
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if(matchListAdapter == null) {
+        if (matchListAdapter == null) {
             matchListAdapter = new MatchListAdapter(getContext());
         }
 
@@ -91,21 +93,31 @@ public class CommandLookupFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(count >= 2) {
+                if (count >= 2) {
                     String searchText = String.valueOf(s).replaceAll("'", "");
                     searchText = searchText.replaceAll("%", "");
-                    List<SimpleCommand> matches = null;
-                    try {
-                        matches = DatabaseHelper.getInstance().partialMatches(searchText);
-                    } catch (SQLiteException sqle) {
-                        Log.d(TAG, "SQL error: " + sqle.toString());
-                        Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
-                    }
-
-                    if(matches != null && matches.size() > 0) {
-                        matchListAdapter.setMatches(matches);
-                        matchListAdapter.notifyDataSetChanged();
-                    }
+                    List<SimpleCommand> matches = new ArrayList<>();
+//                    try {
+                    disposable = Single.just(DatabaseHelper.getInstance().partialMatches(searchText))
+                            .subscribeOn(Schedulers.io())
+                            .delay(200, TimeUnit.MILLISECONDS)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(list -> {
+                                        matches.clear();
+                                        matches.addAll(list);
+                                        if (matches.size() > 0) {
+                                            matchListAdapter.setMatches(matches);
+                                            matchListAdapter.notifyDataSetChanged();
+                                        }
+                                    },
+                                    error -> {
+                                        Log.d(TAG, "SQL error: " + error.toString());
+                                        Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
+                                    });
+//                    } catch (SQLiteException sqle) {
+//                        Log.d(TAG, "SQL error: " + sqle.toString());
+//                        Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
+//                    }
                 } else {
                     matchListAdapter.clear();
                     matchListAdapter.notifyDataSetChanged();
@@ -132,10 +144,22 @@ public class CommandLookupFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
 
-        if(MatchListAdapter.disposables != null) {
+        if(matchListAdapter.helperThreads != null) {
+            for(Thread thread : matchListAdapter.helperThreads) {
+                thread.interrupt();
+                thread = null;
+            }
+        }
+
+        if (MatchListAdapter.disposables != null) {
             MatchListAdapter.disposables.clear();
             matchListAdapter = null;
         }
+
+        if (disposable != null && !disposable.isDisposed()) {
+            disposable.dispose();
+        }
+
     }
 
 
@@ -149,14 +173,14 @@ public class CommandLookupFragment extends Fragment {
             disposable = HttpClient.fetchCommandManPage(matchListAdapter.getItem(position).getUrl())
                     .subscribeOn(Schedulers.io())
                     .flatMapCompletable(response -> {
-                        if(response.isSuccessful() && response.code() == 200) {
+                        if (response.isSuccessful() && response.code() == 200) {
                             infoFragment = CommandInfoFragment.getInstance();
                             infoFragment.setInfo(Ubuntu.crawlForCommandInfo(response.body().string()));
 
                             return Completable.complete();
                         }
 
-                       return Completable.error(new Throwable("Response returned with code: " + response.code()));
+                        return Completable.error(new Throwable("Response returned with code: " + response.code()));
                     })
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnComplete(() -> {

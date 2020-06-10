@@ -45,18 +45,18 @@ public class CommandSyncService extends JobIntentService {
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
-        if(globalDisposable == null) {
+        if (globalDisposable == null) {
             globalDisposable = new CompositeDisposable();
         }
 
         String distro;
-        if(intent.getExtras() == null || (distro = intent.getExtras().getString(DISTRO)) == null) {
+        if (intent.getExtras() == null || (distro = intent.getExtras().getString(DISTRO)) == null) {
             Log.e(TAG, "Null intent or extra passed to job service.");
             return;
         }
 
 
-        if(distro.equalsIgnoreCase(Ubuntu.NAME)) {
+        if (distro.equalsIgnoreCase(Ubuntu.NAME)) {
             syncProgress = "Connecting to " + Ubuntu.BASE_URL + ".";
 
             try {
@@ -73,13 +73,13 @@ public class CommandSyncService extends JobIntentService {
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.computation())
                 .flatMapObservable(response -> {
-                    if(response.isSuccessful() && response.code() == 200) {
+                    if (response.isSuccessful() && response.code() == 200) {
                         String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal() + "/";
 
                         List<String> dirPaths = Ubuntu.crawlForManDirs(response.body().string());
-                        List<Request> requests =  new ArrayList<>();
+                        List<Request> requests = new ArrayList<>();
 
-                        for(String path : dirPaths) {
+                        for (String path : dirPaths) {
                             Request req = new Request.Builder().url(url + path).build();  //+ "/").build();
                             requests.add(req);
                         }
@@ -104,20 +104,24 @@ public class CommandSyncService extends JobIntentService {
                 .subscribe(response -> {
                             String reqUrl = response.request().url().toString();
 
-                        Log.d(TAG, "Successful response from: " + reqUrl);
-                        syncProgress = "\nPulled data from " + reqUrl + "\nProcessing data.";
+                            Log.d(TAG, "Successful response from: " + reqUrl);
+                            syncProgress = "\nPulled data from " + reqUrl;
+                            if(reqUrl.endsWith("3/")) {
+                                syncProgress += "\nLarge data set, longest processing.";
+                            }
+                            syncProgress += "\nProcessing data.";
 
-                        List<SimpleCommand> pageCommands = Ubuntu.crawlForManPages(response.body().string(), reqUrl);
+                            List<SimpleCommand> pageCommands = Ubuntu.crawlForManPages(response.body().string(), reqUrl);
 
-                        syncProgress = "\nSaving data locally.";
+                            syncProgress = "\nSaving data locally.";
 
-                        if(pageCommands.size() > 0) {
-                            DatabaseHelper database = DatabaseHelper.getInstance();
-                            database.addCommands(pageCommands);
+                            if (pageCommands.size() > 0) {
+                                DatabaseHelper database = DatabaseHelper.getInstance();
+                                database.addCommands(pageCommands);
+                            }
                         }
-                }
-                , error -> {
-                    Log.d(TAG, "Block attempting to stop crash.");
+                        , error -> {
+                            Log.d(TAG, "Block attempting to stop crash.");
                         });
 
         globalDisposable.add(disposable);
@@ -133,7 +137,7 @@ public class CommandSyncService extends JobIntentService {
     public void onDestroy() {
         super.onDestroy();
 
-        if(Helpers.getApplicationContext() == null) {
+        if (Helpers.getApplicationContext() == null) {
             DatabaseHelper.getInstance().close();
         }
     }

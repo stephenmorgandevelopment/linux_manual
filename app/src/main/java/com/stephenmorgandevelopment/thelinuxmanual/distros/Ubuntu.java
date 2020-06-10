@@ -20,14 +20,12 @@ import java.util.ArrayList;
 import java.util.Map;
 
 
-public class Ubuntu implements LinuxDistro {
+public class Ubuntu {
     public static final String TAG = Ubuntu.class.getSimpleName();
     public static final String NAME = Helpers.getApplicationContext().getString(R.string.ubuntu_name);
 
     public static final String BASE_URL = "https://manpages.ubuntu.com/manpages/";
     private static final String CRAWLER_SELECTOR = "#tableWrapper pre a";
-
-
 
     private static Release release;
     public enum Release {
@@ -53,36 +51,6 @@ public class Ubuntu implements LinuxDistro {
 
     public static String getReleaseString() {return release.getName();}
 
-    @Override
-    public ArrayList<SimpleCommand> syncSimpleCommands() {
-
-        return null;
-    }
-
-    //    public static synchronized boolean isCommandInManList(int manNum, String manList, String command) {
-//        if(manList == null || manList.isEmpty()) {
-//            Log.e(TAG, Helpers.getApplicationContext().getString(R.string.manpage_parse_error));
-//            return false;
-//        }
-//        Document document = Jsoup.parse(manList);
-//        Elements hrefs = document.getElementsByTag("href");
-//        for(Element href : hrefs) {
-//            if(href.html().trim().equalsIgnoreCase(command + "." + manNum + ".html")) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-
-    //TODO Create crawler to prepopulate command locations.
-    public static synchronized String createSimpleCommandsJsonString() {
-        StringBuilder jsonString = new StringBuilder();
-
-
-
-        return jsonString.toString();
-    }
-
     public static Map<String, String> crawlForCommandInfo(String pageHtml) {
         Log.d(TAG, "Creating info from man page.");
 
@@ -100,7 +68,6 @@ public class Ubuntu implements LinuxDistro {
 
         return info;
     }
-
 
     public static synchronized void addDescriptionToSimpleCommand(SimpleCommand command, String pageHtml) {
         Log.d(TAG, "Adding description for " + command.getName());
@@ -135,13 +102,12 @@ public class Ubuntu implements LinuxDistro {
 
         ArrayList<SimpleCommand> unfinishedCommands = new ArrayList<>();
         for(Element a : anchors) {
-            //String path = manDir.concat(a.attr("href"));
             String path = url.concat(a.attr("href"));
             if(!path.endsWith(".html")) {
                 continue;
             }
+
             String text = a.html();
-//            text = text.substring(0, text.lastIndexOf('.'));
             try {
                 text = text.substring(0, text.lastIndexOf(filter));
             } catch (Exception e) {
@@ -149,6 +115,7 @@ public class Ubuntu implements LinuxDistro {
                 text = text.substring(0, text.lastIndexOf('.'));
                 Log.e(TAG, "String parsing error caught for " + text);
             }
+
             unfinishedCommands.add(new SimpleCommand(text, path, manN));
         }
 
@@ -172,68 +139,6 @@ public class Ubuntu implements LinuxDistro {
         return dirs;
     }
 
-//    public static synchronized void writeSimpleCommandsToDisk(int page) {
-//        writeSimpleCommandsToDisk(true, page);
-//    }
-
-//    public static synchronized void writeSimpleCommandsToDisk(List<SimpleCommand> commands, int page) {
-//        OutputStream outStream = null;
-//        File simpleCommandsFile = new File(Helpers.getFilesDir(), "simple_commands_" + page + ".json");
-////        Gson gson = new Gson();
-//
-//        Log.d(TAG, "Writing simple commands to disk for page " + page + ".");
-//
-//        JSONObject rootObject = new JSONObject();
-//        JSONArray jsonArray = new JSONArray();
-//
-//        for(SimpleCommand command : commands) {
-//            jsonArray.put(command.toJSONObject());
-//        }
-//
-//        try {
-//            rootObject.put("commands", jsonArray);
-//        } catch (JSONException e) {
-//            Log.e(TAG, "JSON error.");
-//            e.printStackTrace();
-//        }
-//
-//        try {
-//            outStream = new FileOutputStream(simpleCommandsFile);
-//            OutputStreamWriter writer = new OutputStreamWriter(outStream);
-//
-//            writer.write(rootObject.toString());
-//            writer.flush();
-//            writer.close();
-//            outStream.close();
-//
-//            Log.d(TAG, "Simple commands written successfully.");
-//        } catch (IOException ioe) {
-//            Log.e(TAG, "IO error writing commands file.");
-//            ioe.printStackTrace();
-//        }
-
-//        try {
-//            outStream = new FileOutputStream(simpleCommandsFile);
-//
-//            JsonWriter writer = new JsonWriter(new OutputStreamWriter(outStream, "UTF-8"));
-//            writer.setIndent("    ");
-//
-//            writer.beginArray();
-//            for(SimpleCommand command : commands) {
-//                writeCommand(writer, command);
-//            }
-//            writer.endArray();
-//
-//            writer.close();
-//            outStream.close();
-//
-//            Log.d(TAG, "Simple commands written successfully for page " + page + ".");
-//        } catch (IOException ioe) {
-//            Log.e(TAG, "IO error writing commands file for page " + page + ".");
-//            ioe.printStackTrace();
-//        }
-//    }
-
     public static synchronized void writeCommand(JsonWriter writer, SimpleCommand command) throws IOException {
         writer.beginObject();
         writer.name("id").value(command.getId());
@@ -243,48 +148,4 @@ public class Ubuntu implements LinuxDistro {
         writer.name("manN").value(command.getManN());
         writer.endObject();
     }
-
-
-
-//    public static synchronized void writeSimpleCommandsToDisk(boolean overwrite, int page) {
-//        OutputStream outStream = null;
-//        File simpleCommandsFile = new File(Helpers.getFilesDir(), "simple_commands_" + page + ".json");
-//        Gson gson = new Gson();
-//
-//        if(overwrite) {
-//            Log.d(TAG, "Writing simple commands to disk.");
-//
-//            JSONObject rootObject = new JSONObject();
-//            JSONArray jsonArray = new JSONArray();
-//
-//            for(SimpleCommand command : getCommandsList()) {
-//                jsonArray.put(command.toJSONObject());
-//            }
-//
-//            try {
-//                rootObject.put("commands", jsonArray);
-//            } catch (JSONException e) {
-//                Log.e(TAG, "JSON error.");
-//                e.printStackTrace();
-//            }
-//
-//            try {
-//                outStream = new FileOutputStream(simpleCommandsFile);
-//                OutputStreamWriter writer = new OutputStreamWriter(outStream);
-//
-//                writer.write(rootObject.toString());
-//                writer.flush();
-//                writer.close();
-//                outStream.close();
-//
-//                Log.d(TAG, "Simple commands written successfully.");
-//            } catch (IOException ioe) {
-//                Log.e(TAG, "IO error writing commands file.");
-//                ioe.printStackTrace();
-//            }
-//        }
-//
-//
-//    }
-
 }

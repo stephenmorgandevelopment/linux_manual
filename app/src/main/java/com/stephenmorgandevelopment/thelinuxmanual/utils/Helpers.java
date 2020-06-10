@@ -3,13 +3,19 @@ package com.stephenmorgandevelopment.thelinuxmanual.utils;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.util.Log;
+
+import androidx.core.os.LocaleListCompat;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 
 import java.io.File;
+import java.util.Locale;
 
 public class Helpers {
     private static final String TAG = Helpers.class.getSimpleName();
@@ -30,15 +36,22 @@ public class Helpers {
 
 
     private static void setLocal() {
-        //TODO Set local according to systems default language code.
-
-        local = "en";
+        String languageTag = LocaleListCompat.getAdjustedDefault().get(0).toLanguageTag().substring(0, 2);
+        Log.i(TAG, "Language tag: " + languageTag);
+        local = languageTag;
+//        local = "en";
     }
 
     public static boolean hasInternet() {
-        //TODO Check for internet connection.
+        ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(cm != null) {
+            NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+            if(networkInfo != null) {
+                return networkInfo.isConnectedOrConnecting();
+            }
+        }
 
-        return true;
+        return false;
     }
 
 
@@ -69,12 +82,6 @@ public class Helpers {
     }
 
     public static File getCacheDir() {return cacheDir;}
-
-//    private static void setDatabaseDir(File dir) {
-//        databaseDir = dir;
-//    }
-
-//    public static File getDatabaseDir() {return databaseDir;}
 
     private static void setApplicationContext(Application application) {
         applicationContext = application.getApplicationContext();

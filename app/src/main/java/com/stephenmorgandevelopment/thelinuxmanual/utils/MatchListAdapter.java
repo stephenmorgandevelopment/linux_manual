@@ -31,6 +31,7 @@ public class MatchListAdapter extends BaseAdapter {
     public static final String TAG = MatchListAdapter.class.getSimpleName();
 
     public static CompositeDisposable disposables;
+    public static List<Thread> helperThreads;
 
     private List<SimpleCommand> matches;
     private LayoutInflater inflater;
@@ -43,6 +44,8 @@ public class MatchListAdapter extends BaseAdapter {
 
         layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutParams.bottomMargin = 5;
+
+        helperThreads = new ArrayList<>();
     }
 
     public void setMatches(List<SimpleCommand> matches) {
@@ -89,34 +92,42 @@ public class MatchListAdapter extends BaseAdapter {
         } else {
             descriptionView.setText(R.string.fetching_data);
 
-            Disposable disposable = fetchDescription(match)
-                    .subscribeOn(Schedulers.computation())
-                    .flatMap(response -> {
-                        Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
+            Thread helperThread = new Thread(() -> {
+               updateDescription(descriptionView, match);
+            });
 
-                        return Single.just(match);
-                    })
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doOnSuccess(success -> {
-                        descriptionView.setText(match.getDescription());
-                    })
-                    .doOnError(error -> {
-                        descriptionView.setText("Unable to fetch data at this time.");
-                    })
-                    .observeOn(Schedulers.io())
-                    .subscribe(response -> {
-                                DatabaseHelper.getInstance().updateCommand(match);
-                            }
-                            , error -> {
-                                Log.e(TAG, error.toString());
-                            });
-
-            disposables.add(disposable);
+            helperThreads.add(helperThread);
+            helperThread.start();
         }
 
         return view;
     }
 
+    private void updateDescription(TextView descriptionView, SimpleCommand match) {
+        Disposable disposable = fetchDescription(match)
+                .subscribeOn(Schedulers.computation())
+                .flatMap(response -> {
+                    Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
+
+                    return Single.just(match);
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSuccess(success -> {
+                    descriptionView.setText(match.getDescription().substring(0, 150));
+                })
+                .doOnError(error -> {
+                    descriptionView.setText("Unable to fetch data at this time.");
+                })
+                .observeOn(Schedulers.io())
+                .subscribe(response -> {
+                            DatabaseHelper.getInstance().updateCommand(match);
+                        }
+                        , error -> {
+                            Log.e(TAG, error.toString());
+                        });
+
+        disposables.add(disposable);
+    }
 
     Single<Response> fetchDescription(SimpleCommand command) {
         Request request = new Request.Builder().url(command.getUrl()).build();

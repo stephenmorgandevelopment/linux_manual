@@ -178,7 +178,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         List<SimpleCommand> matches = new ArrayList<>();
         final String queryStart = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + " WHERE " + KEY_NAME;
-        final String queryEnd =  searchText + "%' ORDER BY (" + KEY_NAME + " = '" + searchText + "') desc";
+        final String queryEnd =  searchText + "%' ORDER BY (" + KEY_NAME + " = '" + searchText + "') desc"
+            + ", LENGTH(" + KEY_NAME + ")";
 
         final String query = searchText.length() >= 4
                 ? queryStart + " LIKE '%" + queryEnd
@@ -187,7 +188,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = database.rawQuery(query, null);
 
         if (!cursor.moveToFirst()) {
-            return null;
+            return matches;
         }
 
         do {

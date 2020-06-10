@@ -99,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    static boolean menuCreated = false;
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         if(toolbar.getMenu().findItem(R.id.refreshMenuBtn) == null){
@@ -119,12 +118,17 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.refreshMenuBtn:
                 if(!CommandSyncService.working) {
-                    DatabaseHelper.getInstance().wipeTable();
+                    if(Helpers.hasInternet()) {
+                        DatabaseHelper.getInstance().wipeTable();
 
-                    Intent intent = new Intent();
-                    intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
+                        Intent intent = new Intent();
+                        intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
 
-                    CommandSyncService.enqueueWork(MainActivity.this, intent);
+                        CommandSyncService.enqueueWork(MainActivity.this, intent);
+
+                    } else {
+                        Toast.makeText(MainActivity.this, "Must be connected to the internet.", Toast.LENGTH_LONG).show();
+                    }
                 } else {
                     Toast.makeText(this, "Already working on it.", Toast.LENGTH_LONG).show();
                 }

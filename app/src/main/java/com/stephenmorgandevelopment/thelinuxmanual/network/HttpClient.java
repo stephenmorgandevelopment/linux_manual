@@ -30,26 +30,16 @@ public class HttpClient {
     private static String clientUrl;
     private static Cache cache;
     private static OkHttpClient okClient;
-    //private static Retrofit retrofit;
 
     private HttpClient() {
-
-
-        cache = new okhttp3.Cache(new File(Helpers.getCacheDir(), "http_cache"), 10485760);
+        if(cache == null) {
+            cache = new okhttp3.Cache(new File(Helpers.getCacheDir(), "http_cache"), 10485760);
+        }
 
         okClient = new OkHttpClient.Builder()
                 .cache(cache)
-//                .callTimeout(45, TimeUnit.SECONDS)
-//                .connectTimeout(45, TimeUnit.SECONDS)
                 .readTimeout(20, TimeUnit.SECONDS)
-//                .writeTimeout(45, TimeUnit.SECONDS)
                 .build();
-
-//        retrofit = new Retrofit.Builder()
-//                .baseUrl(clientUrl)
-//                .client(httpClient)
-//                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-//                .build();
     }
 
 
@@ -108,8 +98,7 @@ public class HttpClient {
         }
 
         if(Helpers.hasInternet()) {
-            //OkHttpClient client = HttpClient.getInstance().getClient();
-            String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal();  // + "/";
+            String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal();
             Request req = new Request.Builder().url(url).build();
 
             return Single.just(okClient.newCall(req).execute());
@@ -131,14 +120,4 @@ public class HttpClient {
             return Single.error(new Throwable("No internet.  FetchCommmandManPage failed."));
         }
     }
-
-
-//    public HttpClientService getService() {
-//        if(httpClientService == null) {
-//            httpClientService = retrofit.create(HttpClientService.class);
-//        }
-//        return httpClientService;
-//    }
-//    public synchronized
-
 }
