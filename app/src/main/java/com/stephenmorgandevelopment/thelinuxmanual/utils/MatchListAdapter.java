@@ -17,9 +17,10 @@ import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -38,7 +39,7 @@ public class MatchListAdapter extends BaseAdapter {
     private LayoutInflater inflater;
     private LinearLayout.LayoutParams layoutParams;
 
-    private static String unableToFetch = Helpers.getApplicationContext().getString(R.string.unable_to_fetch);
+    private static Scheduler threadPool;
 
     public MatchListAdapter(Context ctx) {
         matches = new ArrayList<>();
@@ -49,6 +50,8 @@ public class MatchListAdapter extends BaseAdapter {
         layoutParams.bottomMargin = 5;
 
         helperThreads = new ArrayList<>();
+        Executor executor = Executors.newFixedThreadPool((int) (Runtime.getRuntime().availableProcessors() * .75));
+        threadPool = Schedulers.from(executor);
     }
 
     public void setMatches(List<SimpleCommand> matches) {
@@ -77,7 +80,7 @@ public class MatchListAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View view, ViewGroup parent) {
-        view = inflater.inflate(R.layout.match_list_item, parent, false);
+        view = inflater.inflate(R.layout.match_list_item, null);
 
         view.setLayoutParams(layoutParams);
 
@@ -88,13 +91,13 @@ public class MatchListAdapter extends BaseAdapter {
 
         String description = match.getDescription();
 
-        if(!description.equals("")) {
+        if (!description.equals("")) {
             descriptionView.setText(description);
         } else {
             descriptionView.setText(R.string.fetching_data);
 
             Thread helperThread = new Thread(() -> {
-               updateDescription(descriptionView, match);
+                updateDescription(descriptionView, match);
             });
 
             helperThreads.add(helperThread);
@@ -106,20 +109,23 @@ public class MatchListAdapter extends BaseAdapter {
 
     private void updateDescription(TextView descriptionView, SimpleCommand match) {
         Disposable disposable = fetchDescription(match)
-                .subscribeOn(Schedulers.computation())
+                .subscribeOn(threadPool)
                 .flatMap(response -> {
                     Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
 
-                    String desc = match.getDescription().length() < 151
-                            ? match.getDescription()
-                            : match.getDescription().substring(0, 150);
-
-                    return Single.just(desc);
+                    return Single.just(match);
                 })
                 .observeOn(AndroidSchedulers.mainThread())
-                .delay(3, TimeUnit.MILLISECONDS)
-                .doOnSuccess(descriptionView::setText)
-                .doOnError(error -> descriptionView.setText(unableToFetch))
+                .doOnSuccess(success -> {
+                    String desc = match.getDescription().length() > 150
+                            ? match.getDescription().substring(0, 149)
+                            : match.getDescription();
+
+                    descriptionView.setText(desc);
+                })
+                .doOnError(error -> {
+                    descriptionView.setText("Unable to fetch data at this time.");
+                })
                 .observeOn(Schedulers.computation())
                 .subscribe(response -> {
                             DatabaseHelper.getInstance().updateCommand(match);

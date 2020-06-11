@@ -31,17 +31,20 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class CommandLookupFragment extends Fragment {
     public static final String TAG = CommandLookupFragment.class.getSimpleName();
-    Disposable disposable;
+    private CompositeDisposable disposables;
 
     private EditText searchText;
     private ListView matchListView;
     private MatchListAdapter matchListAdapter;
     private TextView fetchingDataDialog;
+
+    static boolean loadingInfo = false;
 
     public static CommandLookupFragment getInstance() {
         return new CommandLookupFragment();
@@ -61,6 +64,8 @@ public class CommandLookupFragment extends Fragment {
         searchText = view.findViewById(R.id.searchText);
         matchListView = view.findViewById(R.id.matchList);
         fetchingDataDialog = view.findViewById(R.id.fetchingDataDialog);
+
+        disposables = new CompositeDisposable();
 
         matchListView.setDividerHeight(5);
     }
@@ -90,26 +95,22 @@ public class CommandLookupFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (s.length() >= 2) {
-                    if(disposable != null && !disposable.isDisposed()) {
-                        disposable.dispose();
-                    }
+                if(loadingInfo) {
+                    return;
+                }
 
+                if (s.length() >= 2) {
                     String searchText = String.valueOf(s).replaceAll("'", "");
                     searchText = searchText.replaceAll("%", "");
-//                    List<SimpleCommand> matches = new ArrayList<>();
 
-                    disposable = Single.just(DatabaseHelper.getInstance().partialMatches(searchText))
+                    Disposable disposable = Single.just(DatabaseHelper.getInstance().partialMatches(searchText))
                             .subscribeOn(Schedulers.io())
                             .observeOn(Schedulers.io())
-                            .delay(125, TimeUnit.MILLISECONDS)
-//                            .flatMap(list -> {
-//                                matches.clear();
-//                                matches.addAll(list);
-//
-//                                return Single.just(list);
-//                            })
+                            .delay(200, TimeUnit.MILLISECONDS)
                             .observeOn(AndroidSchedulers.mainThread())
+                            .doOnError(error -> {
+                                Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
+                            })
                             .subscribe(list -> {
                                         if (list.size() > 0) {
                                             matchListAdapter.setMatches(list);
@@ -118,8 +119,9 @@ public class CommandLookupFragment extends Fragment {
                                     },
                                     error -> {
                                         Log.d(TAG, "SQL error: " + error.toString());
-                                        Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
                                     });
+
+                    disposables.add(disposable);
                 } else {
                     matchListAdapter.clear();
                     matchListAdapter.notifyDataSetChanged();
@@ -139,6 +141,12 @@ public class CommandLookupFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    public void cleanup() {
+        if (disposables != null) {
+            disposables.clear();
+        }
 
         if (MatchListAdapter.helperThreads != null) {
             for (Thread thread : MatchListAdapter.helperThreads) {
@@ -152,9 +160,7 @@ public class CommandLookupFragment extends Fragment {
             matchListAdapter = null;
         }
 
-        if (disposable != null && !disposable.isDisposed()) {
-            disposable.dispose();
-        }
+        loadingInfo = false;
     }
 
     AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener() {
@@ -162,14 +168,16 @@ public class CommandLookupFragment extends Fragment {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if(disposable != null && !disposable.isDisposed()) {
-                disposable.dispose();
+            if(loadingInfo) {
+                return;
             }
 
-            fetchingDataDialog.setVisibility(View.VISIBLE);
-            fetchingDataDialog.setZ(100);
+            loadingInfo = true;
 
-            disposable = HttpClient.fetchCommandManPage(matchListAdapter.getItem(position).getUrl())
+            fetchingDataDialog.setVisibility(View.VISIBLE);
+            infoFragment = null;
+
+            Disposable disposable = HttpClient.fetchCommandManPage(matchListAdapter.getItem(position).getUrl())
                     .subscribeOn(Schedulers.io())
                     .flatMapCompletable(response -> {
                         if (response.isSuccessful() && response.code() == 200) {
@@ -182,22 +190,41 @@ public class CommandLookupFragment extends Fragment {
                         return Completable.error(new Throwable("Response returned with code: " + response.code()));
                     })
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(() -> {
-                        FragmentManager manager = getActivity().getSupportFragmentManager();
-                        if(manager.findFragmentByTag(CommandInfoFragment.TAG) != null) {
-                            manager.popBackStack();
-                        }
-
-                        manager.beginTransaction()
-                                .add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG)
-                                .addToBackStack(CommandInfoFragment.TAG)
-                                .commit();
-                        fetchingDataDialog.setVisibility(View.GONE);
-                    }, error -> {
+//                    .doOnComplete(() -> {
+//                        FragmentManager manager = getActivity().getSupportFragmentManager();
+//
+//                        manager.beginTransaction()
+//                                .add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG)
+//                                .addToBackStack(CommandInfoFragment.TAG)
+//                                .commit();
+//
+//                        fetchingDataDialog.setVisibility(View.GONE);
+//                    })
+                    .doOnError(error -> {
                         fetchingDataDialog.setVisibility(View.GONE);
                         Toast.makeText(getContext(), "Error fetching data\n" + error.getMessage(), Toast.LENGTH_LONG).show();
-                        error.printStackTrace();
-                    });
+                    })
+                    .subscribe(() -> {
+
+                                FragmentManager manager = getActivity().getSupportFragmentManager();
+
+                                manager.beginTransaction()
+                                        .add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG)
+                                        .addToBackStack(CommandInfoFragment.TAG)
+                                        .commit();
+
+                                fetchingDataDialog.setVisibility(View.GONE);
+
+                                loadingInfo = false;
+                            },
+                            error -> {
+                                Log.d(TAG, "Error in fetchCommandPage");
+                                error.printStackTrace();
+                                loadingInfo = false;
+                            });
+
+            disposables.add(disposable);
         }
     };
+
 }

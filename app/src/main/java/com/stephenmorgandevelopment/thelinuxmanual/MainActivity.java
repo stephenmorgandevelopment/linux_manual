@@ -24,6 +24,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private CommandLookupFragment lookupFragment;
     private Toolbar toolbar;
     private TextView progressDialog;
     private ScrollView progressScroller;
@@ -92,6 +93,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        if (lookupFragment != null) {
+            lookupFragment.cleanup();
+        }
+
+        lookupFragment = null;
     }
 
     @Override
@@ -172,6 +179,10 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         FragmentManager fragMan = getSupportFragmentManager();
 
+        if(CommandLookupFragment.loadingInfo) {
+            return;
+        }
+
         if (fragMan.getFragments().size() == 1) {
             fragMan.popBackStack();
         }
@@ -191,10 +202,10 @@ public class MainActivity extends AppCompatActivity {
     private void addLookupFragment() {
         if (getSupportFragmentManager().findFragmentByTag(CommandLookupFragment.TAG) == null) {
             FragmentManager manager = getSupportFragmentManager();
-            Fragment searchFragment = CommandLookupFragment.getInstance();
+            lookupFragment = CommandLookupFragment.getInstance();
 
             manager.beginTransaction()
-                    .add(R.id.fragmentContainer, searchFragment, CommandLookupFragment.TAG)
+                    .add(R.id.fragmentContainer, lookupFragment, CommandLookupFragment.TAG)
                     .addToBackStack(CommandLookupFragment.TAG)
                     .commit();
         }
