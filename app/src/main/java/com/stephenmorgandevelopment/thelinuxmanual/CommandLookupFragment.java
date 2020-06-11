@@ -24,8 +24,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
@@ -190,16 +188,6 @@ public class CommandLookupFragment extends Fragment {
                         return Completable.error(new Throwable("Response returned with code: " + response.code()));
                     })
                     .observeOn(AndroidSchedulers.mainThread())
-//                    .doOnComplete(() -> {
-//                        FragmentManager manager = getActivity().getSupportFragmentManager();
-//
-//                        manager.beginTransaction()
-//                                .add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG)
-//                                .addToBackStack(CommandInfoFragment.TAG)
-//                                .commit();
-//
-//                        fetchingDataDialog.setVisibility(View.GONE);
-//                    })
                     .doOnError(error -> {
                         fetchingDataDialog.setVisibility(View.GONE);
                         Toast.makeText(getContext(), "Error fetching data\n" + error.getMessage(), Toast.LENGTH_LONG).show();
