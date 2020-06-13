@@ -20,8 +20,8 @@ import androidx.fragment.app.FragmentManager;
 
 import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
-import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
 
 import java.util.concurrent.TimeUnit;
@@ -166,6 +166,11 @@ public class CommandLookupFragment extends Fragment {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if(!Helpers.hasInternet()) {
+                Toast.makeText(getContext(), "Must have internet.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
             if(loadingInfo) {
                 return;
             }
