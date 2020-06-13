@@ -1,15 +1,9 @@
 <resources>
-    <string name="app_name">The Linux Manual</string>
+    <string name="app_name">Ubuntu Manual Pages</string>
 
     <!-- Distribution Names -->
 
     <string name="ubuntu_name">Ubuntu</string>
-    <array name="distro_names">
-<!--        <string name="ubuntu_name">Ubuntu</string>-->
-
-    </array>
-
-
 
     <!-- Menu Button Names -->
     <string name="refresh_button">Refresh</string>
