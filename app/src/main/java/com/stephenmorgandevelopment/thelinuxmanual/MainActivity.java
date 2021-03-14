@@ -5,7 +5,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.viewpager.widget.ViewPager;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,6 +22,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
 
 import java.util.List;
 
@@ -29,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView progressDialog;
     private ScrollView progressScroller;
     private SyncDialogMonitor syncDialogMonitor;
+    private ViewPager viewPager;
+    private PrimaryPagerAdapter pagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +47,10 @@ public class MainActivity extends AppCompatActivity {
 
         progressDialog = findViewById(R.id.progressTextView);
         progressScroller = findViewById(R.id.progressScroller);
+
+        viewPager = findViewById(R.id.viewPager);
+        pagerAdapter = new PrimaryPagerAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(pagerAdapter);
     }
 
 
@@ -50,22 +59,10 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         if (DatabaseHelper.hasDatabase() && DatabaseHelper.getInstance().hasData() && !CommandSyncService.working) {
+            viewPager.setVisibility(View.VISIBLE);
             addLookupFragment();
         } else {
-            progressDialog.setVisibility(View.VISIBLE);
-            progressScroller.setVisibility(View.VISIBLE);
-
-            progressDialog.setText(R.string.initial_sync_message);
-
-            if (!CommandSyncService.working) {
-                Intent intent = new Intent();
-                intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
-
-                CommandSyncService.enqueueWork(MainActivity.this, intent);
-            }
-
-            syncDialogMonitor = new SyncDialogMonitor();
-            syncDialogMonitor.start();
+            syncDatabase();
         }
 
         String title = getString(R.string.app_name) + " - " + Ubuntu.getReleaseString();
@@ -188,6 +185,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
         super.onBackPressed();
+    }
+
+    private void syncDatabase() {
+        progressDialog.setVisibility(View.VISIBLE);
+        progressScroller.setVisibility(View.VISIBLE);
+
+        progressDialog.setText(R.string.initial_sync_message);
+
+        if (!CommandSyncService.working) {
+            Intent intent = new Intent();
+            intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
+
+            CommandSyncService.enqueueWork(MainActivity.this, intent);
+        }
+
+        syncDialogMonitor = new SyncDialogMonitor();
+        syncDialogMonitor.start();
     }
 
     protected void changeRelease(Ubuntu.Release release) {

@@ -42,7 +42,7 @@ public class CommandLookupFragment extends Fragment {
     private MatchListAdapter matchListAdapter;
     private TextView fetchingDataDialog;
 
-    static boolean loadingInfo = false;
+    static volatile boolean loadingInfo = false;
 
     public static CommandLookupFragment getInstance() {
         return new CommandLookupFragment();
@@ -104,7 +104,7 @@ public class CommandLookupFragment extends Fragment {
                     Disposable disposable = Single.just(DatabaseHelper.getInstance().partialMatches(searchText))
                             .subscribeOn(Schedulers.io())
                             .observeOn(Schedulers.io())
-                            .delay(200, TimeUnit.MILLISECONDS)
+                            .delay(500, TimeUnit.MILLISECONDS)
                             .observeOn(AndroidSchedulers.mainThread())
                             .doOnError(error -> {
                                 Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
