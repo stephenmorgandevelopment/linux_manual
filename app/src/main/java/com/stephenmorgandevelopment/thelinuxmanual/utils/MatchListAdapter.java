@@ -124,7 +124,7 @@ public class MatchListAdapter extends BaseAdapter {
                     descriptionView.setText(desc);
                 })
                 .doOnError(error -> {
-                    descriptionView.setText("Unable to fetch data at this time.");
+                    descriptionView.setText(R.string.unable_to_fetch);
                 })
                 .observeOn(Schedulers.computation())
                 .subscribe(response -> {

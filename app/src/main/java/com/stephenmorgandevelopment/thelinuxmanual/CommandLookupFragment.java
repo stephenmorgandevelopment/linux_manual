@@ -24,6 +24,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
@@ -161,6 +162,7 @@ public class CommandLookupFragment extends Fragment {
         loadingInfo = false;
     }
 
+    @SuppressWarnings("NullPointerException")
     AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener() {
         CommandInfoFragment infoFragment;
 
@@ -184,8 +186,9 @@ public class CommandLookupFragment extends Fragment {
                     .subscribeOn(Schedulers.io())
                     .flatMapCompletable(response -> {
                         if (response.isSuccessful() && response.code() == 200) {
-                            infoFragment = CommandInfoFragment.getInstance();
-                            infoFragment.setInfo(Ubuntu.crawlForCommandInfo(response.body().string()));
+                            ((MainActivity) requireActivity())
+                                    .getPagerAdapter()
+                                    .addPage(Ubuntu.crawlForCommandInfo(response.body().string()));
 
                             return Completable.complete();
                         }
@@ -198,23 +201,15 @@ public class CommandLookupFragment extends Fragment {
                         Toast.makeText(getContext(), "Error fetching data\n" + error.getMessage(), Toast.LENGTH_LONG).show();
                     })
                     .subscribe(() -> {
+                        ((MainActivity) requireActivity()).getPagerAdapter().notifyDataSetChanged();
+                        fetchingDataDialog.setVisibility(View.GONE);
+                        loadingInfo = false;
 
-                                FragmentManager manager = getActivity().getSupportFragmentManager();
-
-                                manager.beginTransaction()
-                                        .add(R.id.fragmentContainer, infoFragment, CommandInfoFragment.TAG)
-                                        .addToBackStack(CommandInfoFragment.TAG)
-                                        .commit();
-
-                                fetchingDataDialog.setVisibility(View.GONE);
-
-                                loadingInfo = false;
-                            },
-                            error -> {
-                                Log.d(TAG, "Error in fetchCommandPage");
-                                error.printStackTrace();
-                                loadingInfo = false;
-                            });
+                        }, error -> {
+                            Log.d(TAG, "Error in fetchCommandPage");
+                            error.printStackTrace();
+                            loadingInfo = false;
+                    });
 
             disposables.add(disposable);
         }

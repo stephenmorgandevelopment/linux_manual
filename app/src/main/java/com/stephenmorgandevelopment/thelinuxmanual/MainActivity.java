@@ -18,6 +18,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.tabs.TabLayout;
 import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private ScrollView progressScroller;
     private SyncDialogMonitor syncDialogMonitor;
     private ViewPager viewPager;
+    private TabLayout tabLayout;
     private PrimaryPagerAdapter pagerAdapter;
 
     @Override
@@ -49,8 +51,9 @@ public class MainActivity extends AppCompatActivity {
         progressScroller = findViewById(R.id.progressScroller);
 
         viewPager = findViewById(R.id.viewPager);
-        pagerAdapter = new PrimaryPagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(pagerAdapter);
+        tabLayout = findViewById(R.id.tabLayout);
+
+        tabLayout.setupWithViewPager(viewPager);
     }
 
 
@@ -59,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         if (DatabaseHelper.hasDatabase() && DatabaseHelper.getInstance().hasData() && !CommandSyncService.working) {
-            viewPager.setVisibility(View.VISIBLE);
             addLookupFragment();
         } else {
             syncDatabase();
@@ -177,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
         FragmentManager fragMan = getSupportFragmentManager();
 
         if(CommandLookupFragment.loadingInfo) {
+            Toast.makeText(this, "Syncing, use home or apps button to switch apps.", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -214,15 +217,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addLookupFragment() {
-        if (getSupportFragmentManager().findFragmentByTag(CommandLookupFragment.TAG) == null) {
-            FragmentManager manager = getSupportFragmentManager();
-            lookupFragment = CommandLookupFragment.getInstance();
+        viewPager.setVisibility(View.VISIBLE);
 
-            manager.beginTransaction()
-                    .add(R.id.fragmentContainer, lookupFragment, CommandLookupFragment.TAG)
-                    .addToBackStack(CommandLookupFragment.TAG)
-                    .commit();
-        }
+        lookupFragment = CommandLookupFragment.getInstance();
+
+        pagerAdapter = new PrimaryPagerAdapter(getSupportFragmentManager(), lookupFragment);
+        viewPager.setAdapter(pagerAdapter);
     }
 
     private void clearFragments() {
@@ -231,6 +231,10 @@ public class MainActivity extends AppCompatActivity {
         for (Fragment frag : fragments) {
             fragMan.popBackStack();
         }
+    }
+
+    public PrimaryPagerAdapter getPagerAdapter() {
+        return pagerAdapter;
     }
 
     private class SyncDialogMonitor extends Thread {
