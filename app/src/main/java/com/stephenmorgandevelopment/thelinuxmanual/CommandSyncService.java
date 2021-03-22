@@ -6,6 +6,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.JobIntentService;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
@@ -22,101 +24,98 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.Request;
+import okhttp3.Response;
 
 public class CommandSyncService extends JobIntentService {
     public static final String DISTRO = "distro";
-
+    public static final String COMPLETE_TAG = "complete";
     public static final int JOB_ID = 5001;
-
-    private static String syncProgress = "waiting.";
-
     public static final String TAG = "CommandSyncService";
+
+    private static MutableLiveData<String> progress;
 
     private static CompositeDisposable globalDisposable;
 
-    static volatile boolean working = false;
+    private static volatile boolean working = false;
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
+        progress.postValue(progress.getValue().concat("waiting..."));
+
         if (globalDisposable == null) {
             globalDisposable = new CompositeDisposable();
         }
 
-        String distro;
-        if (intent.getExtras() == null || (distro = intent.getExtras().getString(DISTRO)) == null) {
-            Log.e(TAG, "Null intent or extra passed to job service.");
-            return;
-        }
+        progress.postValue("\n\nConnecting to " + Ubuntu.BASE_URL + ".");
 
-
-        if (distro.equalsIgnoreCase(Ubuntu.NAME)) {
-            syncProgress = "Connecting to " + Ubuntu.BASE_URL + ".";
-
-            try {
-                syncSimpleCommands(Ubuntu.BASE_URL);
-            } catch (IOException ioe) {
-                Log.e("CommandSyncService", "Ioexception in syncSimpleCommands: " + ioe.getMessage());
-                ioe.printStackTrace();
-            }
+        try {
+            syncSimpleCommands();
+        } catch(IOException ioe) {
+            Log.e(TAG, "Error in syncSimpleCommands: " + ioe.getMessage());
+            ioe.printStackTrace();
         }
     }
 
-    private synchronized void syncSimpleCommands(String baseUrl) throws IOException {
+    private synchronized void syncSimpleCommands() throws IOException {
         Disposable disposable = HttpClient.fetchDirsHtml()
-                .subscribeOn(Schedulers.computation())
+                .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
-                .flatMapObservable(response -> {
-                    if (response.isSuccessful() && response.code() == 200) {
-                        String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal() + "/";
-
-                        List<String> dirPaths = Ubuntu.crawlForManDirs(response.body().string());
-                        List<Request> requests = new ArrayList<>();
-
-                        for (String path : dirPaths) {
-                            Request req = new Request.Builder().url(url + path).build();  //+ "/").build();
-                            requests.add(req);
-                        }
-
-                        return Observable.fromIterable(requests);
-                    } else {
-                        Log.e(TAG, "Request unsuccessful: " + response.code());
-                    }
-
-                    return Observable.error(new Throwable());
-                })
+                .flatMapObservable(this::mapHtmlToManDirs)
                 .concatMap(request -> Observable.just(HttpClient.getClient().newCall(request).execute()))
-                .doOnComplete(() -> {
-                    working = false;
-                })
-                .subscribe(response -> {
-                            String reqUrl = response.request().url().toString();
-
-                            Log.d(TAG, "Successful response from: " + reqUrl);
-                            syncProgress = "\nPulled data from " + reqUrl;
-                            if(reqUrl.endsWith("3/")) {
-                                syncProgress += "\nLarge data set, longest processing.";
-                            }
-                            syncProgress += "\nProcessing data.";
-
-                            List<SimpleCommand> pageCommands = Ubuntu.crawlForManPages(response.body().string(), reqUrl);
-
-                            syncProgress = "\nSaving data locally.";
-
-                            if (pageCommands.size() > 0) {
-                                DatabaseHelper.getInstance().addCommands(pageCommands);
-                            }
-                        }
-                        , error -> {
-                            Log.d(TAG, "Command sync error block.");
+                .doOnComplete(CommandSyncService::stopWork)
+                .subscribe(this::processAndSaveResponse, error -> {
+                            Log.d(TAG, error.getMessage());
                             Log.d(TAG, error.toString());
                         });
 
         globalDisposable.add(disposable);
     }
 
+    private void processAndSaveResponse(Response response) throws IOException {
+        String reqUrl = response.request().url().toString();
+
+        if(reqUrl.endsWith("3/")) {
+            progress.postValue("\nPulled data from " + reqUrl
+                    + "\nLarge data set, longest processing."
+                    + "\nProcessing data...");
+        } else {
+            progress.postValue("\nPulled data from " + reqUrl
+                    + "\nProcessing data...");
+        }
+
+        List<SimpleCommand> pageCommands = Ubuntu.crawlForManPages(response.body().string(), reqUrl);
+
+        progress.postValue("\nSaving data locally...");
+
+        if (pageCommands.size() > 0) {
+            DatabaseHelper.getInstance().addCommands(pageCommands);
+        }
+    }
+
+    public Observable<Request> mapHtmlToManDirs(Response response) throws IOException {
+        if (response.isSuccessful() && response.code() == 200) {
+            String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal() + "/";
+
+            List<String> dirPaths = Ubuntu.crawlForManDirs(response.body().string());
+            List<Request> requests = new ArrayList<>();
+
+            for (String path : dirPaths) {
+                Request req = new Request.Builder().url(url + path).build();
+                requests.add(req);
+            }
+
+            return Observable.fromIterable(requests);
+        } else {
+            Log.e(TAG, "Request unsuccessful: " + response.code());
+        }
+
+        return Observable.error(new Throwable());
+    }
+
     @Override
     public boolean onStopCurrentWork() {
         working = false;
+        progress.postValue(COMPLETE_TAG);
         return super.onStopCurrentWork();
     }
 
@@ -129,12 +128,22 @@ public class CommandSyncService extends JobIntentService {
         }
     }
 
-    public static String getSyncProgress() {
-        return syncProgress;
-    }
-
-    public static void enqueueWork(Context context, Intent work) {
+    public static void enqueueWork(Context context, Intent work, MutableLiveData<String> prog) {
+        progress = prog;
         working = true;
         enqueueWork(context, CommandSyncService.class, JOB_ID, work);
+    }
+
+    public static boolean isWorking() {
+        return working;
+    }
+
+    public static void stopWork() {
+        working = false;
+        progress.postValue(COMPLETE_TAG);
+    }
+
+    public static LiveData<String> getProgress() {
+        return progress;
     }
 }

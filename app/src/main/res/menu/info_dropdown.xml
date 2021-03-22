@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    >
+
     <item android:id="@+id/dropDown"
-        android:title="Jump To"
+        android:title="@string/jump_to"
         android:icon="@android:drawable/arrow_down_float"
         app:showAsAction="always"
         >
@@ -12,5 +15,12 @@
             </group>
         </menu>
     </item>
+
+    <item
+        android:id="@+id/closeButton"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        android:title="@string/close"
+        app:showAsAction="always" />
+
 
 </menu>

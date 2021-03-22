@@ -65,4 +65,7 @@ public class Helpers {
         return applicationContext;
     }
 
+    public static void cleanup() {
+        applicationContext = null;
+    }
 }

@@ -1,16 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.viewpager.widget.ViewPager;
-
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,9 +8,19 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.viewpager.widget.ViewPager;
+
 import com.google.android.material.tabs.TabLayout;
 import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
@@ -32,10 +32,11 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private TextView progressDialog;
     private ScrollView progressScroller;
-    private SyncDialogMonitor syncDialogMonitor;
     private ViewPager viewPager;
     private TabLayout tabLayout;
     private PrimaryPagerAdapter pagerAdapter;
+
+    private MainActivityViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +55,13 @@ public class MainActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tabLayout);
 
         tabLayout.setupWithViewPager(viewPager);
+
+        viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
+
+        String title = getString(R.string.app_name) + " - " + Ubuntu.getReleaseString();
+        toolbar.setTitle(title);
+
+        viewModel.getAddPageData().observe(this, updatePagerAdapterObserver);
     }
 
 
@@ -61,30 +69,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (DatabaseHelper.hasDatabase() && DatabaseHelper.getInstance().hasData() && !CommandSyncService.working) {
+        if (DatabaseHelper.hasDatabase() && DatabaseHelper.getInstance().hasData() && !CommandSyncService.isWorking()) {
             addLookupFragment();
         } else {
-            syncDatabase();
+            startDatabaseSync();
         }
 
-        String title = getString(R.string.app_name) + " - " + Ubuntu.getReleaseString();
-        toolbar.setTitle(title);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
-        if (syncDialogMonitor != null && syncDialogMonitor.isAlive()) {
-            syncDialogMonitor.interrupt();
-        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        if (!CommandSyncService.working) {
+        if (!CommandSyncService.isWorking()) {
             DatabaseHelper.getInstance().close();
         }
     }
@@ -98,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         lookupFragment = null;
+
+        Helpers.cleanup();
     }
 
     @Override
@@ -118,16 +123,19 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.refreshMenuBtn:
-                if (!CommandSyncService.working) {
+                if (!CommandSyncService.isWorking()) {
                     if (Helpers.hasInternet()) {
                         DatabaseHelper.getInstance().wipeTable();
 
-                        Intent intent = new Intent();
-                        intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
+//                        Intent intent = new Intent();
+//                        intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
+//
+//                        CommandSyncService.enqueueWork(MainActivity.this, intent);
 
-                        CommandSyncService.enqueueWork(MainActivity.this, intent);
+//                        clearFragments();
+                        startDatabaseSync();
+                        resetScreen();
 
-                        clearFragments();
                         MainActivity.this.recreate();
                     } else {
                         Toast.makeText(MainActivity.this, "Must be connected to the internet.", Toast.LENGTH_LONG).show();
@@ -158,6 +166,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.groovy:
                 changeRelease(Ubuntu.Release.GROOVY);
                 return true;
+            case R.id.hirsute:
+                changeRelease(Ubuntu.Release.HIRSUTE);
+                return true;
             case R.id.precise:
                 changeRelease(Ubuntu.Release.PRECISE);
                 return true;
@@ -178,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         FragmentManager fragMan = getSupportFragmentManager();
 
-        if(CommandLookupFragment.loadingInfo) {
+        if(viewModel.isLoading(-1L)) {
             Toast.makeText(this, "Syncing, use home or apps button to switch apps.", Toast.LENGTH_LONG).show();
             return;
         }
@@ -190,21 +201,34 @@ public class MainActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 
-    private void syncDatabase() {
+    private final Observer<Command> updatePagerAdapterObserver = new Observer<Command>() {
+        @Override
+        public void onChanged(Command command) {
+            pagerAdapter.addPage(command);
+            viewModel.addCommandToCommandList(command);
+            pagerAdapter.notifyDataSetChanged();
+        }
+    };
+
+    private void startDatabaseSync() {
         progressDialog.setVisibility(View.VISIBLE);
         progressScroller.setVisibility(View.VISIBLE);
 
-        progressDialog.setText(R.string.initial_sync_message);
+        viewModel.syncDatabase();
 
-        if (!CommandSyncService.working) {
-            Intent intent = new Intent();
-            intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
+        viewModel.getSyncProgress().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if(s.equals(CommandSyncService.COMPLETE_TAG)) {
+                    progressDialog.setVisibility(View.GONE);
+                    progressScroller.setVisibility(View.GONE);
 
-            CommandSyncService.enqueueWork(MainActivity.this, intent);
-        }
+                    addLookupFragment();
+                }
 
-        syncDialogMonitor = new SyncDialogMonitor();
-        syncDialogMonitor.start();
+                progressDialog.append(s);
+            }
+        });
     }
 
     protected void changeRelease(Ubuntu.Release release) {
@@ -212,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
         Ubuntu.setRelease(release);
         DatabaseHelper.changeTable(release.getName());
 
-        clearFragments();
+        resetScreen();
         MainActivity.this.recreate();
     }
 
@@ -222,7 +246,19 @@ public class MainActivity extends AppCompatActivity {
         lookupFragment = CommandLookupFragment.getInstance();
 
         pagerAdapter = new PrimaryPagerAdapter(getSupportFragmentManager(), lookupFragment);
+        if(viewModel.getCommandsList().size() > 0) {
+            pagerAdapter.addAllPages(viewModel.getCommandsList());
+        }
+
         viewPager.setAdapter(pagerAdapter);
+    }
+
+    private void resetScreen() {
+        viewPager.setVisibility(View.GONE);
+        viewPager.setAdapter(null);
+
+        pagerAdapter = null;
+        lookupFragment = null;
     }
 
     private void clearFragments() {
@@ -237,44 +273,25 @@ public class MainActivity extends AppCompatActivity {
         return pagerAdapter;
     }
 
-    private class SyncDialogMonitor extends Thread {
-        int counter = 0;
-        String progress = "";
+    public void removePage(Command command) {
+        viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
+//        pagerAdapter.destroyItem();
+        pagerAdapter.removePage(command);
+        pagerAdapter.notifyDataSetChanged();
+    }
 
-        @Override
-        public void run() {
-            while (CommandSyncService.working) {
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    Log.e("MainActivity", "Progress dialog thread interrupted while working.");
-                }
+    public TabLayout getTabLayout() {return tabLayout;}
 
-                if (!progress.equals(CommandSyncService.getSyncProgress())) {
-                    progress = CommandSyncService.getSyncProgress();
-                    runOnUiThread(() -> progressDialog.append(progress));
-                }
+    public void morphTabs() {
+        for(int i = 0; i < pagerAdapter.getCount(); i++) {
+            TabLayout.Tab tab = tabLayout.getTabAt(i);
 
-                if (++counter == 20) {
-                    runOnUiThread(() -> progressDialog.append("."));
-                    counter = 0;
-                }
-            }
+            tab.setCustomView(R.layout.tab_layout);
 
-            runOnUiThread(() -> progressDialog.append("\nFinishing up..."));
-
-            try {
-                Thread.sleep(350);
-            } catch (InterruptedException e) {
-                Log.e("MainActivity", "Progress thread interrupted while finishing up.");
-            }
-
-            runOnUiThread(() -> {
-                progressDialog.setVisibility(View.GONE);
-                progressScroller.setVisibility(View.GONE);
-
-                addLookupFragment();
+            tab.view.findViewById(R.id.imageView).setOnClickListener((view) -> {
+                // TODO Close tab.
             });
         }
     }
+
 }

@@ -19,7 +19,7 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TAG = DatabaseHelper.class.getSimpleName();
     private static final String simpleCommandsName = "simple_commands";
-    private final static int version = 1;
+    private final static int version = 2;
 
     private SQLiteDatabase database;
     private static DatabaseHelper helperInstance;
@@ -65,7 +65,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        for (Ubuntu.Release release : Ubuntu.Release.values()) {
+            String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS "
+                    + release.getName() + TABLE_NAME_POSTFIX + "("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
+                    + "description TEXT, url TEXT, manN TEXT)";
 
+            db.execSQL(CREATE_TABLE);
+        }
     }
 
     public void addCommands(List<SimpleCommand> commands) {

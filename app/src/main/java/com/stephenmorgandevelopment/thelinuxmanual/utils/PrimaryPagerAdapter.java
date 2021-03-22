@@ -8,29 +8,41 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 
 import com.stephenmorgandevelopment.thelinuxmanual.CommandInfoFragment;
 import com.stephenmorgandevelopment.thelinuxmanual.CommandLookupFragment;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
-import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
-    private List<Map<String, String>> dataList;
-    private List<SimpleCommand> commands;
+    private final List<Command> dataList = new ArrayList<>();
+    private final CommandLookupFragment lookupFragment;
 
-    private CommandLookupFragment lookupFragment;
+    private static final String INFO_KEY_NAME = "NAME";
 
     public PrimaryPagerAdapter(FragmentManager fm, CommandLookupFragment lookupFragment) {
         super(fm, FragmentStatePagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         this.lookupFragment = lookupFragment;
-
-        dataList = new ArrayList<>();
     }
 
-    public void addPage(Map<String, String> data) {
-        dataList.add(data);
+    public void addPage(Command command) {
+        dataList.add(command);
+    }
+
+    public void addAllPages(List<Command> commands) {
+        dataList.clear();
+        dataList.addAll(commands);
+        notifyDataSetChanged();
+    }
+
+    public void removePage(Command command) {
+        if(!dataList.remove(command)) {
+            for(Command cmd : dataList) {
+                if(cmd.getId() == command.getId()) {
+                    dataList.remove(cmd);
+                    break;
+                }
+            }
+        }
     }
 
     @NonNull
@@ -40,10 +52,14 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
             return lookupFragment;
         }
 
-        CommandInfoFragment infoFragment = CommandInfoFragment.getInstance();
-        infoFragment.setInfo(dataList.get(position - 1));
+        if(dataList.size() > 0) {
+            Command cmd = dataList.get(position - 1);
+            CommandInfoFragment infoFragment =
+                    CommandInfoFragment.getInstance(cmd);
+            return infoFragment;
+        }
 
-        return infoFragment;
+        return lookupFragment;
     }
 
     @Override
@@ -58,6 +74,12 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
             return "Search";
         }
 
-        return dataList.get(position - 1).get("NAME");
+        String regex = "(/W/s)";
+        String name = dataList.get(position - 1)
+                .getData().get(INFO_KEY_NAME);
+
+        return name.substring(0, name.indexOf(" "));
     }
+
+
 }

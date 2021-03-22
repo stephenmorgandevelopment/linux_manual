@@ -2,7 +2,6 @@ package com.stephenmorgandevelopment.thelinuxmanual.network;
 
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
-import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,15 +13,20 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.getLocal;
+import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.hasInternet;
+
 public class HttpClient {
     private static final String TAG = HttpClient.class.getSimpleName();
 
     private static Cache cache;
-    private static OkHttpClient okClient;
+    private static final OkHttpClient okClient;
 
     static {
         if(cache == null) {
-            cache = new okhttp3.Cache(new File(Helpers.getCacheDir(), "http_cache"), 10485760);
+            cache = new okhttp3.Cache(
+                    new File(Helpers.getCacheDir(), "http_cache"),
+                    10485760);
         }
 
         okClient = new OkHttpClient.Builder()

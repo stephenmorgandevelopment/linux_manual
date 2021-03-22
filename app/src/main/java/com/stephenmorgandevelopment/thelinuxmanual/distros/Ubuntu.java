@@ -18,6 +18,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
+import io.reactivex.Single;
+import okhttp3.Response;
+
 
 public class Ubuntu {
     public static final String TAG = Ubuntu.class.getSimpleName();
@@ -28,7 +31,7 @@ public class Ubuntu {
     private static Release release;
 
     public enum Release {
-        ARTFUL("artful"), BIONIC("bionic"), COSMIC("cosmic"), DISCO("disco"), EOAN("eoan"), FOCAL("focal"), GROOVY("groovy"), PRECISE("precise"), TRUSY("trusty"), XENIAL("xenial");
+        ARTFUL("artful"), BIONIC("bionic"), COSMIC("cosmic"), DISCO("disco"), EOAN("eoan"), FOCAL("focal"), GROOVY("groovy"), HIRSUTE("hirsute"), PRECISE("precise"), TRUSY("trusty"), XENIAL("xenial");
 
         private String name;
 
@@ -59,6 +62,11 @@ public class Ubuntu {
     public static String getReleaseString() {
         return release.getName();
     }
+
+    public static Single<Map<String, String>> crawlForCommandInfo(Response response)  throws IOException {
+        return Single.just(crawlForCommandInfo(response.body().string()));
+    }
+
 
     public static Map<String, String> crawlForCommandInfo(String pageHtml) {
         Log.d(TAG, "Creating info from man page.");

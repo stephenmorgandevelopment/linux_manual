@@ -22,24 +22,31 @@
         android:id="@+id/viewPager"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        android:visibility="gone"
-        >
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
 
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                />
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:tabGravity="center"
+            app:tabIndicatorColor="#71A3BAB5"
+            app:tabMaxWidth="150dp"
+            app:tabMinWidth="150dp"
+            app:tabMode="scrollable"
+            >
 
-<!--        <androidx.viewpager.widget.PagerTitleStrip-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_gravity="top"-->
-<!--            />-->
+        </com.google.android.material.tabs.TabLayout>
+
+
+        <!--        <androidx.viewpager.widget.PagerTitleStrip-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_gravity="top"-->
+        <!--            />-->
 
     </androidx.viewpager.widget.ViewPager>
 
