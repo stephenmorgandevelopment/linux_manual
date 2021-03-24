@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -27,7 +26,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -42,12 +40,17 @@ public class CommandLookupFragment extends Fragment {
     private EditText searchText;
     private ListView matchListView;
     private MatchListAdapter matchListAdapter;
-    private TextView fetchingDataDialog;
 
     private MainActivityViewModel viewModel;
 
+    private String searchTextTrimRegex = "^(/W/s)$";
+
     public static CommandLookupFragment getInstance() {
         return new CommandLookupFragment();
+    }
+
+    public CommandLookupFragment() {
+
     }
 
     @Nullable
@@ -64,10 +67,6 @@ public class CommandLookupFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         searchText = view.findViewById(R.id.searchText);
         matchListView = view.findViewById(R.id.matchList);
-        fetchingDataDialog = view.findViewById(R.id.fetchingDataDialog);
-
-//        ((MainActivity)requireActivity())
-//                .setToolbarTitle(getString(R.string.app_name) + " - " + Ubuntu.getReleaseString());
 
         disposables = new CompositeDisposable();
 
@@ -86,8 +85,6 @@ public class CommandLookupFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-
-        ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle("Search");
     }
 
     @Override
@@ -98,14 +95,14 @@ public class CommandLookupFragment extends Fragment {
             matchListView.setAdapter(matchListAdapter);
         }
 
-//        searchText.addTextChangedListener(onChangedText);
+        ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle("Search");
+
+        matchListView.setAdapter(matchListAdapter);
+        matchListView.setOnItemClickListener(itemClicked);
 
         if(viewModel.getSearchText() != null) {
             searchText.setText(viewModel.getSearchText());
         }
-
-        matchListView.setAdapter(matchListAdapter);
-        matchListView.setOnItemClickListener(itemClicked);
     }
 
     @Override
@@ -154,16 +151,15 @@ public class CommandLookupFragment extends Fragment {
         @Override
         public void afterTextChanged(Editable s) {
             if (s.length() >= 2) {
-                String regex = "^(/W/s)$";
                 String searchText = String.valueOf(s).replaceAll("'", "");
                 searchText = searchText.replaceAll("%", "");
-                searchText = searchText.replaceAll(regex,"");
+                searchText = searchText.replaceAll(searchTextTrimRegex,"");
 
                 Disposable disposable = Single.just(
                         DatabaseHelper.getInstance().partialMatches(searchText))
                         .subscribeOn(Schedulers.io())
                         .observeOn(Schedulers.io())
-                        .delay(200, TimeUnit.MILLISECONDS)
+//                        .delay(200, TimeUnit.MILLISECONDS)
 //                        .delaySubscription(350, TimeUnit.MILLISECONDS)
                         .observeOn(AndroidSchedulers.mainThread())
                         .doOnError(error -> {

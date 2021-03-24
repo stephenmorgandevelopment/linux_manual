@@ -30,8 +30,10 @@ import java.util.Set;
 
 public class CommandInfoFragment extends Fragment {
     public static final String TAG = CommandInfoFragment.class.getSimpleName();
-    private final Command command;
+    private Command command;
     private String shortName;
+
+    private TextView fetchingDataDialog;
 
     private LinearLayout scrollContainer;
     private ScrollView rootScrollView;
@@ -39,6 +41,7 @@ public class CommandInfoFragment extends Fragment {
 
     private MainActivityViewModel viewModel;
 
+    private static final String KEY_ID = "id";
     private static final String INFO_KEY_NAME = Helpers.getApplicationContext().getString(R.string.info_key_name);
     private static final String INFO_KEY_SYNOPSIS = Helpers.getApplicationContext().getString(R.string.info_key_synopsis);
     private static final String INFO_KEY_EXAMPLE = Helpers.getApplicationContext().getString(R.string.info_key_example);
@@ -46,13 +49,18 @@ public class CommandInfoFragment extends Fragment {
     private static final String INFO_KEY_OPTIONS = Helpers.getApplicationContext().getString(R.string.info_key_options);
     private static final String INFO_KEY_DESCRIPTION = Helpers.getApplicationContext().getString(R.string.info_key_description);
 
-    public static CommandInfoFragment getInstance(Command command) {
-        return new CommandInfoFragment(command);
+    public static CommandInfoFragment newInstance(long id) {
+        Bundle args = new Bundle();
+        args.putLong(KEY_ID, id);
+
+        CommandInfoFragment fragment = new CommandInfoFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
-    private CommandInfoFragment(Command command) {
-        this.command = command;
-    }
+//    public CommandInfoFragment(Command command) {
+//        this.command = command;
+//    }
 
     @Nullable
     @Override
@@ -60,7 +68,7 @@ public class CommandInfoFragment extends Fragment {
         View view = inflater.inflate(R.layout.command_info_fragment, null);
         view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle(shortName);
+        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
 
         return view;
     }
@@ -70,6 +78,7 @@ public class CommandInfoFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         scrollContainer = view.findViewById(R.id.scrollContainer);
         rootScrollView = view.findViewById(R.id.rootScrollView);
+//        fetchingDataDialog = view.findViewById(R.id.fetchingDataDialog);
 
         buildOutput();
     }
@@ -77,6 +86,11 @@ public class CommandInfoFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
+
+        long id = getArguments().getLong(KEY_ID);
+        command = viewModel.getCommandFromListById(id);
 
         setHasOptionsMenu(true);
 
@@ -88,14 +102,11 @@ public class CommandInfoFragment extends Fragment {
 //        Log.i(TAG, "Set title to " + infoMap.get(INFO_KEY_NAME) + id);
 
         jumpToList = new ArrayList<>();
-        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
     }
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.info_dropdown, menu);
-
-        ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(shortName);
 
         Menu dropDownMenu = menu.findItem(R.id.dropDown).getSubMenu();
 
@@ -134,6 +145,8 @@ public class CommandInfoFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
+        ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(shortName);
     }
 
     @Override
@@ -152,6 +165,8 @@ public class CommandInfoFragment extends Fragment {
 
         jumpToList.add(header);
     }
+
+    public String getShortName() {return shortName;}
 
     private View getDivider() {
         View divider = new View(getContext());

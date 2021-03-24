@@ -1,15 +1,14 @@
 package com.stephenmorgandevelopment.thelinuxmanual.models;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Command {
-    private long id;
-    private Map<String, String> data;
+    private final long id;
+    private final Map<String, String> data;
 
-    public Command(long id) {
-        this(id, new LinkedHashMap<String, String>());
-    }
+//    public Command(long id) {
+//        this(id, new LinkedHashMap<String, String>());
+//    }
 
     public Command(long id, Map<String, String> data) {
         this.id = id;

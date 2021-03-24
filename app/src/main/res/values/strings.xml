@@ -70,7 +70,7 @@
     <string name="precise">precise</string>
     <string name="trusty">trusty</string>
     <string name="xenial">xenial</string>
-    <string name="fetching_data">Fetching data...</string>
+    <string name="fetching_data">Loading&#8230;</string>
     <string name="info_key_name">NAME</string>
     <string name="info_key_synopsis">SYNOPSIS</string>
     <string name="info_key_example">EXAMPLE</string>

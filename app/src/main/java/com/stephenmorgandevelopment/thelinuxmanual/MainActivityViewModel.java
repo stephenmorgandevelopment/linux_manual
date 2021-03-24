@@ -136,6 +136,16 @@ public class MainActivityViewModel extends AndroidViewModel {
         return commandsList;
     }
 
+    public Command getCommandFromListById(long id) {
+        for(Command command : commandsList) {
+            if(command.getId() == id) {
+                return command;
+            }
+        }
+
+        return null;
+    }
+
     public boolean commandsListHasId(long id) {
         for(Command command : commandsList) {
             if(command.getId() == id) {

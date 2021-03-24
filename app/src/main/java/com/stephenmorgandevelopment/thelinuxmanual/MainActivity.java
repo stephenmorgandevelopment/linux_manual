@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
 
         Helpers.init(MainActivity.this.getApplication());
 
+        viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
+
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -56,7 +58,9 @@ public class MainActivity extends AppCompatActivity {
 
         tabLayout.setupWithViewPager(viewPager);
 
-        viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
+        lookupFragment = new CommandLookupFragment();
+
+        pagerAdapter = new PrimaryPagerAdapter(getSupportFragmentManager(), lookupFragment);
 
         String title = getString(R.string.app_name) + " - " + Ubuntu.getReleaseString();
         toolbar.setTitle(title);
@@ -204,9 +208,17 @@ public class MainActivity extends AppCompatActivity {
     private final Observer<Command> updatePagerAdapterObserver = new Observer<Command>() {
         @Override
         public void onChanged(Command command) {
-            pagerAdapter.addPage(command);
+            if(viewModel.getCommandsList().contains(command)) {
+                return;
+            }
+
+            pagerAdapter.startUpdate(viewPager);
+            pagerAdapter.addPage(command.getId(), command.getData().get("NAME"));
             viewModel.addCommandToCommandList(command);
             pagerAdapter.notifyDataSetChanged();
+            pagerAdapter.instantiateItem(viewPager, pagerAdapter.getCount() - 1);
+            pagerAdapter.finishUpdate(viewPager);
+//            morphTab(pagerAdapter.getCount() - 1, command);
         }
     };
 
@@ -243,9 +255,6 @@ public class MainActivity extends AppCompatActivity {
     private void addLookupFragment() {
         viewPager.setVisibility(View.VISIBLE);
 
-        lookupFragment = CommandLookupFragment.getInstance();
-
-        pagerAdapter = new PrimaryPagerAdapter(getSupportFragmentManager(), lookupFragment);
         if(viewModel.getCommandsList().size() > 0) {
             pagerAdapter.addAllPages(viewModel.getCommandsList());
         }
@@ -274,24 +283,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void removePage(Command command) {
-        viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
-//        pagerAdapter.destroyItem();
-        pagerAdapter.removePage(command);
+        Object object = pagerAdapter.getItem(viewPager.getCurrentItem());
+        pagerAdapter.startUpdate(viewPager);
+        pagerAdapter.removePage(command.getId());
         pagerAdapter.notifyDataSetChanged();
+        pagerAdapter.destroyItem(viewPager, viewPager.getCurrentItem(), object);
+        viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
+        pagerAdapter.finishUpdate(viewPager);
+//        pagerAdapter.destroyItem();
+
     }
 
     public TabLayout getTabLayout() {return tabLayout;}
 
     public void morphTabs() {
-        for(int i = 0; i < pagerAdapter.getCount(); i++) {
+        for(int i = 1; i <= pagerAdapter.getCount(); i++) {
             TabLayout.Tab tab = tabLayout.getTabAt(i);
 
             tab.setCustomView(R.layout.tab_layout);
 
             tab.view.findViewById(R.id.imageView).setOnClickListener((view) -> {
-                // TODO Close tab.
+                //TODO Remove page listener.
             });
         }
+    }
+
+    public void morphTab(int tabPosition, Command command) {
+        TabLayout.Tab tab = tabLayout.getTabAt(tabPosition);
+
+        tab.setCustomView(R.layout.tab_layout);
+
+        tab.view.findViewById(R.id.imageView).setOnClickListener((view) -> {
+           removePage(command);
+        });
     }
 
 }
