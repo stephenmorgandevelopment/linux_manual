@@ -9,7 +9,7 @@ import androidx.core.app.JobIntentService;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
+import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;

@@ -1,17 +1,19 @@
 package com.stephenmorgandevelopment.thelinuxmanual.repos;
 
 import android.content.Intent;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
+import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
-import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +25,7 @@ public class UbuntuRepository implements ManPageRepository {
     public static final String TAG = "UbuntuRepository";
 
     public static UbuntuRepository getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new UbuntuRepository();
         }
         return instance;
@@ -33,7 +35,6 @@ public class UbuntuRepository implements ManPageRepository {
 
     }
 
-
     public void syncDatabase() {
 
     }
@@ -42,16 +43,25 @@ public class UbuntuRepository implements ManPageRepository {
         return null;
     }
 
-    public Command getCommandById(long id) {
-
-
-        return null;
+    public Single<Map<String, String>> getCommandData(SimpleCommand simpleCommand) {
+        LocalStorage storage = LocalStorage.getInstance();
+        if(storage.hasCommand(simpleCommand.getId())) {
+            try {
+                return Single.just(storage.loadCommand(simpleCommand.getId()).getData());
+            } catch (IOException ioe) {
+                Log.i(TAG, "Unexpected file error: " + ioe.getMessage());
+                return fetchCommandData(simpleCommand.getUrl());
+            }
+        } else {
+            return fetchCommandData(simpleCommand.getUrl());
+        }
     }
 
-    
+
+
 
     public Single<Map<String, String>> fetchCommandData(String pageUrl) {
-       return HttpClient.fetchCommandManPage(pageUrl)
+        return HttpClient.fetchCommandManPage(pageUrl)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
                 .flatMap(Ubuntu::crawlForCommandInfo);

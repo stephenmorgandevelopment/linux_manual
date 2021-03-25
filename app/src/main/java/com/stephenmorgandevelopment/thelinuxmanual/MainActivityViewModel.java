@@ -43,7 +43,8 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public void loadManpage(SimpleCommand simpleCommand) {
         Disposable disposable = UbuntuRepository.getInstance()
-                .fetchCommandData(simpleCommand.getUrl())
+//                .fetchCommandData(simpleCommand.getUrl())
+                .getCommandData(simpleCommand)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
                 .flatMap(list -> Single.just(new Command(simpleCommand.getId(), list)))
@@ -56,59 +57,13 @@ public class MainActivityViewModel extends AndroidViewModel {
                     Log.d(TAG, "Error in fetchCommandPage");
                     error.printStackTrace();
                 });
-
-
-//        Disposable disposable = HttpClient.fetchCommandManPage(command.getUrl())
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(Schedulers.computation())
-//                .flatMapCompletable(response -> {
-//                    if (response.isSuccessful() && response.code() == 200) {
-//                        ((MainActivity) requireActivity())
-//                                .getPagerAdapter()
-//                                .addPage(id, Ubuntu.crawlForCommandInfo(response.body().string()));
-//
-//                        return Completable.complete();
-//                    }
-//
-//                    return Completable.error(new Throwable("Response returned with code: " + response.code()));
-//                })
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .doOnError(error -> {
-//                    fetchingDataDialog.setVisibility(View.GONE);
-//                    Toast.makeText(getContext(), "Error fetching data\n" + error.getMessage(), Toast.LENGTH_LONG).show();
-//                })
-//                .subscribe(() -> {
-//                    ((MainActivity) requireActivity()).getPagerAdapter().notifyDataSetChanged();
-//                    fetchingDataDialog.setVisibility(View.GONE);
-//                    viewModel.setLoading(id, false);
-//
-//                }, error -> {
-//                    Log.d(TAG, "Error in fetchCommandPage");
-//                    error.printStackTrace();
-//                    viewModel.setLoading(id, false);
-//                });
-//
-//        disposables.put(id, disposable);
     }
-
-//    public void addCommandToPageDataAndNotify(Command command) {
-//        addPageData.postValue(command);
-//        List<Command> tempCommandList = pageData.getValue() == null
-//                ? new ArrayList<>()
-//                : pageData.getValue();
-//        tempCommandList.add(command);
-//        pageData.postValue(tempCommandList);
-//    }
 
     public boolean isLoading(long id) {
         if (!loadingInfo.containsKey(id)) {
             return false;
         }
         return loadingInfo.get(id);
-    }
-
-    public boolean isLoading(Command command) {
-        return isLoading(command.getId());
     }
 
     public void setSearchText(String text) {
@@ -137,8 +92,8 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     public Command getCommandFromListById(long id) {
-        for(Command command : commandsList) {
-            if(command.getId() == id) {
+        for (Command command : commandsList) {
+            if (command.getId() == id) {
                 return command;
             }
         }
@@ -147,8 +102,8 @@ public class MainActivityViewModel extends AndroidViewModel {
     }
 
     public boolean commandsListHasId(long id) {
-        for(Command command : commandsList) {
-            if(command.getId() == id) {
+        for (Command command : commandsList) {
+            if (command.getId() == id) {
                 return true;
             }
         }

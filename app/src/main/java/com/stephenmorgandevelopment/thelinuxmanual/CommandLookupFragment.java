@@ -20,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
+import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;

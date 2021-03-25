@@ -10,7 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
-import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
+import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;

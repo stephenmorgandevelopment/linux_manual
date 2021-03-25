@@ -1,10 +1,5 @@
 package com.stephenmorgandevelopment.thelinuxmanual.models;
 
-import android.os.Build;
-import android.util.Log;
-
-import androidx.annotation.RequiresApi;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -49,21 +44,17 @@ public class Command {
         return new Gson().fromJson(json, dataMapType);
     }
 
+    public static Command fromJson(long id, String dataJson) {
+        return new Command(id, parseMapFromJson(dataJson));
+    }
+
     public String toJsonString() {
         Gson gson = new GsonBuilder().create();
-        String json = gson.toJson(this);
-
-        Log.i("Command-jsonString", json);
-
-        return json;
+        return gson.toJson(this);
     }
 
     public String dataMapToJsonString() {
         Gson gson = new GsonBuilder().create();
-        String json = gson.toJson(this.data);
-
-        Log.i("dataMap-jsonString", json);
-
-        return json;
+        return gson.toJson(this.data);
     }
 }

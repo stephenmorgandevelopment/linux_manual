@@ -12,21 +12,19 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
-import com.stephenmorgandevelopment.thelinuxmanual.databases.DatabaseHelper;
+import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
 
-import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {

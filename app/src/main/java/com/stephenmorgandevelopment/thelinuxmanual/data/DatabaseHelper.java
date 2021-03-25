@@ -1,4 +1,4 @@
-package com.stephenmorgandevelopment.thelinuxmanual.databases;
+package com.stephenmorgandevelopment.thelinuxmanual.data;
 
 import android.content.ContentValues;
 import android.database.Cursor;
