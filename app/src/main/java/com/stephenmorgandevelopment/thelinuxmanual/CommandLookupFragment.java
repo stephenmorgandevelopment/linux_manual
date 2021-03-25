@@ -83,6 +83,12 @@ public class CommandLookupFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -90,12 +96,11 @@ public class CommandLookupFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle("Search");
+
         if (matchListAdapter == null) {
             matchListAdapter = new MatchListAdapter(requireContext());
-            matchListView.setAdapter(matchListAdapter);
         }
-
-        ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle("Search");
 
         matchListView.setAdapter(matchListAdapter);
         matchListView.setOnItemClickListener(itemClicked);
@@ -133,7 +138,7 @@ public class CommandLookupFragment extends Fragment {
 
         if (MatchListAdapter.disposables != null) {
             MatchListAdapter.disposables.clear();
-            matchListAdapter = null;
+//            matchListAdapter = null;
         }
     }
 

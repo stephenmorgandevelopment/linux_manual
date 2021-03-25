@@ -19,7 +19,6 @@ import java.util.List;
 public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
     private static final String TAG = "PrimaryPagerAdapter";
     private static final List<String> titleList = new ArrayList<>();
-//    private final List<Command> dataList = new ArrayList<>();
     private final List<Long> idList = new ArrayList<>();
     private CommandLookupFragment lookupFragment;
 
@@ -30,53 +29,22 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
         this.lookupFragment = lookupFragment;
     }
 
-//    public void addPage(Command command) {
-//        dataList.add(command);
-//    }
-    public void addPage(long id, String title) {
-        String name = title.substring(0, title.indexOf(" "));
-
-        if(name.contains(",")) {
-            name = name.substring(0, name.indexOf(","));
-        }
-
-        titleList.add(name);
+    public void addPage(long id, String shortName) {
+        titleList.add(shortName);
         idList.add(id);
     }
-
-//    public void addAllPages(List<Command> commands) {
-//        dataList.clear();
-//        dataList.addAll(commands);
-//        notifyDataSetChanged();
-//    }
 
     public void addAllPages(List<Command> commands) {
         idList.clear();
         titleList.clear();
+
         for(Command command : commands) {
-            String title = command.getData().get(INFO_KEY_NAME);
-            String name = title.substring(0, title.indexOf(" "));
-
-            if(name.contains(",")) {
-                name = name.substring(0, name.indexOf(","));
-            }
-
             idList.add(command.getId());
-            titleList.add(command.getData().get(INFO_KEY_NAME));
+            titleList.add(command.getShortName());
         }
+
         notifyDataSetChanged();
     }
-
-//    public void removePage(Command command) {
-//        if(!dataList.remove(command)) {
-//            for(Command cmd : dataList) {
-//                if(cmd.getId() == command.getId()) {
-//                    dataList.remove(cmd);
-//                    break;
-//                }
-//            }
-//        }
-//    }
 
     public void removePage(long id) {
         int idx = idList.indexOf(id);
@@ -95,17 +63,6 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
                 return;
             }
         }
-
-
-//        if(!idList.remove(id)) {
-//            for(Long mId : idList) {
-//                if(mId == id) {
-//                    idList.remove(mId);
-//                    Log.i(TAG, "primitive long did not match Long - Caught issue.");
-//                    break;
-//                }
-//            }
-//        }
     }
 
     @Override
@@ -117,8 +74,6 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
         return super.instantiateItem(container, position);
-
-
     }
 
     @Override
@@ -130,19 +85,20 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public Fragment getItem(int position) {
         if(position == 0) {
-            if(lookupFragment == null) {
-                lookupFragment = new CommandLookupFragment();
-            }
-            return lookupFragment;
+            return getLookupFragmentSingleton();
         }
 
         if(idList.size() > 0) {
-//            Command cmd = dataList.get(position - 1);
-//            CommandInfoFragment infoFragment =
-//                    CommandInfoFragment.getInstance(cmd);
             return CommandInfoFragment.newInstance(idList.get(position - 1));
         }
 
+        return lookupFragment;
+    }
+
+    private CommandLookupFragment getLookupFragmentSingleton() {
+        if(lookupFragment == null) {
+            lookupFragment = new CommandLookupFragment();
+        }
         return lookupFragment;
     }
 
@@ -159,19 +115,6 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
         }
 
         return titleList.get(position - 1);
-
-//        String name = titleList.get(position - 1);
-//        name = name.substring(0, name.indexOf(" "));
-//
-//        return !name.contains(",")
-//                ? name : name.substring(0, name.indexOf(","));
-
-//        String regex = "(/W/s)";
-
-//        String name = dataList.get(position - 1)
-//                .getData().get(INFO_KEY_NAME);
-
-//        return name.substring(0, name.indexOf(" "));
     }
 
 

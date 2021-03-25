@@ -1,6 +1,7 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +27,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
 
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private CommandLookupFragment lookupFragment;
@@ -131,12 +133,6 @@ public class MainActivity extends AppCompatActivity {
                     if (Helpers.hasInternet()) {
                         DatabaseHelper.getInstance().wipeTable();
 
-//                        Intent intent = new Intent();
-//                        intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
-//
-//                        CommandSyncService.enqueueWork(MainActivity.this, intent);
-
-//                        clearFragments();
                         startDatabaseSync();
                         resetScreen();
 
@@ -212,13 +208,22 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            String json = command.toJsonString();
+            String dataMapJson = command.dataMapToJsonString();
+
             pagerAdapter.startUpdate(viewPager);
-            pagerAdapter.addPage(command.getId(), command.getData().get("NAME"));
+            pagerAdapter.addPage(command.getId(), command.getShortName());
             viewModel.addCommandToCommandList(command);
             pagerAdapter.notifyDataSetChanged();
             pagerAdapter.instantiateItem(viewPager, pagerAdapter.getCount() - 1);
             pagerAdapter.finishUpdate(viewPager);
-//            morphTab(pagerAdapter.getCount() - 1, command);
+
+            Map<String, String> map = Command.parseMapFromJson(dataMapJson);
+            if(map.equals(command.getData())) {
+                Log.i("Command-Json", "dataMap shit works :)");
+            } else {
+                Log.i("Command-Json", "dataMap shit broke as fuck.... :(");
+            }
         }
     };
 
@@ -270,18 +275,6 @@ public class MainActivity extends AppCompatActivity {
         lookupFragment = null;
     }
 
-    private void clearFragments() {
-        FragmentManager fragMan = getSupportFragmentManager();
-        List<Fragment> fragments = fragMan.getFragments();
-        for (Fragment frag : fragments) {
-            fragMan.popBackStack();
-        }
-    }
-
-    public PrimaryPagerAdapter getPagerAdapter() {
-        return pagerAdapter;
-    }
-
     public void removePage(Command command) {
         Object object = pagerAdapter.getItem(viewPager.getCurrentItem());
         pagerAdapter.startUpdate(viewPager);
@@ -290,32 +283,5 @@ public class MainActivity extends AppCompatActivity {
         pagerAdapter.destroyItem(viewPager, viewPager.getCurrentItem(), object);
         viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
         pagerAdapter.finishUpdate(viewPager);
-//        pagerAdapter.destroyItem();
-
     }
-
-    public TabLayout getTabLayout() {return tabLayout;}
-
-    public void morphTabs() {
-        for(int i = 1; i <= pagerAdapter.getCount(); i++) {
-            TabLayout.Tab tab = tabLayout.getTabAt(i);
-
-            tab.setCustomView(R.layout.tab_layout);
-
-            tab.view.findViewById(R.id.imageView).setOnClickListener((view) -> {
-                //TODO Remove page listener.
-            });
-        }
-    }
-
-    public void morphTab(int tabPosition, Command command) {
-        TabLayout.Tab tab = tabLayout.getTabAt(tabPosition);
-
-        tab.setCustomView(R.layout.tab_layout);
-
-        tab.view.findViewById(R.id.imageView).setOnClickListener((view) -> {
-           removePage(command);
-        });
-    }
-
 }

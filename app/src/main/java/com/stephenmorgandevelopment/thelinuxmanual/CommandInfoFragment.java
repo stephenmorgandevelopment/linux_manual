@@ -1,5 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -31,9 +32,6 @@ import java.util.Set;
 public class CommandInfoFragment extends Fragment {
     public static final String TAG = CommandInfoFragment.class.getSimpleName();
     private Command command;
-    private String shortName;
-
-    private TextView fetchingDataDialog;
 
     private LinearLayout scrollContainer;
     private ScrollView rootScrollView;
@@ -58,10 +56,6 @@ public class CommandInfoFragment extends Fragment {
         return fragment;
     }
 
-//    public CommandInfoFragment(Command command) {
-//        this.command = command;
-//    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -78,7 +72,6 @@ public class CommandInfoFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         scrollContainer = view.findViewById(R.id.scrollContainer);
         rootScrollView = view.findViewById(R.id.rootScrollView);
-//        fetchingDataDialog = view.findViewById(R.id.fetchingDataDialog);
 
         buildOutput();
     }
@@ -93,13 +86,6 @@ public class CommandInfoFragment extends Fragment {
         command = viewModel.getCommandFromListById(id);
 
         setHasOptionsMenu(true);
-
-        String longName = command.getData().get(INFO_KEY_NAME);
-        shortName = longName.substring(0, longName.indexOf(" "))
-                .replaceAll("^(/W/s)$", "");
-
-//        ((MainActivity)requireActivity()).setToolbarTitle(longName.substring(0, longName.indexOf(" ")));
-//        Log.i(TAG, "Set title to " + infoMap.get(INFO_KEY_NAME) + id);
 
         jumpToList = new ArrayList<>();
     }
@@ -146,7 +132,7 @@ public class CommandInfoFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(shortName);
+        ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
     }
 
     @Override
@@ -155,18 +141,24 @@ public class CommandInfoFragment extends Fragment {
     }
 
     private void addTextBubble(String header, String description) {
-        ViewGroup view = (ViewGroup) ((LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.text_bubble, null);
+        ViewGroup view = getInflatedBubbleView();
         view.setTag(header);
 
         ((TextView) view.findViewById(R.id.headerText)).setText(header);
         ((TextView) view.findViewById(R.id.descriptionText)).setText(description);
+
         scrollContainer.addView(view);
         scrollContainer.addView(getDivider());
 
         jumpToList.add(header);
     }
 
-    public String getShortName() {return shortName;}
+    private ViewGroup getInflatedBubbleView() {
+        LayoutInflater inflater = (LayoutInflater) requireContext()
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        return  (ViewGroup) inflater.inflate(R.layout.text_bubble, null);
+    }
 
     private View getDivider() {
         View divider = new View(getContext());

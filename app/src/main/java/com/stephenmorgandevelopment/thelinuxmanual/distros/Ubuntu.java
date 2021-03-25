@@ -136,7 +136,6 @@ public class Ubuntu {
         return unfinishedCommands;
     }
 
-
     public static ArrayList<String> crawlForManDirs(String pageHtml) {
         Document document = Jsoup.parse(pageHtml);
         Elements anchors = document.select(CRAWLER_SELECTOR);
