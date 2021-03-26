@@ -1,9 +1,9 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -62,7 +62,7 @@ public class CommandInfoFragment extends Fragment {
         View view = inflater.inflate(R.layout.command_info_fragment, null);
         view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
+//        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
 
         return view;
     }
@@ -73,7 +73,20 @@ public class CommandInfoFragment extends Fragment {
         scrollContainer = view.findViewById(R.id.scrollContainer);
         rootScrollView = view.findViewById(R.id.rootScrollView);
 
-        buildOutput();
+        long id = getArguments().getLong(KEY_ID);
+        command = viewModel.getCommandFromListById(id);
+
+        Log.i(TAG, "id: " + id);
+
+        if(command == null) {
+            Log.i(TAG, "command is null in onViewCreate....wtf??");
+            Log.i(TAG, "viewModel.getCommandsList: " + viewModel.getCommandsList().toString());
+        } else {
+            Log.i(TAG, "command: " + command.getShortName());
+            buildOutput();
+        }
+
+
     }
 
     @Override
@@ -88,6 +101,8 @@ public class CommandInfoFragment extends Fragment {
         if(command == null) {
             //TODO Kill this fragment, because if command is null, this shouldn't exist.
             //TODO On configuration changes the pager adapter is trying to recreate this....ugh.
+
+            Log.i(TAG, "command is null in onCreate.");
 //            ((MainActivity)requireContext()).
         }
 

@@ -25,9 +25,8 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
 
-import java.util.Map;
-
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private CommandLookupFragment lookupFragment;
     private Toolbar toolbar;
     private TextView progressDialog;
@@ -260,6 +259,8 @@ public class MainActivity extends AppCompatActivity {
         viewPager.setVisibility(View.VISIBLE);
 
         if(viewModel.getCommandsList().size() > 0) {
+            Log.i(TAG, "Adding CommandInfoFragment's to pagerAdapter.");
+            Log.i(TAG, "viewModel.getCommandsList().size() = " + viewModel.getCommandsList().size());
             pagerAdapter.addAllPages(viewModel.getCommandsList());
         }
 

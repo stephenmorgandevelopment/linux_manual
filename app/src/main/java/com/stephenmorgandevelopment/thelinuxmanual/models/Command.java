@@ -1,9 +1,10 @@
 package com.stephenmorgandevelopment.thelinuxmanual.models;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 
+import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.util.Map;
 
@@ -40,8 +41,11 @@ public class Command {
     }
 
     public static Map<String, String> parseMapFromJson(String json) {
+        JsonReader reader = new JsonReader(new StringReader(json));
+        reader.setLenient(true);
+
         Type dataMapType = new TypeToken<Map<String, String>>() {}.getType();
-        return new Gson().fromJson(json, dataMapType);
+        return new Gson().fromJson(reader, dataMapType);
     }
 
     public static Command fromJson(long id, String dataJson) {
