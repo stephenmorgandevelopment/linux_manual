@@ -85,6 +85,12 @@ public class CommandInfoFragment extends Fragment {
         long id = getArguments().getLong(KEY_ID);
         command = viewModel.getCommandFromListById(id);
 
+        if(command == null) {
+            //TODO Kill this fragment, because if command is null, this shouldn't exist.
+            //TODO On configuration changes the pager adapter is trying to recreate this....ugh.
+//            ((MainActivity)requireContext()).
+        }
+
         setHasOptionsMenu(true);
 
         jumpToList = new ArrayList<>();

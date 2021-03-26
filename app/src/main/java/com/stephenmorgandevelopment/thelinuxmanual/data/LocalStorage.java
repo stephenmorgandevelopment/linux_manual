@@ -6,10 +6,17 @@ import android.util.Log;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,20 +53,21 @@ public class LocalStorage {
         StringBuilder json = new StringBuilder();
 
         if(commandFile.exists()) {
-            FileReader fileInput = new FileReader(commandFile);
+            FileInputStream inputStream = new FileInputStream(commandFile);
+            InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 
             char[] buffer = new char[4096];
             int bytesRead = 0;
             do {
-                bytesRead = fileInput.read(buffer);
+                bytesRead = reader.read(buffer);
                 json.append(String.valueOf(buffer));
             } while(bytesRead != -1);
 
-            fileInput.close();
+            reader.close();
         }
 
         Log.i(TAG, "Seems to have loaded from local persistence.");
-        return new Command(id, Command.parseMapFromJson(json.toString()));
+        return Command.fromJson(id, json.toString().trim());
     }
 
     public void saveCommand(Command command) {
@@ -67,13 +75,13 @@ public class LocalStorage {
 
         if (!commandFile.exists()) {
             try {
-                FileWriter outputWriter = new FileWriter(commandFile);
+                FileOutputStream outputStream = new FileOutputStream(commandFile);
+                OutputStreamWriter outputWriter = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
                 outputWriter.write(command.dataMapToJsonString());
                 outputWriter.close();
             } catch (IOException ioe) {
                 Log.i(TAG, "Error saving: " + command.getShortName() + ioe.getMessage());
             }
-
         }
     }
 }

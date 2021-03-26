@@ -49,12 +49,12 @@ public class Command {
     }
 
     public String toJsonString() {
-        Gson gson = new GsonBuilder().create();
+        Gson gson = new Gson();
         return gson.toJson(this);
     }
 
     public String dataMapToJsonString() {
-        Gson gson = new GsonBuilder().create();
+        Gson gson = new Gson();
         return gson.toJson(this.data);
     }
 }
