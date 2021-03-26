@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -80,6 +81,8 @@ public class CommandLookupFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requireActivity().getOnBackPressedDispatcher().addCallback(backPressedCallback);
     }
 
     @Override
@@ -109,6 +112,8 @@ public class CommandLookupFragment extends Fragment {
             searchText.setText(viewModel.getSearchText());
         }
     }
+
+
 
     @Override
     public void onPause() {
@@ -211,4 +216,21 @@ public class CommandLookupFragment extends Fragment {
         }
     };
 
+    OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            if(searchText.getText() == null || searchText.length() == 0) {
+                setEnabled(false);
+                requireActivity().onBackPressed();
+            }
+
+            if(searchText.getText().length() > 1) {
+                viewModel.setSearchText(null);
+                matchListAdapter.clear();
+                matchListAdapter.notifyDataSetChanged();
+            }
+
+            searchText.setText("");
+        }
+    };
 }

@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
@@ -45,16 +46,20 @@ public class UbuntuRepository implements ManPageRepository {
 
     public Single<Map<String, String>> getCommandData(SimpleCommand simpleCommand) {
         LocalStorage storage = LocalStorage.getInstance();
+
         if(storage.hasCommand(simpleCommand.getId())) {
             try {
                 return Single.just(storage.loadCommand(simpleCommand.getId()).getData());
             } catch (IOException ioe) {
-                Log.i(TAG, "Unexpected file error: " + ioe.getMessage());
-                return fetchCommandData(simpleCommand.getUrl());
+                Log.i(TAG, "Unexpected file error loading - " + simpleCommand.getName() +": " + ioe.getMessage());
             }
-        } else {
-            return fetchCommandData(simpleCommand.getUrl());
         }
+
+        return fetchCommandData(simpleCommand.getUrl())
+                .doAfterSuccess((dataMap) -> {
+                    storage.saveCommand(new Command(simpleCommand.getId(), dataMap));
+                    Log.i(TAG ,"Successfully save to disk: " + simpleCommand.getName());
+                });
     }
 
 

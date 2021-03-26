@@ -192,8 +192,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (fragMan.getFragments().size() == 1) {
-            fragMan.popBackStack();
+        if(viewPager.getCurrentItem() != 0) {
+            viewPager.setCurrentItem(0);
         }
 
         super.onBackPressed();
@@ -206,24 +206,25 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            String json = command.toJsonString();
-            String dataMapJson = command.dataMapToJsonString();
-
             pagerAdapter.startUpdate(viewPager);
             pagerAdapter.addPage(command.getId(), command.getShortName());
             viewModel.addCommandToCommandList(command);
             pagerAdapter.notifyDataSetChanged();
             pagerAdapter.instantiateItem(viewPager, pagerAdapter.getCount() - 1);
             pagerAdapter.finishUpdate(viewPager);
-
-            Map<String, String> map = Command.parseMapFromJson(dataMapJson);
-            if(map.equals(command.getData())) {
-                Log.i("Command-Json", "dataMap shit works :)");
-            } else {
-                Log.i("Command-Json", "dataMap shit broke as fuck.... :(");
-            }
         }
     };
+
+    public void removePage(Command command) {
+        Object object = pagerAdapter.getItem(viewPager.getCurrentItem());
+        pagerAdapter.startUpdate(viewPager);
+        pagerAdapter.removePage(command.getId());
+        viewModel.removeCommandFromCommandList(command);
+        pagerAdapter.notifyDataSetChanged();
+        pagerAdapter.destroyItem(viewPager, viewPager.getCurrentItem(), object);
+        viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
+        pagerAdapter.finishUpdate(viewPager);
+    }
 
     private void startDatabaseSync() {
         progressDialog.setVisibility(View.VISIBLE);
@@ -271,15 +272,5 @@ public class MainActivity extends AppCompatActivity {
 
         pagerAdapter = null;
         lookupFragment = null;
-    }
-
-    public void removePage(Command command) {
-        Object object = pagerAdapter.getItem(viewPager.getCurrentItem());
-        pagerAdapter.startUpdate(viewPager);
-        pagerAdapter.removePage(command.getId());
-        pagerAdapter.notifyDataSetChanged();
-        pagerAdapter.destroyItem(viewPager, viewPager.getCurrentItem(), object);
-        viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
-        pagerAdapter.finishUpdate(viewPager);
     }
 }

@@ -16,8 +16,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import io.reactivex.Single;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
@@ -28,12 +30,14 @@ public class MainActivityViewModel extends AndroidViewModel {
     private LiveData<String> syncProgress;
     private final MutableLiveData<Command> addPageData = new MutableLiveData<>();
     private final List<Command> commandsList = new ArrayList<>();
-    private final Map<Long, Disposable> disposables = new HashMap<>();
+//    private final Map<Long, Disposable> disposables = new HashMap<>();
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
     private String searchText = null;
 
     public MainActivityViewModel(Application application) {
         super(application);
+
 
     }
 
@@ -57,6 +61,9 @@ public class MainActivityViewModel extends AndroidViewModel {
                     Log.d(TAG, "Error in fetchCommandPage");
                     error.printStackTrace();
                 });
+
+        disposables.add(disposable);
+//        disposables.put(simpleCommand.getId(), disposable);
     }
 
     public boolean isLoading(long id) {
@@ -85,6 +92,10 @@ public class MainActivityViewModel extends AndroidViewModel {
     public void addCommandToCommandList(Command command) {
         commandsList.add(command);
         removeLoadingKey(command.getId());
+    }
+
+    public void removeCommandFromCommandList(Command command) {
+        commandsList.remove(command);
     }
 
     public List<Command> getCommandsList() {
