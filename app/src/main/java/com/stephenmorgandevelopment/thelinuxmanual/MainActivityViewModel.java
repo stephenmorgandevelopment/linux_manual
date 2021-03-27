@@ -104,7 +104,17 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public void removeCommandFromCommandList(Command command) {
         commandsList.remove(command);
-        savedStateHandler.set(COMMANDS_LIST_KEY, commandsList);
+
+        Log.i(TAG, "commandsList.size(): " + commandsList.size());
+
+        if(commandsList.size() > 0) {
+            savedStateHandler.set(COMMANDS_LIST_KEY, commandsList);
+        } else {
+            commandsList.clear();
+            savedStateHandler.set(COMMANDS_LIST_KEY, null);
+            savedStateHandler.remove(COMMANDS_LIST_KEY);
+            Log.i(TAG, "commandsList removed from savedstate. ");
+        }
     }
 
     public List<Command> getCommandsList() {

@@ -27,6 +27,8 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
 
+import java.util.Objects;
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private CommandLookupFragment lookupFragment;
@@ -209,21 +211,17 @@ public class MainActivity extends AppCompatActivity {
             pagerAdapter.addPage(command.getId(), command.getShortName());
             viewModel.addCommandToCommandList(command);
             pagerAdapter.notifyDataSetChanged();
-
-            tabLayout.getTabAt(pagerAdapter.getItemCount() - 1)
-                    .view.setBackgroundColor(getColor(R.color.ic_launcher_background));
         }
     };
 
     public void removePage(Command command) {
-//        Object object = pagerAdapter.getItem(viewPager.getCurrentItem());
-//        pagerAdapter.startUpdate(viewPager);
-        pagerAdapter.removePage(command.getId());
-        viewModel.removeCommandFromCommandList(command);
-        pagerAdapter.notifyDataSetChanged();
-//        pagerAdapter.destroyItem(viewPager, viewPager.getCurrentItem(), object);
-        viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
-//        pagerAdapter.finishUpdate(viewPager);
+        int position = viewPager.getCurrentItem();
+        if(pagerAdapter.getItemId(position) == command.getId()) {
+            pagerAdapter.removePage(command.getId());
+            viewModel.removeCommandFromCommandList(command);
+            pagerAdapter.notifyDataSetChanged();
+            viewPager.setCurrentItem(position - 1);
+        }
     }
 
     private void startDatabaseSync() {
@@ -258,6 +256,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void addLookupFragment() {
         viewPager.setVisibility(View.VISIBLE);
+        tabLayout.setVisibility(View.VISIBLE);
 
         if(viewModel.getCommandsList().size() > 0) {
             Log.i(TAG, "Adding CommandInfoFragment's to pagerAdapter.");

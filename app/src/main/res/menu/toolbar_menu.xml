@@ -9,7 +9,7 @@
         android:icon="@android:drawable/ic_popup_sync"
         android:title="@string/refresh_button"
         app:showAsAction="never"
-        android:iconTint="@color/fontColor"
+        android:iconTint="@color/fontLight"
         />
 
     <item

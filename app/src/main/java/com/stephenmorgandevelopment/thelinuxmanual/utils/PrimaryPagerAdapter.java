@@ -48,16 +48,19 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
         int idx = idList.indexOf(id);
 
         if(idx != -1) {
-            titleList.remove(idx);
-            idList.remove(idx);
+            Log.i(TAG, "Removing " + titleList.get(idx) + "from PagerAdapter.");
+            String title = titleList.remove(idx);
+            long removedId = idList.remove(idx);
+            Log.i(TAG, "Successfully removed: " + removedId + " - " + title);
             return;
         }
 
         for(int i = 0; i < idList.size(); i++) {
             if(idList.get(i) == id) {
-                idList.remove(i);
-                titleList.remove(i);
-                Log.i(TAG, "primitive long did not match Long - Caught issue.");
+                Log.i(TAG, "Removing " + titleList.get(i) + "from PagerAdapter.");
+                long removedId = idList.remove(i);
+                String title = titleList.remove(i);
+                Log.i(TAG, "primitive long did not match Long: " + removedId + " - " + title);
                 return;
             }
         }
@@ -75,7 +78,7 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
             return CommandInfoFragment.newInstance(idList.get(position - 1));
         }
 
-        return null;
+        return lookupFragment;
     }
 
     private CommandLookupFragment getLookupFragmentSingleton() {

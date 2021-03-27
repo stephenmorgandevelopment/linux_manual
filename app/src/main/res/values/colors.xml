@@ -2,10 +2,12 @@
 <resources>
     <color name="colorPrimary">#3F5780</color>
     <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">@color/fontColor</color>
+    <color name="colorAccent">@color/fontLight</color>
     <color name="background">#151515</color>
 
-    <color name="fontColor">#cdcdcd</color>
+    <color name="fontDark">#656565</color>
+
+    <color name="fontLight">#cdcdcd</color>
     <color name="textBubbles">#d586C5E6</color>
     <color name="textBubblesFont">#2f2f2f</color>
 

@@ -33,6 +33,8 @@ public class CommandInfoFragment extends Fragment {
     public static final String TAG = CommandInfoFragment.class.getSimpleName();
     private Command command;
 
+    private boolean isBuilt = false;
+
     private LinearLayout scrollContainer;
     private ScrollView rootScrollView;
     private List<String> jumpToList;
@@ -62,8 +64,6 @@ public class CommandInfoFragment extends Fragment {
         View view = inflater.inflate(R.layout.command_info_fragment, null);
         view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-//        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
-
         return view;
     }
 
@@ -78,6 +78,7 @@ public class CommandInfoFragment extends Fragment {
 
         if(command != null) {
             buildOutput();
+            Log.i(TAG, "Ui built from onViewCreated.");
         }
 
 
@@ -143,12 +144,11 @@ public class CommandInfoFragment extends Fragment {
             Log.i(TAG, "command instantiate by onResume.");
         }
 
-        if(command != null) {
+        if(command != null && !isBuilt) {
             ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
             buildOutput();
+            Log.i(TAG, "Ui built from onResume.");
         }
-
-
     }
 
     @Override
@@ -220,5 +220,7 @@ public class CommandInfoFragment extends Fragment {
 
         infoMap.clear();
         infoMap = null;
+
+        isBuilt = true;
     }
 }

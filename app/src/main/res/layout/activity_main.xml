@@ -22,16 +22,21 @@
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/fontColor"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:tabGravity="center"
+        android:background="@color/fontLight"
         android:paddingStart="18dp"
         android:paddingEnd="18dp"
-        app:tabIndicatorColor="#71A3BAB5"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:tabGravity="start"
+        app:tabIndicatorColor="@color/ic_launcher_background"
+        app:tabIndicatorHeight="5dp"
+        app:tabIndicatorFullWidth="true"
         app:tabMaxWidth="135dp"
-        app:tabMode="scrollable" />
+        app:tabMode="scrollable"
+        app:tabSelectedTextColor="@color/colorPrimary"
+        app:tabTextColor="@color/fontDark" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
@@ -42,12 +47,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tabLayout">
-
-        <!--        <androidx.viewpager.widget.PagerTitleStrip-->
-        <!--            android:layout_width="wrap_content"-->
-        <!--            android:layout_height="wrap_content"-->
-        <!--            android:layout_gravity="top"-->
-        <!--            />-->
 
     </androidx.viewpager2.widget.ViewPager2>
 
