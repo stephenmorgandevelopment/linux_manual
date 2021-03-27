@@ -27,8 +27,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
 
-import java.util.Objects;
-
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private CommandLookupFragment lookupFragment;
@@ -94,11 +92,15 @@ public class MainActivity extends AppCompatActivity {
         if (!CommandSyncService.isWorking()) {
             DatabaseHelper.getInstance().close();
         }
+
+//        viewModel.getAddPageData().removeObserver(updatePagerAdapterObserver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        viewModel.getAddPageData().removeObserver(updatePagerAdapterObserver);
 
         if(isFinishing()) {
             if (lookupFragment != null) {

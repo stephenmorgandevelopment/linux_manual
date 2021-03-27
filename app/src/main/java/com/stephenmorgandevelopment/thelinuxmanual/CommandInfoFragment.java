@@ -137,17 +137,8 @@ public class CommandInfoFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        if(command == null) {
-            long id = getArguments().getLong(KEY_ID);
-            command = viewModel.getCommandFromListById(id);
-
-            Log.i(TAG, "command instantiate by onResume.");
-        }
-
-        if(command != null && !isBuilt) {
+        if(command != null) {
             ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
-            buildOutput();
-            Log.i(TAG, "Ui built from onResume.");
         }
     }
 

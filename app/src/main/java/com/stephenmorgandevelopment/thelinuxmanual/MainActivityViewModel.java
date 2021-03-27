@@ -40,9 +40,10 @@ public class MainActivityViewModel extends AndroidViewModel {
         super(application);
         this.savedStateHandler = savedStateHandle;
 
-        commandsList = savedStateHandler.contains(COMMANDS_LIST_KEY)
-                ? savedStateHandler.get(COMMANDS_LIST_KEY)
-                : new ArrayList<>();
+        commandsList = new ArrayList<>();
+//        commandsList = savedStateHandler.contains(COMMANDS_LIST_KEY)
+//                ? savedStateHandler.get(COMMANDS_LIST_KEY)
+//                : new ArrayList<>();
 
         searchText = savedStateHandler.contains(SEARCH_TEXT_KEY)
                 ? savedStateHandler.get(SEARCH_TEXT_KEY)
@@ -113,7 +114,7 @@ public class MainActivityViewModel extends AndroidViewModel {
             commandsList.clear();
             savedStateHandler.set(COMMANDS_LIST_KEY, null);
             savedStateHandler.remove(COMMANDS_LIST_KEY);
-            Log.i(TAG, "commandsList removed from savedstate. ");
+            Log.i(TAG, "commandsList removed from savedstate.");
         }
     }
 

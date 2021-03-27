@@ -103,15 +103,6 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
         return itemId == -1 || idList.contains(itemId);
     }
 
-    //    @Nullable
-//    @Override
-//    public CharSequence getPageTitle(int position) {
-//        if(position == 0) {
-//            return "Search";
-//        }
-//
-//        return titleList.get(position - 1);
-//    }
     public CharSequence getPageTitle(int position) {
         if(position == 0) {
             return "Search";

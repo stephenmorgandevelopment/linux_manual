@@ -13,7 +13,6 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -98,21 +97,20 @@ public class CommandLookupFragment extends Fragment {
 
     @Override
     public void onPrepareOptionsMenu(@NonNull Menu menu) {
-        if (menu.findItem(R.id.closeButton) != null) {
-            menu.clear();
-        }
-
+        menu.clear();
         super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        menu.clear();
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+
         ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle("Search");
 
         if (matchListAdapter == null) {
