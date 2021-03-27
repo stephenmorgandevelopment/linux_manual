@@ -72,8 +72,10 @@ public class CommandLookupFragment extends Fragment {
         disposables = new CompositeDisposable();
 
         matchListView.setDividerHeight(5);
+        matchListAdapter = new MatchListAdapter(requireContext());
 
-        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
+        matchListView.setAdapter(matchListAdapter);
+        matchListView.setOnItemClickListener(itemClicked);
 
         searchText.addTextChangedListener(onChangedText);
     }
@@ -83,6 +85,8 @@ public class CommandLookupFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         requireActivity().getOnBackPressedDispatcher().addCallback(backPressedCallback);
+
+        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
     }
 
     @Override
@@ -105,21 +109,19 @@ public class CommandLookupFragment extends Fragment {
             matchListAdapter = new MatchListAdapter(requireContext());
         }
 
-        matchListView.setAdapter(matchListAdapter);
-        matchListView.setOnItemClickListener(itemClicked);
-
-        if(viewModel.getSearchText() != null) {
+        if (viewModel.getSearchText() != null) {
+//            matchListView.setAdapter(matchListAdapter);
+//            matchListView.setOnItemClickListener(itemClicked);
             searchText.setText(viewModel.getSearchText());
         }
     }
-
 
 
     @Override
     public void onPause() {
         super.onPause();
 
-        if(disposables.size() > 0) {
+        if (disposables.size() > 0) {
             disposables.clear();
         }
     }
@@ -143,7 +145,6 @@ public class CommandLookupFragment extends Fragment {
 
         if (MatchListAdapter.disposables != null) {
             MatchListAdapter.disposables.clear();
-//            matchListAdapter = null;
         }
     }
 
@@ -163,14 +164,12 @@ public class CommandLookupFragment extends Fragment {
             if (s.length() >= 2) {
                 String searchText = String.valueOf(s).replaceAll("'", "");
                 searchText = searchText.replaceAll("%", "");
-                searchText = searchText.replaceAll(searchTextTrimRegex,"");
+                searchText = searchText.replaceAll(searchTextTrimRegex, "");
 
                 Disposable disposable = Single.just(
                         DatabaseHelper.getInstance().partialMatches(searchText))
                         .subscribeOn(Schedulers.io())
                         .observeOn(Schedulers.io())
-//                        .delay(200, TimeUnit.MILLISECONDS)
-//                        .delaySubscription(350, TimeUnit.MILLISECONDS)
                         .observeOn(AndroidSchedulers.mainThread())
                         .doOnError(error -> {
                             Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
@@ -219,12 +218,12 @@ public class CommandLookupFragment extends Fragment {
     OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
         @Override
         public void handleOnBackPressed() {
-            if(searchText.getText() == null || searchText.length() == 0) {
+            if (searchText.getText() == null || searchText.length() == 0) {
                 setEnabled(false);
                 requireActivity().onBackPressed();
             }
 
-            if(searchText.getText().length() > 1) {
+            if (searchText.getText().length() > 1) {
                 viewModel.setSearchText(null);
                 matchListAdapter.clear();
                 matchListAdapter.notifyDataSetChanged();

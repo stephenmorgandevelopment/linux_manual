@@ -1,13 +1,11 @@
 package com.stephenmorgandevelopment.thelinuxmanual.utils;
 
 import android.util.Log;
-import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.stephenmorgandevelopment.thelinuxmanual.CommandInfoFragment;
 import com.stephenmorgandevelopment.thelinuxmanual.CommandLookupFragment;
@@ -16,7 +14,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
+public class PrimaryPagerAdapter extends FragmentStateAdapter {
     private static final String TAG = "PrimaryPagerAdapter";
     private static final List<String> titleList = new ArrayList<>();
     private final List<Long> idList = new ArrayList<>();
@@ -24,8 +22,8 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
 
     private static final String INFO_KEY_NAME = "NAME";
 
-    public PrimaryPagerAdapter(FragmentManager fm, CommandLookupFragment lookupFragment) {
-        super(fm, FragmentStatePagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+    public PrimaryPagerAdapter(FragmentActivity activity, CommandLookupFragment lookupFragment) {
+        super(activity);
         this.lookupFragment = lookupFragment;
     }
 
@@ -65,26 +63,11 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
         }
     }
 
-    @Override
-    public void startUpdate(@NonNull ViewGroup container) {
-        super.startUpdate(container);
-    }
-
     @NonNull
     @Override
-    public Object instantiateItem(@NonNull ViewGroup container, int position) {
-        return super.instantiateItem(container, position);
-    }
-
-    @Override
-    public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
-        super.destroyItem(container, position, object);
-    }
-
-    @NonNull
-    @Override
-    public Fragment getItem(int position) {
+    public Fragment createFragment(int position) {
         if(position == 0) {
+//            return new CommandLookupFragment();
             return getLookupFragmentSingleton();
         }
 
@@ -92,7 +75,7 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
             return CommandInfoFragment.newInstance(idList.get(position - 1));
         }
 
-        return lookupFragment;
+        return null;
     }
 
     private CommandLookupFragment getLookupFragmentSingleton() {
@@ -103,19 +86,34 @@ public class PrimaryPagerAdapter extends FragmentStatePagerAdapter {
     }
 
     @Override
-    public int getCount() {
+    public int getItemCount() {
         return idList.size() + 1;
     }
 
-    @Nullable
     @Override
+    public long getItemId(int position) {
+        return position == 0 ? -1 : idList.get(position -1);
+    }
+
+    @Override
+    public boolean containsItem(long itemId) {
+        return itemId == -1 || idList.contains(itemId);
+    }
+
+    //    @Nullable
+//    @Override
+//    public CharSequence getPageTitle(int position) {
+//        if(position == 0) {
+//            return "Search";
+//        }
+//
+//        return titleList.get(position - 1);
+//    }
     public CharSequence getPageTitle(int position) {
         if(position == 0) {
             return "Search";
         }
-
         return titleList.get(position - 1);
     }
-
 
 }

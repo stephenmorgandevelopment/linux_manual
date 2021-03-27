@@ -6,19 +6,13 @@ import android.util.Log;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 
 public class LocalStorage {
     private static final String TAG = LocalStorage.class.getSimpleName();
@@ -36,11 +30,6 @@ public class LocalStorage {
         commandsDir = Helpers.getApplicationContext()
                 .getDir("commands", Context.MODE_PRIVATE);
 
-    }
-
-    public boolean hasCommandAlt(long id) {
-        List<String> fileNames =  Arrays.asList(commandsDir.list());
-        return fileNames.contains(String.valueOf(id));
     }
 
     public boolean hasCommand(long id) {
@@ -79,6 +68,8 @@ public class LocalStorage {
                 OutputStreamWriter outputWriter = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
                 outputWriter.write(command.dataMapToJsonString());
                 outputWriter.close();
+
+                Log.i(TAG ,"Successfully save to disk: " + command.getShortName());
             } catch (IOException ioe) {
                 Log.i(TAG, "Error saving: " + command.getShortName() + ioe.getMessage());
             }

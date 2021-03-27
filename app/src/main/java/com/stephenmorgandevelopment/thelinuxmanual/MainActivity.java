@@ -15,9 +15,11 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.viewpager.widget.ViewPager;
+import androidx.lifecycle.ViewModelStoreOwner;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
@@ -31,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private TextView progressDialog;
     private ScrollView progressScroller;
-    private ViewPager viewPager;
+    private ViewPager2 viewPager;
     private TabLayout tabLayout;
     private PrimaryPagerAdapter pagerAdapter;
 
@@ -44,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
         Helpers.init(MainActivity.this.getApplication());
 
-        viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
+        viewModel = new ViewModelProvider((ViewModelStoreOwner) MainActivity.this).get(MainActivityViewModel.class);
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -55,18 +57,15 @@ public class MainActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.viewPager);
         tabLayout = findViewById(R.id.tabLayout);
 
-        tabLayout.setupWithViewPager(viewPager);
-
         lookupFragment = new CommandLookupFragment();
 
-        pagerAdapter = new PrimaryPagerAdapter(getSupportFragmentManager(), lookupFragment);
+        pagerAdapter = new PrimaryPagerAdapter(MainActivity.this, lookupFragment);
 
         String title = getString(R.string.app_name) + " - " + Ubuntu.getReleaseString();
         toolbar.setTitle(title);
 
         viewModel.getAddPageData().observe(this, updatePagerAdapterObserver);
     }
-
 
     @Override
     protected void onResume() {
@@ -99,11 +98,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        if (lookupFragment != null) {
-            lookupFragment.cleanup();
-        }
+        if(isFinishing()) {
+            if (lookupFragment != null) {
+                lookupFragment.cleanup();
+            }
 
-        lookupFragment = null;
+            lookupFragment = null;
+        }
 
         Helpers.cleanup();
     }
@@ -205,24 +206,24 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            pagerAdapter.startUpdate(viewPager);
             pagerAdapter.addPage(command.getId(), command.getShortName());
             viewModel.addCommandToCommandList(command);
             pagerAdapter.notifyDataSetChanged();
-            pagerAdapter.instantiateItem(viewPager, pagerAdapter.getCount() - 1);
-            pagerAdapter.finishUpdate(viewPager);
+
+            tabLayout.getTabAt(pagerAdapter.getItemCount() - 1)
+                    .view.setBackgroundColor(getColor(R.color.ic_launcher_background));
         }
     };
 
     public void removePage(Command command) {
-        Object object = pagerAdapter.getItem(viewPager.getCurrentItem());
-        pagerAdapter.startUpdate(viewPager);
+//        Object object = pagerAdapter.getItem(viewPager.getCurrentItem());
+//        pagerAdapter.startUpdate(viewPager);
         pagerAdapter.removePage(command.getId());
         viewModel.removeCommandFromCommandList(command);
         pagerAdapter.notifyDataSetChanged();
-        pagerAdapter.destroyItem(viewPager, viewPager.getCurrentItem(), object);
+//        pagerAdapter.destroyItem(viewPager, viewPager.getCurrentItem(), object);
         viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
-        pagerAdapter.finishUpdate(viewPager);
+//        pagerAdapter.finishUpdate(viewPager);
     }
 
     private void startDatabaseSync() {
@@ -265,6 +266,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         viewPager.setAdapter(pagerAdapter);
+
+        new TabLayoutMediator(tabLayout, viewPager,
+                (tab, position) -> tab.setText(pagerAdapter.getPageTitle(position))
+        ).attach();
     }
 
     private void resetScreen() {

@@ -58,12 +58,8 @@ public class UbuntuRepository implements ManPageRepository {
         return fetchCommandData(simpleCommand.getUrl())
                 .doAfterSuccess((dataMap) -> {
                     storage.saveCommand(new Command(simpleCommand.getId(), dataMap));
-                    Log.i(TAG ,"Successfully save to disk: " + simpleCommand.getName());
                 });
     }
-
-
-
 
     public Single<Map<String, String>> fetchCommandData(String pageUrl) {
         return HttpClient.fetchCommandManPage(pageUrl)
@@ -71,40 +67,6 @@ public class UbuntuRepository implements ManPageRepository {
                 .observeOn(Schedulers.computation())
                 .flatMap(Ubuntu::crawlForCommandInfo);
     }
-
-//    private void getManPage(SimpleCommand command) {
-//        Disposable disposable = HttpClient.fetchCommandManPage(command.getUrl())
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(Schedulers.computation())
-//                .flatMapCompletable(response -> {
-//                    if (response.isSuccessful() && response.code() == 200) {
-//                        ((MainActivity) requireActivity())
-//                                .getPagerAdapter()
-//                                .addPage(id, Ubuntu.crawlForCommandInfo(response.body().string()));
-//
-//                        return Completable.complete();
-//                    }
-//
-//                    return Completable.error(new Throwable("Response returned with code: " + response.code()));
-//                })
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .doOnError(error -> {
-//                    fetchingDataDialog.setVisibility(View.GONE);
-//                    Toast.makeText(getContext(), "Error fetching data\n" + error.getMessage(), Toast.LENGTH_LONG).show();
-//                })
-//                .subscribe(() -> {
-//                    ((MainActivity) requireActivity()).getPagerAdapter().notifyDataSetChanged();
-//                    fetchingDataDialog.setVisibility(View.GONE);
-//                    viewModel.setLoading(id, false);
-//
-//                }, error -> {
-//                    Log.d(TAG, "Error in fetchCommandPage");
-//                    error.printStackTrace();
-//                    viewModel.setLoading(id, false);
-//                });
-//
-//        disposables.put(id, disposable);
-//    }
 
     public LiveData<String> launchSyncService() {
         if (!CommandSyncService.isWorking()) {

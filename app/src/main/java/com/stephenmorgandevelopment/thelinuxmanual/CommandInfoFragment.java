@@ -76,13 +76,7 @@ public class CommandInfoFragment extends Fragment {
         long id = getArguments().getLong(KEY_ID);
         command = viewModel.getCommandFromListById(id);
 
-        Log.i(TAG, "id: " + id);
-
-        if(command == null) {
-            Log.i(TAG, "command is null in onViewCreate....wtf??");
-            Log.i(TAG, "viewModel.getCommandsList: " + viewModel.getCommandsList().toString());
-        } else {
-            Log.i(TAG, "command: " + command.getShortName());
+        if(command != null) {
             buildOutput();
         }
 
@@ -94,17 +88,6 @@ public class CommandInfoFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
-
-        long id = getArguments().getLong(KEY_ID);
-        command = viewModel.getCommandFromListById(id);
-
-        if(command == null) {
-            //TODO Kill this fragment, because if command is null, this shouldn't exist.
-            //TODO On configuration changes the pager adapter is trying to recreate this....ugh.
-
-            Log.i(TAG, "command is null in onCreate.");
-//            ((MainActivity)requireContext()).
-        }
 
         setHasOptionsMenu(true);
 
@@ -153,7 +136,19 @@ public class CommandInfoFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
+        if(command == null) {
+            long id = getArguments().getLong(KEY_ID);
+            command = viewModel.getCommandFromListById(id);
+
+            Log.i(TAG, "command instantiate by onResume.");
+        }
+
+        if(command != null) {
+            ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
+            buildOutput();
+        }
+
+
     }
 
     @Override
