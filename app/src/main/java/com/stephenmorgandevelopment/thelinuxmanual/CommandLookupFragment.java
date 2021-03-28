@@ -206,10 +206,10 @@ public class CommandLookupFragment extends Fragment {
     AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (!Helpers.hasInternet()) {
-                Toast.makeText(getContext(), "Must have internet.", Toast.LENGTH_LONG).show();
-                return;
-            }
+//            if (!Helpers.hasInternet()) {
+//                Toast.makeText(getContext(), "Must have internet.", Toast.LENGTH_LONG).show();
+//                return;
+//            }
 
             long cmdId = matchListAdapter.getItemId(position);
 

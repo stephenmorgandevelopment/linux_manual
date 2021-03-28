@@ -30,6 +30,7 @@ public class MainActivityViewModel extends AndroidViewModel {
     private static volatile Map<Long, Boolean> loadingInfo = new LinkedHashMap<>();
     private LiveData<String> syncProgress;
     private final MutableLiveData<Command> addPageData = new MutableLiveData<>();
+    private final MutableLiveData<Throwable> onErrorData = new MutableLiveData<>();
     private final List<Command> commandsList;
     private final SavedStateHandle savedStateHandler;
     private final CompositeDisposable disposables = new CompositeDisposable();
@@ -58,16 +59,19 @@ public class MainActivityViewModel extends AndroidViewModel {
                 .getCommandData(simpleCommand)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
-                .flatMap(list -> Single.just(new Command(simpleCommand.getId(), list)))
+                .flatMap(list ->
+                        Single.just(new Command(simpleCommand.getId(), list)))
                 .doOnError(error -> {
                     Log.d("MainActivityViewModel",
                             "Error pulling man page - "
                                     + simpleCommand.getName());
                 })
-                .subscribe(addPageData::postValue, error -> {
-                    Log.d(TAG, "Error in fetchCommandPage");
-                    error.printStackTrace();
-                });
+                .subscribe(addPageData::postValue, onErrorData::postValue);
+
+//                        error -> {
+//                    Log.d(TAG, "Error in fetchCommandPage");
+//                    error.printStackTrace();
+//                });
 
         disposables.add(disposable);
     }
@@ -150,6 +154,9 @@ public class MainActivityViewModel extends AndroidViewModel {
 
     public void clearAddPageData() {
         addPageData.setValue(null);
-//        addPageData.postValue(null);
+    }
+
+    public LiveData<Throwable> getOnErrorData() {
+        return onErrorData;
     }
 }

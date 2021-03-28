@@ -45,7 +45,7 @@ public class UbuntuRepository implements ManPageRepository {
     }
 
     public Single<Map<String, String>> getCommandData(SimpleCommand simpleCommand) {
-        LocalStorage storage = LocalStorage.getInstance();
+        final LocalStorage storage = LocalStorage.getInstance();
 
         if(storage.hasCommand(simpleCommand.getId())) {
             try {
@@ -55,10 +55,14 @@ public class UbuntuRepository implements ManPageRepository {
             }
         }
 
-        return fetchCommandData(simpleCommand.getUrl())
-                .doAfterSuccess((dataMap) -> {
-                    storage.saveCommand(new Command(simpleCommand.getId(), dataMap));
-                });
+        if(Helpers.hasInternet()) {
+            return fetchCommandData(simpleCommand.getUrl())
+                    .doAfterSuccess((dataMap) -> {
+                        storage.saveCommand(new Command(simpleCommand.getId(), dataMap));
+                    });
+        }
+
+        return Single.error(new Throwable("Must have internet."));
     }
 
     public Single<Map<String, String>> fetchCommandData(String pageUrl) {

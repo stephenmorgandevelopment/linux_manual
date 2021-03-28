@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         toolbar.setTitle(title);
 
         viewModel.getAddPageData().observe(this, updatePagerAdapterObserver);
+        viewModel.getOnErrorData().observe(this, onErrorObserver);
     }
 
     @Override
@@ -215,6 +216,9 @@ public class MainActivity extends AppCompatActivity {
             pagerAdapter.notifyDataSetChanged();
         }
     };
+
+    private final Observer<Throwable> onErrorObserver = throwable ->
+            Toast.makeText(this, throwable.getMessage(), Toast.LENGTH_LONG).show();
 
     public void removePage(Command command) {
         int position = viewPager.getCurrentItem();
