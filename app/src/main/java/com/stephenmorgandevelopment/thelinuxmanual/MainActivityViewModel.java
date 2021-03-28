@@ -147,4 +147,9 @@ public class MainActivityViewModel extends AndroidViewModel {
     public LiveData<Command> getAddPageData() {
         return addPageData;
     }
+
+    public void clearAddPageData() {
+        addPageData.setValue(null);
+//        addPageData.postValue(null);
+    }
 }

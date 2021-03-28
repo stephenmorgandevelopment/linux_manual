@@ -100,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
+        viewModel.getAddPageData().removeObserver(updatePagerAdapterObserver);
+
         if(isFinishing()) {
             if (lookupFragment != null) {
                 lookupFragment.cleanup();
@@ -204,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
     private final Observer<Command> updatePagerAdapterObserver = new Observer<Command>() {
         @Override
         public void onChanged(Command command) {
-            if(viewModel.getCommandsList().contains(command)) {
+            if(command == null || viewModel.getCommandsList().contains(command)) {
                 return;
             }
 
@@ -221,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
             viewModel.removeCommandFromCommandList(command);
             pagerAdapter.notifyDataSetChanged();
             viewPager.setCurrentItem(position - 1);
+            viewModel.clearAddPageData();
         }
     }
 
@@ -259,8 +262,6 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setVisibility(View.VISIBLE);
 
         if(viewModel.getCommandsList().size() > 0) {
-            Log.i(TAG, "Adding CommandInfoFragment's to pagerAdapter.");
-            Log.i(TAG, "viewModel.getCommandsList().size() = " + viewModel.getCommandsList().size());
             pagerAdapter.addAllPages(viewModel.getCommandsList());
         }
 

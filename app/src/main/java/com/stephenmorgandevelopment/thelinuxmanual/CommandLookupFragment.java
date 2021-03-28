@@ -117,14 +117,12 @@ public class CommandLookupFragment extends Fragment {
 
         if (matchListAdapter == null) {
             matchListAdapter = new MatchListAdapter(requireContext());
-            Log.i(TAG, "matchListAdapter instantiated in onResume.");
         }
 
         if (viewModel.getSearchText() != null) {
             searchText.setText(viewModel.getSearchText());
         }
     }
-
 
     @Override
     public void onPause() {

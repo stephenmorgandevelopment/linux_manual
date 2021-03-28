@@ -78,10 +78,7 @@ public class CommandInfoFragment extends Fragment {
 
         if(command != null) {
             buildOutput();
-            Log.i(TAG, "Ui built from onViewCreated.");
         }
-
-
     }
 
     @Override
@@ -140,15 +137,15 @@ public class CommandInfoFragment extends Fragment {
         if(command == null) {
             long id = getArguments().getLong(KEY_ID);
             command = viewModel.getCommandFromListById(id);
-
-            Log.i(TAG, "command instantiate by onResume.");
         }
 
-        if(command != null && !isBuilt) {
-            ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
-            buildOutput();
-            Log.i(TAG, "Ui built from onResume.");
-        }
+        ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
+
+//        if(command != null) {  // && !isBuilt) {
+//            ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
+//            buildOutput();
+//            Log.i(TAG, "Ui built from onResume.");
+//        }
     }
 
     @Override
