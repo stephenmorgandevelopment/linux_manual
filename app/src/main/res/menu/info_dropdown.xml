@@ -4,6 +4,12 @@
 
     >
 
+    <item
+        android:id="@+id/searchButton"
+        android:icon="?android:attr/actionModeWebSearchDrawable"
+        android:title="@string/search"
+        app:showAsAction="ifRoom" />
+
     <item android:id="@+id/dropDown"
         android:title="@string/jump_to"
         android:icon="@android:drawable/arrow_down_float"

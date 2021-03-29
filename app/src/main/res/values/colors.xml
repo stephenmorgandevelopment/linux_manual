@@ -5,10 +5,10 @@
     <color name="colorAccent">@color/fontLight</color>
     <color name="background">#151515</color>
 
-    <color name="fontDark">#656565</color>
+    <color name="fontDark">#252525</color>
 
-    <color name="fontLight">#cdcdcd</color>
-    <color name="textBubbles">#d586C5E6</color>
+    <color name="fontLight">#ededed</color>
+    <color name="textBubbles">#ff82CEF6</color>
     <color name="textBubblesFont">#2f2f2f</color>
 
     <color name="matchListItem">#ffdfdfdf</color>

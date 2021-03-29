@@ -50,7 +50,7 @@ public class HttpClient {
 
     public static Single<Response> fetchDirsHtml() throws IOException {
          if(hasInternet()) {
-            String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + getLocal();
+            String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal();
             Request req = new Request.Builder().url(url).build();
 
             return Single.just(okClient.newCall(req).execute());
