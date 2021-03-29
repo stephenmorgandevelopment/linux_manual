@@ -76,10 +76,11 @@ public class MainActivity extends AppCompatActivity {
 
         if (DatabaseHelper.hasDatabase() && DatabaseHelper.getInstance().hasData() && !CommandSyncService.isWorking()) {
             addLookupFragment();
-        } else {
+        } else if(Helpers.hasInternet()) {
             startDatabaseSync();
+        } else {
+            displayNoDataNoInternetMessage();
         }
-
     }
 
     @Override
@@ -134,12 +135,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.refreshMenuBtn:
                 if (!CommandSyncService.isWorking()) {
                     if (Helpers.hasInternet()) {
-                        DatabaseHelper.getInstance().wipeTable();
-
-                        startDatabaseSync();
-                        resetScreen();
-
-                        MainActivity.this.recreate();
+                        syncDataAndReset();
                     } else {
                         Toast.makeText(MainActivity.this, "Must be connected to the internet.", Toast.LENGTH_LONG).show();
                     }
@@ -204,6 +200,17 @@ public class MainActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 
+    private void syncDataAndReset() {
+        DatabaseHelper.getInstance().wipeTable();
+        startDatabaseSync();
+
+        viewModel.clearCommandsList();
+        viewModel.clearAddPageData();
+
+        resetScreen();
+        MainActivity.this.recreate();
+    }
+
     private final Observer<Command> updatePagerAdapterObserver = new Observer<Command>() {
         @Override
         public void onChanged(Command command) {
@@ -252,10 +259,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void displayNoDataNoInternetMessage() {
+        progressDialog.setVisibility(View.VISIBLE);
+        progressScroller.setVisibility(View.VISIBLE);
+
+        progressDialog.setTextSize(30f);
+        progressDialog.setText(R.string.no_data_no_internet);
+    }
+
     protected void changeRelease(Ubuntu.Release release) {
         Preferences.setRelease(release.getName());
         Ubuntu.setRelease(release);
         DatabaseHelper.changeTable(release.getName());
+
+        viewModel.clearCommandsList();
+        viewModel.clearAddPageData();
 
         resetScreen();
         MainActivity.this.recreate();

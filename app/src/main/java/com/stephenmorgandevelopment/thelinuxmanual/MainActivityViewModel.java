@@ -109,16 +109,18 @@ public class MainActivityViewModel extends AndroidViewModel {
     public void removeCommandFromCommandList(Command command) {
         commandsList.remove(command);
 
-        Log.i(TAG, "commandsList.size(): " + commandsList.size());
+//        Log.i(TAG, "commandsList.size(): " + commandsList.size());
+//
+//        if(commandsList.size() > 0) {
+//            savedStateHandler.set(COMMANDS_LIST_KEY, commandsList);
+//        } else {
+//            savedStateHandler.set(COMMANDS_LIST_KEY, null);
+//            savedStateHandler.remove(COMMANDS_LIST_KEY);
+//        }
+    }
 
-        if(commandsList.size() > 0) {
-            savedStateHandler.set(COMMANDS_LIST_KEY, commandsList);
-        } else {
-            commandsList.clear();
-            savedStateHandler.set(COMMANDS_LIST_KEY, null);
-            savedStateHandler.remove(COMMANDS_LIST_KEY);
-            Log.i(TAG, "commandsList removed from savedstate. ");
-        }
+    public void clearCommandsList() {
+        commandsList.clear();
     }
 
     public List<Command> getCommandsList() {

@@ -82,5 +82,6 @@
     <string name="close">Close</string>
     <string name="jump_to">Jump To</string>
     <string name="hirsute">hirsute</string>
+    <string name="no_data_no_internet">Must have internet to build the local database of commands.  Please restart the app when you are connected to the internet, or press the refresh button once connected.</string>
 
 </resources>
