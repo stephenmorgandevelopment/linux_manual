@@ -10,6 +10,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -17,6 +20,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -33,11 +37,19 @@ public class CommandInfoFragment extends Fragment {
     public static final String TAG = CommandInfoFragment.class.getSimpleName();
     private Command command;
 
-    private boolean isBuilt = false;
-
     private LinearLayout scrollContainer;
     private ScrollView rootScrollView;
     private List<String> jumpToList;
+
+    private ConstraintLayout searchBar;
+    private EditText searchEditText;
+    private ImageButton searchBarButton;
+
+    private ConstraintLayout searchControlBar;
+    private TextView searchTextDisplay;
+    private TextView numberOfTextMatches;
+    private Button prevSearchButton;
+    private Button nextSearchButton;
 
     private MainActivityViewModel viewModel;
 
@@ -72,6 +84,16 @@ public class CommandInfoFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         scrollContainer = view.findViewById(R.id.scrollContainer);
         rootScrollView = view.findViewById(R.id.rootScrollView);
+
+        searchBar = view.findViewById(R.id.textSearchBox);
+        searchEditText = view.findViewById(R.id.searchEditText);
+        searchBarButton = view.findViewById(R.id.searchBarButton);
+
+        searchControlBar = view.findViewById(R.id.searchControlBar);
+        searchTextDisplay = view.findViewById(R.id.searchTextDisplay);
+        numberOfTextMatches = view.findViewById(R.id.numberOfTextMatches);
+        prevSearchButton = view.findViewById(R.id.prevSearchButton);
+        nextSearchButton = view.findViewById(R.id.nextSearchButton);
 
         long id = getArguments().getLong(KEY_ID);
         command = viewModel.getCommandFromListById(id);
@@ -140,12 +162,6 @@ public class CommandInfoFragment extends Fragment {
         }
 
         ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
-
-//        if(command != null) {  // && !isBuilt) {
-//            ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
-//            buildOutput();
-//            Log.i(TAG, "Ui built from onResume.");
-//        }
     }
 
     @Override
@@ -217,7 +233,5 @@ public class CommandInfoFragment extends Fragment {
 
         infoMap.clear();
         infoMap = null;
-
-        isBuilt = true;
     }
 }
