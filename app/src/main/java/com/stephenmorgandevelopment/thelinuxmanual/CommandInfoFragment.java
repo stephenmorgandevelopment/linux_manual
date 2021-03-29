@@ -25,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
+import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import java.util.ArrayList;
@@ -131,6 +132,11 @@ public class CommandInfoFragment extends Fragment {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.closeButton) {
             ((MainActivity) requireActivity()).removePage(command);
+            return true;
+        }
+
+        if(item.getItemId() == R.id.searchButton) {
+            toggleSearchBarDisplay();
         }
 
         if (jumpToList.contains(item.getTitle().toString())) {
@@ -167,6 +173,38 @@ public class CommandInfoFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    View.OnClickListener onClickSearchBarButton = v -> {
+        for(Map.Entry<String, String> entry : command.getData().entrySet()) {
+            getTextMatches(entry.getValue());
+        }
+    };
+
+    View.OnClickListener onClickPrevButton = v -> {
+
+    };
+
+    View.OnClickListener onClickNextButton = v -> {
+
+    };
+
+    private TextSearchResult getTextMatches(String searchMeForMatches) {
+        final String query = searchEditText.getText().toString();
+
+        if(searchMeForMatches.contains(query)) {
+
+        }
+
+        return null;
+    }
+
+    private void toggleSearchBarDisplay() {
+        if(searchBar.getVisibility() == View.GONE) {
+            searchBar.setVisibility(View.VISIBLE);
+        } else {
+            searchBar.setVisibility(View.GONE);
+        }
     }
 
     private void addTextBubble(String header, String description) {

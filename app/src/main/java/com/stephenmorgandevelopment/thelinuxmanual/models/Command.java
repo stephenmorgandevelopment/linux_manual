@@ -61,4 +61,10 @@ public class Command {
         Gson gson = new Gson();
         return gson.toJson(this.data);
     }
+
+    public TextSearchResult searchDataForTextMatch(String query) {
+
+
+        return null;
+    }
 }
