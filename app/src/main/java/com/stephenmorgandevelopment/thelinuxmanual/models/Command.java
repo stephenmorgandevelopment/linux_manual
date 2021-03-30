@@ -6,6 +6,9 @@ import com.google.gson.stream.JsonReader;
 
 import java.io.StringReader;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Command {
@@ -63,8 +66,34 @@ public class Command {
     }
 
     public TextSearchResult searchDataForTextMatch(String query) {
+        int count = 0;
+        Map<String, List<Integer>> matchIndexes = new LinkedHashMap<>();
 
+        for(Map.Entry<String, String> entry : data.entrySet()) {
+            if(entry.getValue().contains(query)) {
+                List<Integer> indexes = getMatchIndexes(query, entry.getValue());
+                count += indexes.size();
 
-        return null;
+                matchIndexes.put(entry.getKey(), indexes);
+            }
+        }
+
+        return new TextSearchResult(query, matchIndexes, count);
+    }
+
+    private List<Integer> getMatchIndexes(String query, String textToSearch) {
+        List<Integer> indexes = new ArrayList<>();
+        String tmpText = textToSearch;
+
+        int runningIndex = 0;
+        while(tmpText.contains(query)) {
+            int idx = tmpText.indexOf(query) + runningIndex;
+            indexes.add(idx);
+            tmpText = tmpText.substring((idx + query.length()));
+
+            runningIndex += (idx + query.length());
+        }
+
+        return indexes;
     }
 }

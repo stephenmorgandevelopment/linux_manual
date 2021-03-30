@@ -37,6 +37,8 @@ import java.util.Set;
 public class CommandInfoFragment extends Fragment {
     public static final String TAG = CommandInfoFragment.class.getSimpleName();
     private Command command;
+    private TextSearchResult searchResults;
+    private int currentMatchIndex;
 
     private LinearLayout scrollContainer;
     private ScrollView rootScrollView;
@@ -176,8 +178,9 @@ public class CommandInfoFragment extends Fragment {
     }
 
     View.OnClickListener onClickSearchBarButton = v -> {
-        for(Map.Entry<String, String> entry : command.getData().entrySet()) {
-            getTextMatches(entry.getValue());
+        if(searchEditText.getText().length() >= 2) {
+            searchResults = command.searchDataForTextMatch(searchEditText.getText().toString());
+            displaySearchResults();
         }
     };
 
@@ -189,14 +192,15 @@ public class CommandInfoFragment extends Fragment {
 
     };
 
-    private TextSearchResult getTextMatches(String searchMeForMatches) {
-        final String query = searchEditText.getText().toString();
+    private void displaySearchResults() {
+        if(searchResults.getCount() > 0) {
+            currentMatchIndex = 1;
+            searchControlBar.setVisibility(View.VISIBLE);
 
-        if(searchMeForMatches.contains(query)) {
+            searchTextDisplay.setText(searchResults.getQuery());
+            numberOfTextMatches.setText(String.format("%d/%d", currentMatchIndex, searchResults.getCount()));
 
         }
-
-        return null;
     }
 
     private void toggleSearchBarDisplay() {
