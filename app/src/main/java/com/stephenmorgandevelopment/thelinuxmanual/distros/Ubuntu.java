@@ -69,8 +69,6 @@ public class Ubuntu {
 
 
     public static Map<String, String> crawlForCommandInfo(String pageHtml) {
-        Log.d(TAG, "Creating info from man page.");
-
         Map<String, String> info = new ArrayMap<>();
 
         Document document = Jsoup.parse(pageHtml);
