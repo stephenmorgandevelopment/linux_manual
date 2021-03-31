@@ -8,7 +8,7 @@
         android:id="@+id/searchButton"
         android:icon="?android:attr/actionModeWebSearchDrawable"
         android:title="@string/search"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 
     <item android:id="@+id/dropDown"
         android:title="@string/jump_to"

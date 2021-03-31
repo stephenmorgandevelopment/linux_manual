@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/colorControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="3dp"
+        android:background="@color/cardview_light_background"
+        android:layout_margin="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/colorsTxt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/colors"
+            android:textColor="#d7212121"
+            android:textSize="24sp"
+            android:textStyle="bold|italic"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/colorBtns"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginStart="7dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="7dp"
+            android:background="#c38a8a8a"
+            android:padding="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/colorsTxt">
+
+            <Button
+                android:id="@+id/colorPrimaryBtn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="1dp"
+                android:background="#8a8a8a"
+                android:fontFamily="serif"
+                android:padding="0dp"
+                android:text="@string/primary"
+                android:textAllCaps="false"
+                android:textColor="#d7212121"
+                android:textSize="12sp"
+                android:textStyle="italic"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/colorSecondBtn"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/colorSecondBtn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="1dp"
+                android:background="#8a8a8a"
+                android:fontFamily="serif"
+                android:padding="0dp"
+                android:text="@string/secondary"
+                android:textAllCaps="false"
+                android:textColor="#d7212121"
+                android:textSize="12sp"
+                android:textStyle="italic"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/colorBtnThr"
+                app:layout_constraintStart_toEndOf="@id/colorPrimaryBtn"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/colorBtnThr"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="1dp"
+                android:background="#8a8a8a"
+                android:fontFamily="serif"
+                android:padding="0dp"
+                android:text="@string/third"
+                android:textAllCaps="false"
+                android:textColor="#d7212121"
+                android:textSize="12sp"
+                android:textStyle="italic"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/colorAccentBtn"
+                app:layout_constraintStart_toEndOf="@id/colorSecondBtn"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/colorAccentBtn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="1dp"
+                android:background="#8a8a8a"
+                android:fontFamily="serif"
+                android:padding="0dp"
+                android:text="@string/accent"
+                android:textAllCaps="false"
+                android:textColor="#d7212121"
+                android:textSize="12sp"
+                android:textStyle="italic"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/colorBtnThr"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/colorPicker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:padding="7dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/colorBtns"
+            tools:layout_editor_absoluteX="10dp">
+
+            <TextView
+                android:id="@+id/redTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="0dp"
+                android:text="@string/r_000"
+                android:textColor="#FF0000"
+                android:textSize="24sp"
+                app:layout_constraintBottom_toBottomOf="@+id/redValue"
+                app:layout_constraintEnd_toStartOf="@+id/redValue"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/redValue" />
+
+            <EditText
+                android:id="@+id/redValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/the_amount_of_red_in_your_color_selection"
+                android:inputType="number"
+                android:text="@string/_000"
+                android:textColor="#FF0000"
+                android:textSize="24sp"
+                app:layout_constraintEnd_toEndOf="@+id/greenValue"
+                app:layout_constraintStart_toStartOf="@+id/greenValue"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <SeekBar
+                android:id="@+id/redSeek"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="7dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginBottom="7dp"
+                android:background="#cf909090"
+                android:max="255"
+                android:paddingBottom="3dp"
+                app:layout_constraintBottom_toBottomOf="@+id/redValue"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/redValue"
+                app:layout_constraintTop_toTopOf="@+id/redValue" />
+
+            <TextView
+                android:id="@+id/greenTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="0dp"
+                android:gravity="center"
+                android:text="@string/g_000"
+                android:textColor="#00FF00"
+                android:textSize="24sp"
+                app:layout_constraintBottom_toBottomOf="@+id/greenValue"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/greenValue" />
+
+            <EditText
+                android:id="@+id/greenValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/the_amount_of_green_in_your_color_selection"
+                android:inputType="number"
+                android:text="@string/_000"
+                android:textColor="#00FF00"
+                android:textSize="24sp"
+                app:layout_constraintStart_toEndOf="@id/greenTxt"
+                app:layout_constraintTop_toBottomOf="@id/redValue" />
+
+            <SeekBar
+                android:id="@+id/greenSeek"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="7dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginBottom="7dp"
+                android:background="#cf909090"
+                android:max="255"
+                app:layout_constraintBottom_toBottomOf="@id/greenValue"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/greenValue"
+                app:layout_constraintTop_toTopOf="@id/greenValue" />
+
+            <TextView
+                android:id="@+id/blueTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="0dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center_horizontal"
+                android:text="@string/b_000"
+                android:textColor="#0000FF"
+                android:textSize="24sp"
+                app:layout_constraintBottom_toBottomOf="@id/blueValue"
+                app:layout_constraintEnd_toEndOf="@id/greenTxt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/blueValue" />
+
+            <EditText
+                android:id="@+id/blueValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/the_amount_of_blue_in_your_color_selection"
+                android:inputType="number"
+                android:text="@string/_000"
+                android:textColor="#0000FF"
+                android:textSize="24sp"
+                app:layout_constraintStart_toEndOf="@+id/blueTxt"
+                app:layout_constraintTop_toBottomOf="@id/greenValue" />
+
+            <SeekBar
+                android:id="@+id/blueSeek"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="7dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginBottom="7dp"
+                android:background="#cf909090"
+                android:max="255"
+                app:layout_constraintBottom_toBottomOf="@id/blueValue"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/blueValue"
+                app:layout_constraintTop_toTopOf="@id/blueValue" />
+
+            <Button
+                android:id="@+id/colorResetBtn"
+                style="@android:style/Widget.Holo.Light.Button.Inset"
+
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:layout_marginEnd="12dp"
+                android:paddingStart="28dp"
+                android:paddingEnd="28dp"
+                android:text="@string/reset"
+                android:textAllCaps="false"
+                app:layout_constraintEnd_toStartOf="@id/colorApplyBtn"
+                app:layout_constraintTop_toBottomOf="@id/blueSeek"
+                app:layout_constraintWidth_percent=".375" />
+
+            <Button
+                android:id="@+id/colorApplyBtn"
+                style="@android:style/Widget.Holo.Light.Button.Inset"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:layout_marginEnd="8dp"
+                android:paddingStart="28dp"
+                android:paddingEnd="28dp"
+                android:text="@string/apply"
+                android:textAllCaps="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/blueSeek"
+                app:layout_constraintWidth_percent=".375" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/fontControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/cardview_light_background"
+        android:layout_margin="16dp"
+        app:layout_constraintTop_toBottomOf="@id/colorControls">
+
+        <TextView
+            android:id="@+id/fontTxt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/font_size"
+            android:textColor="#d7212121"
+            android:textSize="24sp"
+            android:textStyle="bold|italic"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/listFontTxt"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginStart="36dp"
+            android:foregroundGravity="center_vertical"
+            android:gravity="center_vertical"
+            android:text="@string/list"
+            android:textColor="@color/settingsText"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="@id/listFontSeek"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/listFontSeek" />
+
+        <SeekBar
+            android:id="@+id/listFontSeek"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="0dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="28dp"
+            android:background="#CDD18E3B"
+            android:max="4"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:progress="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/listFontTxt"
+            app:layout_constraintTop_toBottomOf="@id/fontTxt" />
+
+        <TextView
+            android:id="@+id/thumbFontTxt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:foregroundGravity="center_vertical"
+            android:gravity="center_vertical"
+            android:text="@string/details_text"
+            android:textColor="@color/settingsText"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="@id/thumbFontSeek"
+            app:layout_constraintStart_toStartOf="@+id/listFontTxt"
+            app:layout_constraintTop_toTopOf="@id/thumbFontSeek" />
+
+        <SeekBar
+            android:id="@+id/thumbFontSeek"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="0dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="28dp"
+            android:layout_marginBottom="24dp"
+            android:background="#CDD18E3B"
+            android:max="2"
+            android:paddingStart="28dp"
+            android:paddingEnd="28dp"
+            android:progress="1"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/thumbFontTxt"
+            app:layout_constraintTop_toBottomOf="@id/listFontSeek" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -104,6 +104,8 @@ public class CommandInfoFragment extends Fragment {
         if(command != null) {
             buildOutput();
         }
+
+        searchBarButton.setOnClickListener(onClickSearchBarButton);
     }
 
     @Override

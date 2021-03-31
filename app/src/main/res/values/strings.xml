@@ -59,7 +59,7 @@
     <string name="security">security</string>
     <string name="reporting">reporting</string>
     <string name="copyright">copyright</string>
-    <string name="finishing_up">Finishing up...</string>
+    <string name="finishing_up">Finishing up&#8230;</string>
     <string name="artful">artful</string>
     <string name="bionic">bionic</string>
     <string name="cosmic">cosmic</string>
@@ -84,5 +84,25 @@
     <string name="hirsute">hirsute</string>
     <string name="no_data_no_internet">Must have internet to build the local database of commands.  Please restart the app when you are connected to the internet, or press the refresh button once connected.</string>
     <string name="search">Search</string>
+    <string name="styles">Styles</string>
+    <string name="colors">Colors</string>
+    <string name="primary">Primary</string>
+    <string name="secondary">Secondary</string>
+    <string name="third">Third</string>
+    <string name="accent">Accent</string>
+
+    <string name="reset">reset</string>
+    <string name="font_size">Font size:</string>
+    <string name="r_000">Red:</string>
+    <string name="b_000">Blue:</string>
+    <string name="g_000">Green:</string>
+    <string name="_000">000</string>
+    <string name="apply">apply</string>
+    <string name="the_amount_of_blue_in_your_color_selection">The amount of blue in your color selection</string>
+    <string name="the_amount_of_green_in_your_color_selection">The amount of green in your color selection</string>
+    <string name="the_amount_of_red_in_your_color_selection">The amount of red in your color selection</string>
+    <string name="font">Font:</string>
+    <string name="list">List:</string>
+    <string name="details_text">Details:</string>
 
 </resources>

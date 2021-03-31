@@ -5,6 +5,11 @@
     >
 
     <item
+        android:id="@+id/styles"
+        android:title="@string/styles"
+        />
+
+    <item
         android:id="@+id/refreshMenuBtn"
         android:icon="@android:drawable/ic_popup_sync"
         android:title="@string/refresh_button"
@@ -33,4 +38,5 @@
         </menu>
 
     </item>
+
 </menu>

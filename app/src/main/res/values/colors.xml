@@ -15,4 +15,6 @@
     <color name="matchListItemFont">@color/textBubblesFont</color>
 
     <color name="transparent">#00ffffff</color>
+
+    <color name="settingsText">#D7212121</color>
 </resources>
