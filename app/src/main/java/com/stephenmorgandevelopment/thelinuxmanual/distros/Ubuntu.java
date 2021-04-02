@@ -24,7 +24,7 @@ import okhttp3.Response;
 
 public class Ubuntu {
     public static final String TAG = Ubuntu.class.getSimpleName();
-    public static final String NAME = Helpers.getApplicationContext().getString(R.string.ubuntu_name);
+    public static final String NAME = "Ubuntu";
     public static final String BASE_URL = "https://manpages.ubuntu.com/manpages/";
     private static final String CRAWLER_SELECTOR = "#tableWrapper pre a";
 

@@ -26,13 +26,13 @@ public class Command {
 
     public String getShortName() {
         String name = data.get("NAME");
-        if(name == null) {
+        if (name == null) {
             return "unknown-error";
         }
 
         name = name.substring(0, name.indexOf(" "));
 
-        if(name.contains(",")) {
+        if (name.contains(",")) {
             name = name.substring(0, name.indexOf(","));
         }
 
@@ -47,7 +47,8 @@ public class Command {
         JsonReader reader = new JsonReader(new StringReader(json));
         reader.setLenient(true);
 
-        Type dataMapType = new TypeToken<Map<String, String>>() {}.getType();
+        Type dataMapType = new TypeToken<Map<String, String>>() {
+        }.getType();
         return new Gson().fromJson(reader, dataMapType);
     }
 
@@ -69,9 +70,11 @@ public class Command {
         int count = 0;
         Map<String, List<Integer>> matchIndexes = new LinkedHashMap<>();
 
-        for(Map.Entry<String, String> entry : data.entrySet()) {
-            if(entry.getValue().contains(query)) {
-                List<Integer> indexes = getMatchIndexes(query, entry.getValue());
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            if (entry.getValue().contains(query)) {
+                List<Integer> indexes =
+                        getMatchIndexes(query.toLowerCase(), entry.getValue());
+
                 count += indexes.size();
 
                 matchIndexes.put(entry.getKey(), indexes);
@@ -83,12 +86,12 @@ public class Command {
 
     private List<Integer> getMatchIndexes(String query, String textToSearch) {
         List<Integer> indexes = new ArrayList<>();
-        String tmpText = textToSearch;
+        String tmpText = textToSearch.toLowerCase();
 
         int runningIndex = 0;
-        while(tmpText.contains(query)) {
-            int idx = tmpText.indexOf(query) + runningIndex;
-            indexes.add(idx);
+        while (tmpText.contains(query)) {
+            int idx = tmpText.indexOf(query); // + runningIndex;
+            indexes.add(idx + runningIndex);
             tmpText = tmpText.substring((idx + query.length()));
 
             runningIndex += (idx + query.length());

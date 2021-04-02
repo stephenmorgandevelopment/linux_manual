@@ -126,7 +126,7 @@
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/colorBtns"
-            tools:layout_editor_absoluteX="10dp">
+            >
 
             <TextView
                 android:id="@+id/redTxt"
@@ -256,7 +256,6 @@
             <Button
                 android:id="@+id/colorResetBtn"
                 style="@android:style/Widget.Holo.Light.Button.Inset"
-
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="28dp"

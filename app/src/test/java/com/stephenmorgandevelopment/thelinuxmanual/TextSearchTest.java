@@ -15,6 +15,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,20 +24,21 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
-@RunWith(AndroidJUnit4.class)
+//@RunWith(AndroidJUnit4.class)
 public class TextSearchTest {
 
 
-    @Test
-    public void command_searchDataForTextMatch_ReturnsCorrectCount() {
-        int expectedCount = 73;
-        String searchQuery = "transfer";
-
-        TextSearchResult results =
-                getTestCommand().searchDataForTextMatch(searchQuery);
-
-        Assert.assertEquals(expectedCount, results.getCount());
-    }
+//    @Test
+//    public void command_searchDataForTextMatch_ReturnsCorrectCount() {
+//        int expectedCount = 73;
+//        String searchQuery = "transfer";
+//
+//        TextSearchResult results =
+//                getTestCommand().searchDataForTextMatch(searchQuery);
+//
+//        Log.i("TextSearchText", "results.getCount() : " + results.getCount());
+//        Assert.assertEquals(expectedCount, results.getCount());
+//    }
 
 
 
@@ -44,10 +47,14 @@ public class TextSearchTest {
         StringBuilder manPageHtml = new StringBuilder();
 
         try {
-            InputStreamReader reader = new InputStreamReader(
-                    ApplicationProvider.getApplicationContext()
-                            .getAssets().open("curlManPage.json")
-            );
+            File testFile = new File("src/main/assets/curlManPage.html");
+
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(testFile));
+
+//            InputStreamReader reader = new InputStreamReader(
+//                    ApplicationProvider.getApplicationContext()
+//                            .getAssets().open("curlManPage.json")
+//            );
 
             BufferedReader bufferedReader = new BufferedReader(reader, 4096);
 

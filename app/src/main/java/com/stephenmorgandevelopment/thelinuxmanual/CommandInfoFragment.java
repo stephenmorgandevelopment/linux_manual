@@ -101,7 +101,7 @@ public class CommandInfoFragment extends Fragment {
         long id = getArguments().getLong(KEY_ID);
         command = viewModel.getCommandFromListById(id);
 
-        if(command != null) {
+        if (command != null) {
             buildOutput();
         }
 
@@ -139,16 +139,15 @@ public class CommandInfoFragment extends Fragment {
             return true;
         }
 
-        if(item.getItemId() == R.id.searchButton) {
+        if (item.getItemId() == R.id.searchButton) {
             toggleSearchBarDisplay();
         }
 
         if (jumpToList.contains(item.getTitle().toString())) {
-            View v = scrollContainer.findViewWithTag(item.getTitle());
-            rootScrollView.scrollTo(0, v.getTop() - 12);
-
+            jumpTo(item.getTitle().toString());
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -166,12 +165,12 @@ public class CommandInfoFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        if(command == null) {
+        if (command == null) {
             long id = getArguments().getLong(KEY_ID);
             command = viewModel.getCommandFromListById(id);
         }
 
-        ((AppCompatActivity)requireActivity()).getSupportActionBar().setTitle(command.getShortName());
+        ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle(command.getShortName());
     }
 
     @Override
@@ -180,33 +179,45 @@ public class CommandInfoFragment extends Fragment {
     }
 
     View.OnClickListener onClickSearchBarButton = v -> {
-        if(searchEditText.getText().length() >= 2) {
+        if (searchEditText.getText().length() >= 2) {
             searchResults = command.searchDataForTextMatch(searchEditText.getText().toString());
+            currentMatchIndex = 1;
             displaySearchResults();
         }
     };
 
     View.OnClickListener onClickPrevButton = v -> {
+        currentMatchIndex++;
 
+
+        updateCurrentMatchDisplay();
     };
 
     View.OnClickListener onClickNextButton = v -> {
 
     };
 
+    private void jumpTo(String section) {
+        View v = scrollContainer.findViewWithTag(section);
+        rootScrollView.scrollTo(0, v.getTop() - 12);
+    }
+
     private void displaySearchResults() {
-        if(searchResults.getCount() > 0) {
-            currentMatchIndex = 1;
+        if (searchResults.getCount() > 0) {
             searchControlBar.setVisibility(View.VISIBLE);
 
             searchTextDisplay.setText(searchResults.getQuery());
-            numberOfTextMatches.setText(String.format("%d/%d", currentMatchIndex, searchResults.getCount()));
-
+            updateCurrentMatchDisplay();
         }
     }
 
+    private void updateCurrentMatchDisplay() {
+        String numberTextMatchesText = currentMatchIndex + "/" + searchResults.getCount();
+        numberOfTextMatches.setText(numberTextMatchesText);
+    }
+
     private void toggleSearchBarDisplay() {
-        if(searchBar.getVisibility() == View.GONE) {
+        if (searchBar.getVisibility() == View.GONE) {
             searchBar.setVisibility(View.VISIBLE);
         } else {
             searchBar.setVisibility(View.GONE);
@@ -230,7 +241,7 @@ public class CommandInfoFragment extends Fragment {
         LayoutInflater inflater = (LayoutInflater) requireContext()
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        return  (ViewGroup) inflater.inflate(R.layout.text_bubble, null);
+        return (ViewGroup) inflater.inflate(R.layout.text_bubble, null);
     }
 
     private View getDivider() {
