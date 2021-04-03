@@ -1,6 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual.network;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import java.io.File;
@@ -13,7 +13,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.getLocal;
 import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.hasInternet;
 
 public class HttpClient {
@@ -50,7 +49,7 @@ public class HttpClient {
 
     public static Single<Response> fetchDirsHtml() throws IOException {
          if(hasInternet()) {
-            String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal();
+            String url = UbuntuHtmlAdapter.BASE_URL + UbuntuHtmlAdapter.getReleaseString() + "/" + Helpers.getLocal();
             Request req = new Request.Builder().url(url).build();
 
             return Single.just(okClient.newCall(req).execute());

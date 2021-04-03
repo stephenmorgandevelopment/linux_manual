@@ -2,27 +2,14 @@ package com.stephenmorgandevelopment.thelinuxmanual;
 
 import android.util.Log;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
-import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 
 //@RunWith(AndroidJUnit4.class)
 public class TextSearchTest {
@@ -69,6 +56,6 @@ public class TextSearchTest {
             Log.d("TextSearchText", "getTestCommand io error: " + ioe.getMessage());
         }
 
-        return new Command(1, Ubuntu.crawlForCommandInfo(manPageHtml.toString()));
+        return new Command(1, UbuntuHtmlAdapter.crawlForCommandInfo(manPageHtml.toString()));
     }
 }

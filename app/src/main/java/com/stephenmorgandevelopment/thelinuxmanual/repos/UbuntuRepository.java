@@ -8,7 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
@@ -69,7 +69,7 @@ public class UbuntuRepository implements ManPageRepository {
         return HttpClient.fetchCommandManPage(pageUrl)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
-                .flatMap(Ubuntu::crawlForCommandInfo);
+                .flatMap(UbuntuHtmlAdapter::crawlForCommandInfo);
     }
 
     public LiveData<String> launchSyncService() {
@@ -78,7 +78,7 @@ public class UbuntuRepository implements ManPageRepository {
             progress.postValue("Running initial sync to build local command database.");
 
             Intent intent = new Intent();
-            intent.putExtra(CommandSyncService.DISTRO, Ubuntu.NAME);
+            intent.putExtra(CommandSyncService.DISTRO, UbuntuHtmlAdapter.NAME);
 
             CommandSyncService.enqueueWork(Helpers.getApplicationContext(), intent, progress);
 

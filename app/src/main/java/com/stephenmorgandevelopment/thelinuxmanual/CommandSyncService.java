@@ -10,7 +10,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
@@ -46,7 +46,7 @@ public class CommandSyncService extends JobIntentService {
             globalDisposable = new CompositeDisposable();
         }
 
-        progress.postValue("\n\nConnecting to " + Ubuntu.BASE_URL + ".");
+        progress.postValue("\n\nConnecting to " + UbuntuHtmlAdapter.BASE_URL + ".");
 
         try {
             syncSimpleCommands();
@@ -83,7 +83,7 @@ public class CommandSyncService extends JobIntentService {
                     + "\nProcessing data...");
         }
 
-        List<SimpleCommand> pageCommands = Ubuntu.crawlForManPages(response.body().string(), reqUrl);
+        List<SimpleCommand> pageCommands = UbuntuHtmlAdapter.crawlForManPages(response.body().string(), reqUrl);
 
         progress.postValue("\nSaving data locally...");
 
@@ -94,9 +94,9 @@ public class CommandSyncService extends JobIntentService {
 
     public Observable<Request> mapHtmlToManDirs(Response response) throws IOException {
         if (response.isSuccessful() && response.code() == 200) {
-            String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + Helpers.getLocal() + "/";
+            String url = UbuntuHtmlAdapter.BASE_URL + UbuntuHtmlAdapter.getReleaseString() + "/" + Helpers.getLocal() + "/";
 
-            List<String> dirPaths = Ubuntu.crawlForManDirs(response.body().string());
+            List<String> dirPaths = UbuntuHtmlAdapter.crawlForManDirs(response.body().string());
             List<Request> requests = new ArrayList<>();
 
             for (String path : dirPaths) {

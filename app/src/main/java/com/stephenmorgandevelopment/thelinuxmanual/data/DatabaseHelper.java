@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
@@ -25,7 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static DatabaseHelper helperInstance;
 
     private static final String TABLE_NAME_POSTFIX = "_SimpleCommands";
-    private static String TABLE_NAME_PREFIX = Ubuntu.getReleaseString();
+    private static String TABLE_NAME_PREFIX = UbuntuHtmlAdapter.getReleaseString();
 
     private static final String KEY_ID = "id";
     private static final String KEY_NAME = "name";
@@ -53,7 +53,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        for (Ubuntu.Release release : Ubuntu.Release.values()) {
+        for (UbuntuHtmlAdapter.Release release : UbuntuHtmlAdapter.Release.values()) {
             String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS "
                     + release.getName() + TABLE_NAME_POSTFIX + "("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
@@ -65,7 +65,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        for (Ubuntu.Release release : Ubuntu.Release.values()) {
+        for (UbuntuHtmlAdapter.Release release : UbuntuHtmlAdapter.Release.values()) {
             String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS "
                     + release.getName() + TABLE_NAME_POSTFIX + "("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
@@ -76,7 +76,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void addCommands(List<SimpleCommand> commands) {
-        TABLE_NAME_PREFIX = Ubuntu.getReleaseString();
+        TABLE_NAME_PREFIX = UbuntuHtmlAdapter.getReleaseString();
 
         if (commands == null) {
             Log.e(TAG, "Failed adding commands to database.  commands == null");

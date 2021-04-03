@@ -1,6 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual.network;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import java.io.File;
@@ -56,7 +56,7 @@ public class UbuntuApi implements HttpApi{
 
 
     private Single<Response> fetchDirsHtml() throws IOException {
-        String url = Ubuntu.BASE_URL + Ubuntu.getReleaseString() + "/" + getLocal();
+        String url = UbuntuHtmlAdapter.BASE_URL + UbuntuHtmlAdapter.getReleaseString() + "/" + getLocal();
         Request req = new Request.Builder().url(url).build();
 
         return Single.just(okClient.newCall(req).execute());

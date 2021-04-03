@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 
@@ -111,7 +111,7 @@ public class MatchListAdapter extends BaseAdapter {
         Disposable disposable = fetchDescription(match)
                 .subscribeOn(threadPool)
                 .flatMap(response -> {
-                    Ubuntu.addDescriptionToSimpleCommand(match, response.body().string());
+                    UbuntuHtmlAdapter.addDescriptionToSimpleCommand(match, response.body().string());
 
                     return Single.just(match);
                 })

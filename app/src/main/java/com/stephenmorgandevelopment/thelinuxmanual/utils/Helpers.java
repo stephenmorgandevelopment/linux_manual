@@ -8,7 +8,7 @@ import android.util.Log;
 
 import androidx.core.os.LocaleListCompat;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 
 import java.io.File;
 
@@ -24,7 +24,7 @@ public class Helpers {
         setCacheDir(app.getCacheDir());
         setLocal();
 
-        Ubuntu.setRelease(Ubuntu.Release.fromString(Preferences.getRelease()));
+        UbuntuHtmlAdapter.setRelease(UbuntuHtmlAdapter.Release.fromString(Preferences.getRelease()));
     }
 
     private static void setLocal() {

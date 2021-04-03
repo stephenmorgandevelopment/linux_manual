@@ -104,5 +104,6 @@
     <string name="font">Font:</string>
     <string name="list">List:</string>
     <string name="details_text">Details:</string>
+    <string name="no_matches">No matches.</string>
 
 </resources>

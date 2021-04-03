@@ -7,8 +7,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import com.stephenmorgandevelopment.thelinuxmanual.CommandInfoFragment;
-import com.stephenmorgandevelopment.thelinuxmanual.CommandLookupFragment;
+import com.stephenmorgandevelopment.thelinuxmanual.ui.CommandInfoFragment;
+import com.stephenmorgandevelopment.thelinuxmanual.ui.CommandLookupFragment;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 
 import java.util.ArrayList;

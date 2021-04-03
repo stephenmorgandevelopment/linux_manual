@@ -5,9 +5,7 @@ import android.util.ArrayMap;
 import android.util.Log;
 
 import com.google.gson.stream.JsonWriter;
-import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,14 +14,15 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import io.reactivex.Single;
 import okhttp3.Response;
 
 
-public class Ubuntu {
-    public static final String TAG = Ubuntu.class.getSimpleName();
+public class UbuntuHtmlAdapter {
+    public static final String TAG = UbuntuHtmlAdapter.class.getSimpleName();
     public static final String NAME = "Ubuntu";
     public static final String BASE_URL = "https://manpages.ubuntu.com/manpages/";
     private static final String CRAWLER_SELECTOR = "#tableWrapper pre a";
@@ -56,7 +55,7 @@ public class Ubuntu {
     }
 
     public static void setRelease(Release release) {
-        Ubuntu.release = release;
+        UbuntuHtmlAdapter.release = release;
     }
 
     public static String getReleaseString() {
@@ -69,7 +68,7 @@ public class Ubuntu {
 
 
     public static Map<String, String> crawlForCommandInfo(String pageHtml) {
-        Map<String, String> info = new ArrayMap<>();
+        Map<String, String> info = new LinkedHashMap<>();
 
         Document document = Jsoup.parse(pageHtml);
         Elements h4List = document.select("#tableWrapper h4");
@@ -78,7 +77,7 @@ public class Ubuntu {
 
         for (Element h4 : h4List) {
             int idx = h4List.indexOf(h4);
-            info.put(h4.text(), preList.get(idx).text());
+            info.put(h4.text(), preList.get(idx).wholeText());
         }
 
         return info;

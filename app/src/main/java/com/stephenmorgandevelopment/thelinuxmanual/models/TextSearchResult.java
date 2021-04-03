@@ -4,15 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 public class TextSearchResult {
-	private String query;
-	private int count;
-	//	private List<Integer> matchIndexes = new ArrayList<>();
-	private Map<String, List<Integer>> matchIndexes;
+	private final String query;
+	private final List<SingleTextMatch> matchIndexes;
 
-	public TextSearchResult(String query, Map<String, List<Integer>> matchIndexes, int count) {
+	public TextSearchResult(String query, List<SingleTextMatch> matchIndexes, int count) {
 		this.query = query;
 		this.matchIndexes = matchIndexes;
-		this.count = count;
 	}
 
 	public String getQuery() {
@@ -20,11 +17,10 @@ public class TextSearchResult {
 	}
 
 	public int getCount() {
-		return count;
+		return matchIndexes.size();
 	}
 
-	public Map<String, List<Integer>> getMatchIndexes() {
+	public List<SingleTextMatch> getMatchIndexes() {
 		return matchIndexes;
 	}
-
 }

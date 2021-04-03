@@ -1,4 +1,4 @@
-package com.stephenmorgandevelopment.thelinuxmanual;
+package com.stephenmorgandevelopment.thelinuxmanual.viewmodels;
 
 import android.app.Application;
 import android.util.Log;

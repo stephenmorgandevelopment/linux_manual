@@ -1,7 +1,6 @@
-package com.stephenmorgandevelopment.thelinuxmanual;
+package com.stephenmorgandevelopment.thelinuxmanual.ui;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,14 +19,15 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
+import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.Ubuntu;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
-
-import java.util.Objects;
+import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         pagerAdapter = new PrimaryPagerAdapter(MainActivity.this, lookupFragment);
 
-        String title = getString(R.string.app_name) + " - " + Ubuntu.getReleaseString();
+        String title = getString(R.string.app_name) + " - " + UbuntuHtmlAdapter.getReleaseString();
         toolbar.setTitle(title);
 
         viewModel.getAddPageData().observe(this, updatePagerAdapterObserver);
@@ -145,37 +145,37 @@ public class MainActivity extends AppCompatActivity {
 
                 return true;
             case R.id.artful:
-                changeRelease(Ubuntu.Release.ARTFUL);
+                changeRelease(UbuntuHtmlAdapter.Release.ARTFUL);
                 return true;
             case R.id.bionic:
-                changeRelease(Ubuntu.Release.BIONIC);
+                changeRelease(UbuntuHtmlAdapter.Release.BIONIC);
                 return true;
             case R.id.cosmic:
-                changeRelease(Ubuntu.Release.COSMIC);
+                changeRelease(UbuntuHtmlAdapter.Release.COSMIC);
                 return true;
             case R.id.disco:
-                changeRelease(Ubuntu.Release.DISCO);
+                changeRelease(UbuntuHtmlAdapter.Release.DISCO);
                 return true;
             case R.id.eoan:
-                changeRelease(Ubuntu.Release.EOAN);
+                changeRelease(UbuntuHtmlAdapter.Release.EOAN);
                 return true;
             case R.id.focal:
-                changeRelease(Ubuntu.Release.FOCAL);
+                changeRelease(UbuntuHtmlAdapter.Release.FOCAL);
                 return true;
             case R.id.groovy:
-                changeRelease(Ubuntu.Release.GROOVY);
+                changeRelease(UbuntuHtmlAdapter.Release.GROOVY);
                 return true;
             case R.id.hirsute:
-                changeRelease(Ubuntu.Release.HIRSUTE);
+                changeRelease(UbuntuHtmlAdapter.Release.HIRSUTE);
                 return true;
             case R.id.precise:
-                changeRelease(Ubuntu.Release.PRECISE);
+                changeRelease(UbuntuHtmlAdapter.Release.PRECISE);
                 return true;
             case R.id.trusty:
-                changeRelease(Ubuntu.Release.TRUSY);
+                changeRelease(UbuntuHtmlAdapter.Release.TRUSY);
                 return true;
             case R.id.xenial:
-                changeRelease(Ubuntu.Release.XENIAL);
+                changeRelease(UbuntuHtmlAdapter.Release.XENIAL);
                 return true;
             default:
 
@@ -227,6 +227,10 @@ public class MainActivity extends AppCompatActivity {
     private final Observer<Throwable> onErrorObserver = throwable ->
             Toast.makeText(this, throwable.getMessage(), Toast.LENGTH_LONG).show();
 
+    public void removePage(long id) {
+        removePage(viewModel.getCommandFromListById(id));
+    }
+
     public void removePage(Command command) {
         int position = viewPager.getCurrentItem();
         if(pagerAdapter.getItemId(position) == command.getId()) {
@@ -267,9 +271,9 @@ public class MainActivity extends AppCompatActivity {
         progressDialog.setText(R.string.no_data_no_internet);
     }
 
-    protected void changeRelease(Ubuntu.Release release) {
+    protected void changeRelease(UbuntuHtmlAdapter.Release release) {
         Preferences.setRelease(release.getName());
-        Ubuntu.setRelease(release);
+        UbuntuHtmlAdapter.setRelease(release);
         DatabaseHelper.changeTable(release.getName());
 
         viewModel.clearCommandsList();
