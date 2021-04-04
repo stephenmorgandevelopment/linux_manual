@@ -94,7 +94,9 @@ public class Command {
 
     private List<SingleTextMatch> getMatchIndexes(String query, Map.Entry<String, String> entry) {
         List<SingleTextMatch> indexes = new ArrayList<>();
-        String tmpText = entry.getValue().toLowerCase();
+        SpannableString spannableString = SpannableString.valueOf(Html.fromHtml(entry.getValue(), Html.FROM_HTML_SEPARATOR_LINE_BREAK_BLOCKQUOTE));
+
+        String tmpText = String.valueOf(spannableString).toLowerCase();
 
         int runningIndex = 0;
         while (tmpText.contains(query)) {

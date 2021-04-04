@@ -7,6 +7,7 @@ import android.text.Html;
 import android.text.SpannableString;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -65,12 +66,12 @@ public class CommandInfoFragment extends Fragment {
     private Button nextSearchButton;
 
     private static final String KEY_ID = "id";
-    private static final String INFO_KEY_NAME = Helpers.getApplicationContext().getString(R.string.info_key_name);
-    private static final String INFO_KEY_SYNOPSIS = Helpers.getApplicationContext().getString(R.string.info_key_synopsis);
-    private static final String INFO_KEY_EXAMPLE = Helpers.getApplicationContext().getString(R.string.info_key_example);
-    private static final String INFO_KEY_EXAMPLES = Helpers.getApplicationContext().getString(R.string.info_key_examples);
-    private static final String INFO_KEY_OPTIONS = Helpers.getApplicationContext().getString(R.string.info_key_options);
-    private static final String INFO_KEY_DESCRIPTION = Helpers.getApplicationContext().getString(R.string.info_key_description);
+//    private static final String INFO_KEY_NAME = Helpers.getApplicationContext().getString(R.string.info_key_name);
+//    private static final String INFO_KEY_SYNOPSIS = Helpers.getApplicationContext().getString(R.string.info_key_synopsis);
+//    private static final String INFO_KEY_EXAMPLE = Helpers.getApplicationContext().getString(R.string.info_key_example);
+//    private static final String INFO_KEY_EXAMPLES = Helpers.getApplicationContext().getString(R.string.info_key_examples);
+//    private static final String INFO_KEY_OPTIONS = Helpers.getApplicationContext().getString(R.string.info_key_options);
+//    private static final String INFO_KEY_DESCRIPTION = Helpers.getApplicationContext().getString(R.string.info_key_description);
 
     public static CommandInfoFragment newInstance(long id) {
         Bundle args = new Bundle();
@@ -113,6 +114,8 @@ public class CommandInfoFragment extends Fragment {
         buildOutput(command.getData());
 
         searchBarButton.setOnClickListener(onClickSearchBarButton);
+        nextSearchButton.setOnClickListener(onClickNextButton);
+        prevSearchButton.setOnClickListener(onClickPrevButton);
     }
 
     @Override
@@ -173,11 +176,6 @@ public class CommandInfoFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-//        if (command == null) {
-//            long id = getArguments().getLong(KEY_ID);
-//            command = viewModel.getCommandFromListById(id);
-//        }
-
         ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle(infoModel.getShortName());
     }
 
@@ -192,34 +190,48 @@ public class CommandInfoFragment extends Fragment {
                     searchEditText.getText().toString(),
                     viewModel.getCommandFromListById(infoModel.getId()));
 
+            SingleTextMatch textMatch = infoModel.getCurrentMatch();
+
+            jumpTo(textMatch.getSection());
+            highlightCurrentMatch(textMatch);
             displaySearchResults();
         }
     };
 
     View.OnClickListener onClickPrevButton = v -> {
+        SingleTextMatch textMatch = infoModel.getPrevMatch();
 
-
-
-        updateCurrentMatchDisplay();
+        gotoMatch(textMatch);
     };
 
     View.OnClickListener onClickNextButton = v -> {
-        SingleTextMatch textMatch = infoModel.getNextMatch();
+        gotoMatch(infoModel.getNextMatch());
+//        SingleTextMatch textMatch = infoModel.getNextMatch();
 
+//        if(textMatch == null) {
+//            Toast.makeText(getContext(), "No matches found.", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        Log.i(TAG, "textMatch: " + textMatch.getSection() + "/" + textMatch.getIndex());
+//
+//        jumpTo(textMatch.getSection());
+//
+//        highlightCurrentMatch(textMatch);
+//
+//        updateCurrentMatchDisplay();
+    };
+
+    private void gotoMatch(SingleTextMatch textMatch) {
         if(textMatch == null) {
             Toast.makeText(getContext(), "No matches found.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         jumpTo(textMatch.getSection());
-
-//        tv.setHighlightColor(getResources().getColor(
-//                R.color.ic_launcher_background,
-//                requireContext().getTheme()));
-
         highlightCurrentMatch(textMatch);
-
-    };
+        updateCurrentMatchDisplay();
+    }
 
     private void jumpTo(String section) {
         View v = scrollContainer.findViewWithTag(section);
@@ -250,7 +262,12 @@ public class CommandInfoFragment extends Fragment {
         View bubble = scrollContainer.findViewWithTag(textMatch.getSection());
         TextView tv = bubble.findViewById(R.id.descriptionText);
 
-        SpannableString text = SpannableString.valueOf(tv.getText());
+//        SpannableString text = SpannableString.valueOf(tv.getText());
+
+        String info = viewModel.getCommandFromListById(infoModel.getId()).getData().get(textMatch.getSection());
+        SpannableString text = SpannableString.valueOf(Html.fromHtml(info, Html.FROM_HTML_SEPARATOR_LINE_BREAK_BLOCKQUOTE));
+
+
 
         ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(
                 requireContext().getColor(R.color.ic_launcher_background));
@@ -272,7 +289,7 @@ public class CommandInfoFragment extends Fragment {
                 endIdx,
                 SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        tv.setText(text);
+        tv.setText(text, TextView.BufferType.SPANNABLE);
     }
 
     private void buildOutput(Map<String, String> infoMap) {
@@ -280,7 +297,7 @@ public class CommandInfoFragment extends Fragment {
 
         Set<String> keys = infoMap.keySet();
         for (String key : keys) {
-            addTextBubble(key, SpannableString.valueOf(Html.fromHtml(infoMap.get(key))));
+            addTextBubble(key, SpannableString.valueOf(Html.fromHtml(infoMap.get(key), Html.FROM_HTML_SEPARATOR_LINE_BREAK_BLOCKQUOTE)));
         }
 
         scrollContainer.requestLayout();
@@ -291,8 +308,8 @@ public class CommandInfoFragment extends Fragment {
         ViewGroup view = getInflatedBubbleView();
         view.setTag(header);
 
-        ((TextView) view.findViewById(R.id.headerText)).setText(header);
-        ((TextView) view.findViewById(R.id.descriptionText)).setText(description);
+        ((TextView) view.findViewById(R.id.headerText)).setText(header, TextView.BufferType.SPANNABLE);
+        ((TextView) view.findViewById(R.id.descriptionText)).setText(description, TextView.BufferType.SPANNABLE);
 
         scrollContainer.addView(view);
         scrollContainer.addView(getDivider());

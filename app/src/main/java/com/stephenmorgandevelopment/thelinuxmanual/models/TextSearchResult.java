@@ -23,4 +23,8 @@ public class TextSearchResult {
 	public List<SingleTextMatch> getMatchIndexes() {
 		return matchIndexes;
 	}
+
+	public SingleTextMatch getMatch(int index) {
+		return matchIndexes.get(index);
+	}
 }

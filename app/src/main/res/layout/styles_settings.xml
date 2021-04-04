@@ -328,16 +328,15 @@
             style="@style/Widget.AppCompat.SeekBar.Discrete"
             android:layout_width="0dp"
             android:layout_height="28dp"
-            android:layout_marginStart="28dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="28dp"
             android:background="#CDD18E3B"
-            android:max="4"
+            android:max="2"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
-            android:progress="2"
+            android:progress="1"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/listFontTxt"
+            app:layout_constraintStart_toStartOf="@+id/thumbFontSeek"
             app:layout_constraintTop_toBottomOf="@id/fontTxt" />
 
         <TextView

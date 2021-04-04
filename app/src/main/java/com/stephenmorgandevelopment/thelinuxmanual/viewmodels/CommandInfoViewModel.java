@@ -21,6 +21,11 @@ public class CommandInfoViewModel extends ViewModel {
 
     }
 
+    public void init(Command command) {
+        this.id = command.getId();
+        this.shortName = command.getShortName();
+    }
+
     public void searchTextFor(String query, Command command) {
         searchResults = command.searchDataForTextMatch(query);
 
@@ -31,9 +36,12 @@ public class CommandInfoViewModel extends ViewModel {
         }
     }
 
-    public void init(Command command) {
-        this.id = command.getId();
-        this.shortName = command.getShortName();
+    public SingleTextMatch getCurrentMatch() {
+        if(searchResults.getCount() == 0) {
+            return null;
+        }
+
+        return searchResults.getMatch(currentMatchIndex - 1);
     }
 
     public SingleTextMatch getNextMatch() {
@@ -45,7 +53,19 @@ public class CommandInfoViewModel extends ViewModel {
             currentMatchIndex = 1;
         }
 
-         return searchResults.getMatchIndexes().get(currentMatchIndex-1);
+         return searchResults.getMatch(currentMatchIndex-1);
+    }
+
+    public SingleTextMatch getPrevMatch() {
+        if(searchResults.getCount() == 0) {
+            return null;
+        }
+
+        if(--currentMatchIndex == 0) {
+            currentMatchIndex = searchResults.getCount() - 1;
+        }
+
+        return searchResults.getMatch(currentMatchIndex);
     }
 
     public long getId() {
@@ -59,6 +79,8 @@ public class CommandInfoViewModel extends ViewModel {
     public TextSearchResult getSearchResults() {
         return searchResults;
     }
+
+
 
     public int getCurrentMatchIndex() {
         return currentMatchIndex;
