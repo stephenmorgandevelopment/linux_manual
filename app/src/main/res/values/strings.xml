@@ -6,7 +6,7 @@
     <string name="ubuntu_name">Ubuntu</string>
 
     <!-- Menu Button Names -->
-    <string name="refresh_button">Refresh</string>
+    <string name="refresh_button">Re-Sync Data</string>
     <string name="change_release_button">Change Release</string>
     <string name="store_pages_offline">Store Offline</string>
     <string name="sort_button">Sort Order</string>
@@ -15,6 +15,8 @@
     <!-- Placeholders -->
     <string name="header">Header</string>
     <string name="text">text</string>
+    <string name="placeholder_description" formatted="true">\u003cpre\u003e       Git is a fast, scalable, distributed revision control system with an unusually rich\n       command set that provides both high-level operations and full access to internals.\n\n       See \u003cb\u003e\u003ca href\u003d\"../man7/gittutorial.7.html\"\u003egittutorial\u003c/a\u003e\u003c/b\u003e(7) to get started, then see \u003cb\u003e\u003ca href\u003d\"../man7/giteveryday.7.html\"\u003egiteveryday\u003c/a\u003e\u003c/b\u003e(7) for a useful minimum set of\n       commands. The \u003cb\u003eGit\u003c/b\u003e \u003cb\u003eUser’s\u003c/b\u003e \u003cb\u003eManual\u003c/b\u003e[1] has a more in-depth introduction.\n\n       After you mastered the basic concepts, you can come back to this page to learn what\n       commands Git offers. You can learn more about individual Git commands with \"git help\n       command\". \u003cb\u003e\u003ca href\u003d\"../man7/gitcli.7.html\"\u003egitcli\u003c/a\u003e\u003c/b\u003e(7) manual page gives you an overview of the command-line command syntax.\n\n       A formatted and hyperlinked copy of the latest Git documentation can be viewed at\n       \u003cb\u003ehttps://git.github.io/htmldocs/git.html\u003c/b\u003e or \u003cb\u003ehttps://git-scm.com/docs\u003c/b\u003e.\n\n\u003c/pre\u003e</string>
+
 
     <!-- Find Command strings -->
     <string name="search_command">Search Command</string>
@@ -34,8 +36,8 @@
 
     <!-- Man Page Fields -->
     <string name="name">name</string>
-    <string name="synopsis">synopsis</string>
-    <string name="configuration">configuration</string>
+     <string name="synopsis">synopsis</string>
+   <string name="configuration">configuration</string>
     <string name="description">description</string>
     <string name="option">option</string>
     <string name="exit_status">exit status</string>
@@ -84,7 +86,7 @@
     <string name="hirsute">hirsute</string>
     <string name="no_data_no_internet">Must have internet to build the local database of commands.  Please restart the app when you are connected to the internet, or press the refresh button once connected.</string>
     <string name="search">Search</string>
-    <string name="styles">Styles</string>
+    <string name="styles">Font Size Settings</string>
     <string name="colors">Colors</string>
     <string name="primary">Primary</string>
     <string name="secondary">Secondary</string>

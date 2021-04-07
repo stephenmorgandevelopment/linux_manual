@@ -13,7 +13,7 @@
         android:id="@+id/matchListCommand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="21sp"
+        android:textSize="@dimen/list_header_size"
         android:layout_marginTop="3dp"
         android:text="@string/header"
         android:textColor="@color/matchListItemFont"
@@ -28,7 +28,7 @@
         android:lines="3"
         android:maxLines="3"
         android:text="@string/text"
-        android:textSize="16sp"
+        android:textSize="@dimen/list_description_size"
         android:layout_marginBottom="7dp"
         android:textColor="@color/matchListItemFont"
         />

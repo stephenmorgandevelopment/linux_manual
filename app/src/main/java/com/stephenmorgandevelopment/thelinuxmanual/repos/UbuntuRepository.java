@@ -1,12 +1,17 @@
 package com.stephenmorgandevelopment.thelinuxmanual.repos;
 
 import android.content.Intent;
+import android.text.Html;
+import android.text.Spanned;
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
+import com.stephenmorgandevelopment.thelinuxmanual.R;
+import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
@@ -19,11 +24,16 @@ import java.util.List;
 import java.util.Map;
 
 import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class UbuntuRepository implements ManPageRepository {
     private static UbuntuRepository instance;
     public static final String TAG = "UbuntuRepository";
+
+    private static CompositeDisposable disposables;
 
     public static UbuntuRepository getInstance() {
         if (instance == null) {
@@ -33,15 +43,7 @@ public class UbuntuRepository implements ManPageRepository {
     }
 
     private UbuntuRepository() {
-
-    }
-
-    public void syncDatabase() {
-
-    }
-
-    public List<SimpleCommand> searchDatabase() {
-        return null;
+        disposables = new CompositeDisposable();
     }
 
     public Single<Map<String, String>> getCommandData(SimpleCommand simpleCommand) {
@@ -72,19 +74,50 @@ public class UbuntuRepository implements ManPageRepository {
                 .flatMap(UbuntuHtmlAdapter::crawlForCommandInfo);
     }
 
+    public LiveData<String> updateDescription(SimpleCommand match) {
+        MutableLiveData<String> liveDescription = new MutableLiveData<>();
+
+        Disposable disposable = HttpClient.fetchDescription(match)
+                .subscribeOn(Schedulers.computation())
+                .observeOn(Schedulers.computation())
+                .flatMap(response -> {
+                    match.setDescription(UbuntuHtmlAdapter.crawlForDescription(response.body().string()));
+                    return Single.just(match);
+                })
+                .doOnSuccess(simpleCommand -> {
+                    liveDescription.postValue(simpleCommand.getDescription());
+                })
+                .doOnError(error -> {
+                    liveDescription.postValue(Helpers.getApplicationContext()
+                            .getString(R.string.unable_to_fetch));
+
+                    Log.i(TAG, error.getMessage());
+                })
+                .subscribe(simpleCommand -> {
+                            DatabaseHelper.getInstance().updateCommand(simpleCommand);
+                        }
+                        , error -> {
+                            Log.e(TAG, error.toString());
+                        });
+
+        disposables.add(disposable);
+        return liveDescription;
+    }
+
     public LiveData<String> launchSyncService() {
         if (!CommandSyncService.isWorking()) {
-            MutableLiveData<String> progress = new MutableLiveData<>();
-            progress.postValue("Running initial sync to build local command database.");
-
             Intent intent = new Intent();
             intent.putExtra(CommandSyncService.DISTRO, UbuntuHtmlAdapter.NAME);
 
-            CommandSyncService.enqueueWork(Helpers.getApplicationContext(), intent, progress);
-
-            return progress;
+            return CommandSyncService.enqueueWork(Helpers.getApplicationContext(), intent);
         }
 
         return CommandSyncService.getProgress();
+    }
+
+    public static void cleanBackgroundThreads() {
+        if(disposables != null) {
+            disposables.clear();
+        }
     }
 }

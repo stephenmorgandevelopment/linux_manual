@@ -28,6 +28,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
 import java.util.List;
+import java.util.Objects;
 
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -36,207 +37,189 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class CommandLookupFragment extends Fragment {
-    public static final String TAG = CommandLookupFragment.class.getSimpleName();
-    private CompositeDisposable disposables;
+	public static final String TAG = CommandLookupFragment.class.getSimpleName();
+	private CompositeDisposable disposables;
 
-    private EditText searchText;
-    private ListView matchListView;
-    private MatchListAdapter matchListAdapter;
+	private EditText searchText;
+	private ListView matchListView;
+	private MatchListAdapter matchListAdapter;
 
-    private MainActivityViewModel viewModel;
+	private MainActivityViewModel viewModel;
 
-    private String searchTextTrimRegex = "^(/W/s)$";
+	private final String searchTextTrimRegex = "^(/W/s)$";
 
-    public static CommandLookupFragment getInstance() {
-        return new CommandLookupFragment();
-    }
+	public static CommandLookupFragment newInstance() {
+		return new CommandLookupFragment();
+	}
 
-    public CommandLookupFragment() {
+	@Nullable
+	@Override
+	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+		View view = inflater.inflate(R.layout.command_lookup_fragment, null);
+		view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-    }
+		return view;
+	}
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.command_lookup_fragment, null);
-        view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+	@Override
+	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+		searchText = view.findViewById(R.id.searchText);
+		matchListView = view.findViewById(R.id.matchList);
 
-        return view;
-    }
+		disposables = new CompositeDisposable();
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        searchText = view.findViewById(R.id.searchText);
-        matchListView = view.findViewById(R.id.matchList);
+		matchListView.setDividerHeight(5);
+		matchListAdapter = new MatchListAdapter(requireContext());
 
-        disposables = new CompositeDisposable();
+		matchListView.setAdapter(matchListAdapter);
+		matchListView.setOnItemClickListener(itemClicked);
 
-        matchListView.setDividerHeight(5);
-        matchListAdapter = new MatchListAdapter(requireContext());
+		searchText.addTextChangedListener(onChangedText);
+	}
 
-        matchListView.setAdapter(matchListAdapter);
-        matchListView.setOnItemClickListener(itemClicked);
+	@Override
+	public void onCreate(@Nullable Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        searchText.addTextChangedListener(onChangedText);
-    }
+		requireActivity().getOnBackPressedDispatcher().addCallback(backPressedCallback);
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+		viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
+	}
 
-        requireActivity().getOnBackPressedDispatcher().addCallback(backPressedCallback);
+	@Override
+	public void onStart() {
+		super.onStart();
 
-        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
-    }
+	}
 
-    @Override
-    public void onStart() {
-        super.onStart();
+	@Override
+	public void onPrepareOptionsMenu(@NonNull Menu menu) {
+		menu.clear();
 
-    }
+		super.onPrepareOptionsMenu(menu);
+	}
 
-    @Override
-    public void onPrepareOptionsMenu(@NonNull Menu menu) {
-        if (menu.findItem(R.id.closeButton) != null) {
-            menu.clear();
-        }
+	@Override
+	public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+	}
 
-        super.onPrepareOptionsMenu(menu);
-    }
+	@Override
+	public void onResume() {
+		super.onResume();
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-    }
+		Objects.requireNonNull(
+				((AppCompatActivity) requireActivity())
+						.getSupportActionBar()).setTitle("Search");
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle("Search");
+		if (matchListAdapter == null) {
+			matchListAdapter = new MatchListAdapter(requireContext());
+		}
 
-        if (matchListAdapter == null) {
-            matchListAdapter = new MatchListAdapter(requireContext());
-        }
+		if (viewModel.getSearchText() != null) {
+			searchText.setText(viewModel.getSearchText());
+		}
+	}
 
-        if (viewModel.getSearchText() != null) {
-            searchText.setText(viewModel.getSearchText());
-        }
-    }
+	@Override
+	public void onPause() {
+		super.onPause();
 
-    @Override
-    public void onPause() {
-        super.onPause();
+		if (disposables.size() > 0) {
+			disposables.clear();
+		}
+	}
 
-        if (disposables.size() > 0) {
-            disposables.clear();
-        }
-    }
+	public void cleanup() {
+		if (disposables != null) {
+			disposables.clear();
+		}
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
+		if(matchListAdapter != null) {
+			matchListAdapter.removeObservers();
+		}
+	}
 
-    public void cleanup() {
-        if (disposables != null) {
-            disposables.clear();
-        }
+	TextWatcher onChangedText = new TextWatcher() {
+		@Override
+		public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+		}
 
-        if (MatchListAdapter.helperThreads != null) {
-            for (Thread thread : MatchListAdapter.helperThreads) {
-                thread.interrupt();
-                thread = null;
-            }
-        }
+		@Override
+		public void onTextChanged(CharSequence s, int start, int before, int count) {
+		}
 
-        if (MatchListAdapter.disposables != null) {
-            MatchListAdapter.disposables.clear();
-        }
-    }
+		@Override
+		public void afterTextChanged(Editable s) {
+			if (s.length() >= 2) {
+				String searchQuery = String.valueOf(s).replaceAll("'", "");
+				searchQuery = searchQuery.replaceAll("%", "");
+				searchQuery = searchQuery.replaceAll(searchTextTrimRegex, "");
 
-    TextWatcher onChangedText = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+				Disposable disposable = Single.just(
+						DatabaseHelper.getInstance().partialMatches(searchQuery))
+						.subscribeOn(Schedulers.io())
+						.observeOn(Schedulers.io())
+						.observeOn(AndroidSchedulers.mainThread())
+						.doOnError(error -> {
+							Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
+						})
+						.subscribe(this::updateMatchList
+								, error ->
+										Log.d(TAG, "SQL error: " + error.toString())
+						);
 
-        }
+				viewModel.setSearchText(s.toString());
+				disposables.add(disposable);
+			} else {
+				viewModel.setSearchText(null);
+				matchListAdapter.clear();
+				matchListAdapter.notifyDataSetChanged();
+			}
+		}
 
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
+		private void updateMatchList(List<SimpleCommand> list) {
+			if (list.size() > 0) {
+				matchListAdapter.setMatches(list);
+				matchListAdapter.notifyDataSetChanged();
+			}
+		}
+	};
 
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-            if (s.length() >= 2) {
-                String searchText = String.valueOf(s).replaceAll("'", "");
-                searchText = searchText.replaceAll("%", "");
-                searchText = searchText.replaceAll(searchTextTrimRegex, "");
-
-                Disposable disposable = Single.just(
-                        DatabaseHelper.getInstance().partialMatches(searchText))
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .doOnError(error -> {
-                            Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
-                        })
-                        .subscribe(this::updateMatchList
-                                , error ->
-                                        Log.d(TAG, "SQL error: " + error.toString())
-                        );
-
-                viewModel.setSearchText(s.toString());
-                disposables.add(disposable);
-            } else {
-                viewModel.setSearchText(null);
-                matchListAdapter.clear();
-                matchListAdapter.notifyDataSetChanged();
-            }
-        }
-
-        private void updateMatchList(List<SimpleCommand> list) {
-            if (list.size() > 0) {
-                matchListAdapter.setMatches(list);
-                matchListAdapter.notifyDataSetChanged();
-            }
-        }
-    };
-
-    AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//            if (!Helpers.hasInternet()) {
-//                Toast.makeText(getContext(), "Must have internet.", Toast.LENGTH_LONG).show();
-//                return;
-//            }
-
+	AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener() {
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             long cmdId = matchListAdapter.getItemId(position);
 
-            if (viewModel.isLoading(cmdId) || viewModel.commandsListHasId(cmdId)) {
-                return;
-            }
+			if (viewModel.isLoading(cmdId) || viewModel.commandsListHasId(cmdId)) {
+				return;
+			}
 
-            viewModel.setLoading(matchListAdapter.getItemId(position), true);
-            viewModel.loadManpage(matchListAdapter.getItem(position));
-        }
-    };
+			viewModel.setLoading(matchListAdapter.getItemId(position), true);
+			viewModel.loadManpage(matchListAdapter.getItem(position));
+		}
+	};
 
-    OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
-        @Override
-        public void handleOnBackPressed() {
-            if (searchText.getText() == null || searchText.length() == 0) {
-                setEnabled(false);
-                requireActivity().onBackPressed();
-            }
+	OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
+		@Override
+		public void handleOnBackPressed() {
+			if (searchText.getText() == null || searchText.length() == 0) {
+				setEnabled(false);
+				getActivity().onBackPressed();
+			}
 
-            if (searchText.getText().length() > 1) {
-                viewModel.setSearchText(null);
-                matchListAdapter.clear();
-                matchListAdapter.notifyDataSetChanged();
-            }
+			clear();
+		}
+	};
 
-            searchText.setText("");
-        }
-    };
+	public void clear() {
+		cleanup();
+
+		viewModel.setSearchText(null);
+		matchListAdapter.clear();
+		matchListAdapter.notifyDataSetChanged();
+
+		searchText.setText("");
+	}
 }

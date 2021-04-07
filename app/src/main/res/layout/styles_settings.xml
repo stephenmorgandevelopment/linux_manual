@@ -4,6 +4,20 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/settingsToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/Widget.MaterialComponents.ActionBar.Surface"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:title="@string/styles" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/colorControls"
         android:layout_width="match_parent"
@@ -11,7 +25,9 @@
         android:padding="3dp"
         android:background="@color/cardview_light_background"
         android:layout_margin="16dp"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/settingsToolbar"
+        android:visibility="gone"
+        >
 
         <TextView
             android:id="@+id/colorsTxt"
@@ -55,12 +71,12 @@
                 android:textSize="12sp"
                 android:textStyle="italic"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/colorSecondBtn"
+                app:layout_constraintEnd_toStartOf="@id/colorSecondaryBtn"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
-                android:id="@+id/colorSecondBtn"
+                android:id="@+id/colorSecondaryBtn"
                 style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -74,12 +90,12 @@
                 android:textSize="12sp"
                 android:textStyle="italic"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/colorBtnThr"
+                app:layout_constraintEnd_toStartOf="@id/colorThirdBtn"
                 app:layout_constraintStart_toEndOf="@id/colorPrimaryBtn"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
-                android:id="@+id/colorBtnThr"
+                android:id="@+id/colorThirdBtn"
                 style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -94,7 +110,7 @@
                 android:textStyle="italic"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/colorAccentBtn"
-                app:layout_constraintStart_toEndOf="@id/colorSecondBtn"
+                app:layout_constraintStart_toEndOf="@id/colorSecondaryBtn"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <Button
@@ -113,7 +129,7 @@
                 android:textStyle="italic"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/colorBtnThr"
+                app:layout_constraintStart_toEndOf="@id/colorThirdBtn"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -336,11 +352,11 @@
             android:paddingEnd="20dp"
             android:progress="1"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/thumbFontSeek"
+            app:layout_constraintStart_toStartOf="@+id/detailsFontSeek"
             app:layout_constraintTop_toBottomOf="@id/fontTxt" />
 
         <TextView
-            android:id="@+id/thumbFontTxt"
+            android:id="@+id/detailsFontTxt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:foregroundGravity="center_vertical"
@@ -348,12 +364,12 @@
             android:text="@string/details_text"
             android:textColor="@color/settingsText"
             android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="@id/thumbFontSeek"
+            app:layout_constraintBottom_toBottomOf="@id/detailsFontSeek"
             app:layout_constraintStart_toStartOf="@+id/listFontTxt"
-            app:layout_constraintTop_toTopOf="@id/thumbFontSeek" />
+            app:layout_constraintTop_toTopOf="@id/detailsFontSeek" />
 
         <SeekBar
-            android:id="@+id/thumbFontSeek"
+            android:id="@+id/detailsFontSeek"
             style="@style/Widget.AppCompat.SeekBar.Discrete"
             android:layout_width="0dp"
             android:layout_height="28dp"
@@ -368,7 +384,7 @@
             android:progress="1"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/thumbFontTxt"
+            app:layout_constraintStart_toEndOf="@id/detailsFontTxt"
             app:layout_constraintTop_toBottomOf="@id/listFontSeek" />
 
 

@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F5780</color>
-    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorPrimary">#272E3A</color>
+    <color name="colorPrimaryDark">#FBA700</color>
     <color name="colorAccent">@color/fontLight</color>
     <color name="background">#151515</color>
+    <color name="linkColor">#298307</color>
 
     <color name="fontDark">#252525</color>
 
     <color name="fontLight">#ededed</color>
-    <color name="textBubbles">#9FE1FF</color>
-    <color name="textBubblesFont">#121212</color>
+    <color name="textBubbles">#D6D8D8</color>
+    <color name="textBubblesFont">#1b1b1b</color>
 
     <color name="matchListItem">#dcdcdc</color>
     <color name="matchListItemFont">@color/textBubblesFont</color>

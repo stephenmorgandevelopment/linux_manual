@@ -1,5 +1,7 @@
 package com.stephenmorgandevelopment.thelinuxmanual.models;
 
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.util.Log;
 
 import org.json.JSONException;

@@ -38,15 +38,26 @@ public class CommandSyncService extends JobIntentService {
 
     private static volatile boolean working = false;
 
+    public static LiveData<String> enqueueWork(Context context, Intent work) {
+        if(progress == null) {
+            progress = new MutableLiveData<>();
+        }
+        progress.setValue("Running initial sync to build local command database.");
+
+        working = true;
+        enqueueWork(context, CommandSyncService.class, JOB_ID, work);
+
+        return progress;
+    }
+
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
-        progress.postValue(progress.getValue().concat("waiting..."));
-
         if (globalDisposable == null) {
             globalDisposable = new CompositeDisposable();
         }
 
-        progress.postValue("\n\nConnecting to " + UbuntuHtmlAdapter.BASE_URL + ".");
+        updateProgress("\n\nConnecting to " + UbuntuHtmlAdapter.BASE_URL + ".");
+
 
         try {
             syncSimpleCommands();
@@ -75,17 +86,17 @@ public class CommandSyncService extends JobIntentService {
         String reqUrl = response.request().url().toString();
 
         if(reqUrl.endsWith("3/")) {
-            progress.postValue("\nPulled data from " + reqUrl
+            updateProgress("\nPulled data from " + reqUrl
                     + "\nLarge data set, longest processing."
                     + "\nProcessing data...");
         } else {
-            progress.postValue("\nPulled data from " + reqUrl
+            updateProgress("\nPulled data from " + reqUrl
                     + "\nProcessing data...");
         }
 
         List<SimpleCommand> pageCommands = UbuntuHtmlAdapter.crawlForManPages(response.body().string(), reqUrl);
 
-        progress.postValue("\nSaving data locally...");
+        updateProgress("\nSaving data locally...");
 
         if (pageCommands.size() > 0) {
             DatabaseHelper.getInstance().addCommands(pageCommands);
@@ -112,10 +123,18 @@ public class CommandSyncService extends JobIntentService {
         return Observable.error(new Throwable());
     }
 
+    private static void updateProgress(String progressString) {
+        if(progress != null) {
+            progress.postValue(progressString);
+        }
+    }
+
     @Override
     public boolean onStopCurrentWork() {
         working = false;
-        progress.postValue(COMPLETE_TAG);
+        updateProgress(COMPLETE_TAG);
+        globalDisposable.clear();
+        progress = null;
         return super.onStopCurrentWork();
     }
 
@@ -128,19 +147,14 @@ public class CommandSyncService extends JobIntentService {
         }
     }
 
-    public static void enqueueWork(Context context, Intent work, MutableLiveData<String> prog) {
-        progress = prog;
-        working = true;
-        enqueueWork(context, CommandSyncService.class, JOB_ID, work);
-    }
-
     public static boolean isWorking() {
         return working;
     }
 
     public static void stopWork() {
         working = false;
-        progress.postValue(COMPLETE_TAG);
+
+        updateProgress(COMPLETE_TAG);
     }
 
     public static LiveData<String> getProgress() {

@@ -75,4 +75,19 @@ public class LocalStorage {
             }
         }
     }
+
+    public void wipeAll() {
+        File[] commands = commandsDir.listFiles();
+
+        if(commands == null) {
+            Log.i(TAG, "This shouldn't happen. Result of commandsDir not being a dir.");
+            return;
+        }
+
+        for(File command : commands) {
+            if(!command.delete()) {
+                Log.i(TAG, "Error removing command with id: " + command.getName());
+            }
+        }
+    }
 }

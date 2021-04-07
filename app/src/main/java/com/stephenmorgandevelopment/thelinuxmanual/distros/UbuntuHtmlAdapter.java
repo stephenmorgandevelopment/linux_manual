@@ -1,6 +1,9 @@
 package com.stephenmorgandevelopment.thelinuxmanual.distros;
 
 
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.SpannedString;
 import android.util.ArrayMap;
 import android.util.Log;
 
@@ -77,7 +80,7 @@ public class UbuntuHtmlAdapter {
 
         for (Element h4 : h4List) {
             int idx = h4List.indexOf(h4);
-            info.put(h4.text(), preList.get(idx).wholeText());
+            info.put(h4.text(), preList.get(idx).outerHtml());
         }
 
         return info;
@@ -92,7 +95,7 @@ public class UbuntuHtmlAdapter {
 
         for (Element h4 : h4List) {
             if (h4.text().toUpperCase().contains("DESCRIPTION")) {
-                command.setDescription(preList.get(h4List.indexOf(h4)).text());
+                command.setDescription(preList.get(h4List.indexOf(h4)).outerHtml());
                 if (h4.text().equals("DESCRIPTION")) {
                     break;
                 }
@@ -102,6 +105,30 @@ public class UbuntuHtmlAdapter {
         if (command.getDescription().equals("")) {
             command.setDescription("No description available.");
         }
+    }
+
+    public static synchronized String crawlForDescription(String pageHtml) {
+        Document document = Jsoup.parse(pageHtml);
+        Elements h4List = document.select("#tableWrapper h4");
+        Elements preList = document.select("#tableWrapper pre");
+
+        preList.remove(0);
+
+        String description = null;
+        for (Element h4 : h4List) {
+            if (h4.text().toUpperCase().contains("DESCRIPTION")) {
+                description = preList.get(h4List.indexOf(h4)).outerHtml();
+                if (h4.text().equals("DESCRIPTION")) {
+                    return description;
+                }
+            }
+        }
+
+        if (description == null) {
+            return "No description available.";
+        }
+
+        return description;
     }
 
     public static ArrayList<SimpleCommand> crawlForManPages(String pageHtml, String url) {
@@ -130,6 +157,7 @@ public class UbuntuHtmlAdapter {
             unfinishedCommands.add(new SimpleCommand(text, path, manN));
         }
 
+        Log.i(TAG, "Added commands for man" + manN);
         return unfinishedCommands;
     }
 

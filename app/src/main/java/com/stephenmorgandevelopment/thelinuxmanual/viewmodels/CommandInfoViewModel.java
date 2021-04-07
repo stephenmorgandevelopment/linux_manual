@@ -41,7 +41,7 @@ public class CommandInfoViewModel extends ViewModel {
             return null;
         }
 
-        return searchResults.getMatch(currentMatchIndex - 1);
+        return searchResults.getMatch(currentMatchIndex-1);
     }
 
     public SingleTextMatch getNextMatch() {
@@ -62,10 +62,10 @@ public class CommandInfoViewModel extends ViewModel {
         }
 
         if(--currentMatchIndex == 0) {
-            currentMatchIndex = searchResults.getCount() - 1;
+            currentMatchIndex = searchResults.getCount();
         }
 
-        return searchResults.getMatch(currentMatchIndex);
+        return searchResults.getMatch(currentMatchIndex-1);
     }
 
     public long getId() {

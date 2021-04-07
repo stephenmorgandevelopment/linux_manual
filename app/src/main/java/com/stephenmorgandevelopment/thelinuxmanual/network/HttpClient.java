@@ -1,12 +1,14 @@
 package com.stephenmorgandevelopment.thelinuxmanual.network;
 
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
@@ -43,6 +45,8 @@ public class HttpClient {
 //        return instance;
 //    }
 
+    private HttpClient() {}
+
     public static OkHttpClient getClient() {
         return okClient;
     }
@@ -65,5 +69,19 @@ public class HttpClient {
         } else {
             return Single.error(new Throwable("No internet.  Fetch Command ManPage failed."));
         }
+    }
+
+    public static Single<Response> fetchDescription(SimpleCommand command) {
+        Request request = new Request.Builder().url(command.getUrl()).build();
+        return Single.defer(() -> Single.just(okClient.newCall(request).execute()));
+    }
+
+    public static Single<Response> fetchManPageList(Request request) throws IOException {
+        return Single.just(HttpClient.getClient().newCall(request).execute());
+    }
+
+    public static Single<Response> fetchManPageList(String url) throws IOException {
+        Request req = new Request.Builder().url(url).build();
+        return Single.just(HttpClient.getClient().newCall(req).execute());
     }
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="list_header_size">21sp</dimen>
+    <dimen name="list_description_size">16sp</dimen>
+
+    <dimen name="bubble_header_size">24sp</dimen>
+    <dimen name="bubble_text_size">16sp</dimen>
+</resources>

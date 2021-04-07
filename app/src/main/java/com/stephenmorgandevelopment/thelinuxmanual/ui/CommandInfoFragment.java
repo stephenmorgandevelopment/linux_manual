@@ -5,9 +5,10 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.SpannedString;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,307 +30,273 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SingleTextMatch;
-import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandInfoViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 public class CommandInfoFragment extends Fragment {
-    public static final String TAG = CommandInfoFragment.class.getSimpleName();
+	public static final String TAG = CommandInfoFragment.class.getSimpleName();
 
-    private MainActivityViewModel viewModel;
-    private CommandInfoViewModel infoModel;
+	private MainActivityViewModel viewModel;
+	private CommandInfoViewModel infoModel;
 
-    private LinearLayout scrollContainer;
-    private ScrollView rootScrollView;
-    private List<String> jumpToList;
+	private LinearLayout scrollContainer;
+	private ScrollView rootScrollView;
+	private List<String> jumpToList;
 
-    private ConstraintLayout searchBar;
-    private EditText searchEditText;
-    private ImageButton searchBarButton;
+	private ConstraintLayout searchBar;
+	private EditText searchEditText;
 
-    private ConstraintLayout searchControlBar;
-    private TextView searchTextDisplay;
-    private TextView numberOfTextMatches;
-    private Button prevSearchButton;
-    private Button nextSearchButton;
+	private ConstraintLayout searchControlBar;
+	private TextView searchTextDisplay;
+	private TextView numberOfTextMatches;
 
-    private static final String KEY_ID = "id";
-//    private static final String INFO_KEY_NAME = Helpers.getApplicationContext().getString(R.string.info_key_name);
-//    private static final String INFO_KEY_SYNOPSIS = Helpers.getApplicationContext().getString(R.string.info_key_synopsis);
-//    private static final String INFO_KEY_EXAMPLE = Helpers.getApplicationContext().getString(R.string.info_key_example);
-//    private static final String INFO_KEY_EXAMPLES = Helpers.getApplicationContext().getString(R.string.info_key_examples);
-//    private static final String INFO_KEY_OPTIONS = Helpers.getApplicationContext().getString(R.string.info_key_options);
-//    private static final String INFO_KEY_DESCRIPTION = Helpers.getApplicationContext().getString(R.string.info_key_description);
+	private static final String KEY_ID = "id";
 
-    public static CommandInfoFragment newInstance(long id) {
-        Bundle args = new Bundle();
-        args.putLong(KEY_ID, id);
+	public static CommandInfoFragment newInstance(long id) {
+		Bundle args = new Bundle();
+		args.putLong(KEY_ID, id);
 
-        CommandInfoFragment fragment = new CommandInfoFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
+		CommandInfoFragment fragment = new CommandInfoFragment();
+		fragment.setArguments(args);
+		return fragment;
+	}
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.command_info_fragment, null);
-        view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+	@Nullable
+	@Override
+	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+		View view = inflater.inflate(R.layout.command_info_fragment, null);
+		view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        return view;
-    }
+		return view;
+	}
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        scrollContainer = view.findViewById(R.id.scrollContainer);
-        rootScrollView = view.findViewById(R.id.rootScrollView);
+	@Override
+	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+		scrollContainer = view.findViewById(R.id.scrollContainer);
+		rootScrollView = view.findViewById(R.id.rootScrollView);
 
-        searchBar = view.findViewById(R.id.textSearchBox);
-        searchEditText = view.findViewById(R.id.searchEditText);
-        searchBarButton = view.findViewById(R.id.searchBarButton);
+		searchBar = view.findViewById(R.id.textSearchBox);
+		searchEditText = view.findViewById(R.id.searchEditText);
 
-        searchControlBar = view.findViewById(R.id.searchControlBar);
-        searchTextDisplay = view.findViewById(R.id.searchTextDisplay);
-        numberOfTextMatches = view.findViewById(R.id.numberOfTextMatches);
-        prevSearchButton = view.findViewById(R.id.prevSearchButton);
-        nextSearchButton = view.findViewById(R.id.nextSearchButton);
+		searchControlBar = view.findViewById(R.id.searchControlBar);
+		searchTextDisplay = view.findViewById(R.id.searchTextDisplay);
+		numberOfTextMatches = view.findViewById(R.id.numberOfTextMatches);
 
-        long id = getArguments().getLong(KEY_ID);
-        Command command = viewModel.getCommandFromListById(id);
-        infoModel.init(command);
 
-        buildOutput(command.getData());
+		long id = requireArguments().getLong(KEY_ID);
+		Command command = viewModel.getCommandFromListById(id);
 
-        searchBarButton.setOnClickListener(onClickSearchBarButton);
-        nextSearchButton.setOnClickListener(onClickNextButton);
-        prevSearchButton.setOnClickListener(onClickPrevButton);
-    }
+		if(command != null) {
+			infoModel.init(command);
+			buildOutput(command.getData());
+		}
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+		ImageButton searchBarButton = view.findViewById(R.id.searchBarButton);
+		Button prevSearchButton = view.findViewById(R.id.prevSearchButton);
+		Button nextSearchButton = view.findViewById(R.id.nextSearchButton);
 
-        viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
-        infoModel = new ViewModelProvider(this).get(CommandInfoViewModel.class);
+		searchBarButton.setOnClickListener(onClickSearchBarButton);
+		nextSearchButton.setOnClickListener(onClickNextButton);
+		prevSearchButton.setOnClickListener(onClickPrevButton);
+	}
 
-        setHasOptionsMenu(true);
+	@Override
+	public void onCreate(@Nullable Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        jumpToList = new ArrayList<>();
-    }
+		viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
+		infoModel = new ViewModelProvider(this).get(CommandInfoViewModel.class);
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.info_dropdown, menu);
+		setHasOptionsMenu(true);
 
-        Menu dropDownMenu = menu.findItem(R.id.dropDown).getSubMenu();
+		jumpToList = new ArrayList<>();
+	}
 
-        if (dropDownMenu != null) {
-            for (String title : jumpToList) {
-                dropDownMenu.add(R.id.jumpTo, Menu.NONE, Menu.NONE, title);
-            }
-        }
-    }
+	@Override
+	public void onPrepareOptionsMenu(@NonNull Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+	}
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.closeButton) {
-            ((MainActivity) requireActivity()).removePage(infoModel.getId());
-            return true;
-        }
+	@Override
+	public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+		inflater.inflate(R.menu.command_info_menu, menu);
 
-        if (item.getItemId() == R.id.searchButton) {
-            toggleSearchBarDisplay();
-        }
+		Menu dropDownMenu = menu.findItem(R.id.dropDown).getSubMenu();
 
-        if (jumpToList.contains(item.getTitle().toString())) {
-            jumpTo(item.getTitle().toString());
-            return true;
-        }
+		for (String title : jumpToList) {
+			dropDownMenu.add(R.id.jumpTo, Menu.NONE, Menu.NONE, title);
+		}
+	}
 
-        return super.onOptionsItemSelected(item);
-    }
+	@Override
+	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+		if (item.getItemId() == R.id.closeButton) {
+			((MainActivity) requireActivity()).removePage(infoModel.getId());
+			return true;
+		}
 
-    @Override
-    public void onOptionsMenuClosed(@NonNull Menu menu) {
-        super.onOptionsMenuClosed(menu);
-    }
+		if (item.getItemId() == R.id.searchButton) {
+			toggleSearchBarDisplay();
+			return true;
+		}
 
-    @Override
-    public void onDestroyOptionsMenu() {
-        super.onDestroyOptionsMenu();
-    }
+		if (jumpToList.contains(item.getTitle().toString())) {
+			jumpTo(item.getTitle().toString());
+			return true;
+		}
 
-    @Override
-    public void onResume() {
-        super.onResume();
+		return super.onOptionsItemSelected(item);
+	}
 
-        ((AppCompatActivity) requireActivity()).getSupportActionBar().setTitle(infoModel.getShortName());
-    }
+	@Override
+	public void onResume() {
+		super.onResume();
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
+		Objects.requireNonNull(
+				((AppCompatActivity) requireActivity())
+						.getSupportActionBar()).setTitle(infoModel.getShortName());
+	}
 
-    View.OnClickListener onClickSearchBarButton = v -> {
-        if (searchEditText.getText().length() >= 2) {
-            infoModel.searchTextFor(
-                    searchEditText.getText().toString(),
-                    viewModel.getCommandFromListById(infoModel.getId()));
+	View.OnClickListener onClickSearchBarButton = v -> {
+		if (searchEditText.getText().length() >= 2) {
+			infoModel.searchTextFor(
+					searchEditText.getText().toString(),
+					viewModel.getCommandFromListById(infoModel.getId()));
 
-            SingleTextMatch textMatch = infoModel.getCurrentMatch();
-
-            jumpTo(textMatch.getSection());
-            highlightCurrentMatch(textMatch);
-            displaySearchResults();
-        }
-    };
-
-    View.OnClickListener onClickPrevButton = v -> {
-        SingleTextMatch textMatch = infoModel.getPrevMatch();
-
-        gotoMatch(textMatch);
-    };
-
-    View.OnClickListener onClickNextButton = v -> {
-        gotoMatch(infoModel.getNextMatch());
-//        SingleTextMatch textMatch = infoModel.getNextMatch();
-
-//        if(textMatch == null) {
-//            Toast.makeText(getContext(), "No matches found.", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
+			gotoMatch(infoModel.getCurrentMatch());
+			displaySearchResults();
+//			SingleTextMatch textMatch = infoModel.getCurrentMatch();
 //
-//        Log.i(TAG, "textMatch: " + textMatch.getSection() + "/" + textMatch.getIndex());
-//
-//        jumpTo(textMatch.getSection());
-//
-//        highlightCurrentMatch(textMatch);
-//
-//        updateCurrentMatchDisplay();
-    };
+//			jumpTo(textMatch.getSection());
+//			highlightCurrentMatch(textMatch);
+//			displaySearchResults();
+		}
+	};
 
-    private void gotoMatch(SingleTextMatch textMatch) {
-        if(textMatch == null) {
-            Toast.makeText(getContext(), "No matches found.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+	View.OnClickListener onClickPrevButton = v -> {
+//		SingleTextMatch textMatch = infoModel.getPrevMatch();
+		gotoMatch(infoModel.getPrevMatch());
+	};
 
-        jumpTo(textMatch.getSection());
-        highlightCurrentMatch(textMatch);
-        updateCurrentMatchDisplay();
-    }
+	View.OnClickListener onClickNextButton = v -> {
+		gotoMatch(infoModel.getNextMatch());
+	};
 
-    private void jumpTo(String section) {
-        View v = scrollContainer.findViewWithTag(section);
-        rootScrollView.scrollTo(0, v.getTop() - 12);
-    }
+	private void gotoMatch(SingleTextMatch textMatch) {
+		if (textMatch == null) {
+			Toast.makeText(getContext(), "No matches found.", Toast.LENGTH_SHORT).show();
+			return;
+		}
 
-    private void displaySearchResults() {
-        searchControlBar.setVisibility(View.VISIBLE);
-        searchTextDisplay.setText(infoModel.getSearchResults().getQuery());
+		jumpTo(textMatch.getSection());
+		highlightCurrentMatch(textMatch);
+		updateCurrentMatchDisplay();
+	}
 
-        updateCurrentMatchDisplay();
-    }
+	private void jumpTo(String section) {
+		View v = scrollContainer.findViewWithTag(section);
+		rootScrollView.scrollTo(0, v.getTop() - 12);
+	}
 
-    private void updateCurrentMatchDisplay() {
-        String numberTextMatchesText = infoModel.getCurrentMatchIndex() + "/" + infoModel.getResultsCount();
-        numberOfTextMatches.setText(numberTextMatchesText);
-    }
+	private void displaySearchResults() {
+		searchControlBar.setVisibility(View.VISIBLE);
+		searchTextDisplay.setText(infoModel.getSearchResults().getQuery());
 
-    private void toggleSearchBarDisplay() {
-        if (searchBar.getVisibility() == View.GONE) {
-            searchBar.setVisibility(View.VISIBLE);
-        } else {
-            searchBar.setVisibility(View.GONE);
-        }
-    }
+		updateCurrentMatchDisplay();
+	}
 
-    private void highlightCurrentMatch(SingleTextMatch textMatch) {
-        View bubble = scrollContainer.findViewWithTag(textMatch.getSection());
-        TextView tv = bubble.findViewById(R.id.descriptionText);
+	private void updateCurrentMatchDisplay() {
+		String numberTextMatchesText = infoModel.getCurrentMatchIndex() + "/" + infoModel.getResultsCount();
+		numberOfTextMatches.setText(numberTextMatchesText);
+	}
 
-//        SpannableString text = SpannableString.valueOf(tv.getText());
+	private void toggleSearchBarDisplay() {
+		if (searchBar.getVisibility() == View.GONE) {
+			searchBar.setVisibility(View.VISIBLE);
+		} else {
+			searchBar.setVisibility(View.GONE);
+		}
+	}
 
-        String info = viewModel.getCommandFromListById(infoModel.getId()).getData().get(textMatch.getSection());
-        SpannableString text = SpannableString.valueOf(Html.fromHtml(info, Html.FROM_HTML_SEPARATOR_LINE_BREAK_BLOCKQUOTE));
+	private void highlightCurrentMatch(SingleTextMatch textMatch) {
+		View bubble = scrollContainer.findViewWithTag(textMatch.getSection());
+		TextView tv = bubble.findViewById(R.id.descriptionText);
 
+		String info = viewModel.getCommandFromListById(infoModel.getId()).getData().get(textMatch.getSection());
+		SpannableString text = SpannableString.valueOf(Html.fromHtml(info, Html.FROM_HTML_MODE_LEGACY));
 
+		ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(
+				requireContext().getColor(R.color.colorPrimaryDark));
 
-        ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(
-                requireContext().getColor(R.color.ic_launcher_background));
+		BackgroundColorSpan backgroundSpan = new BackgroundColorSpan(
+				requireContext().getColor(R.color.textBubblesFont));
 
-        BackgroundColorSpan backgroundSpan = new BackgroundColorSpan(
-                requireContext().getColor(R.color.design_default_color_secondary));
+		int endIdx = textMatch.getIndex() + infoModel.getSearchResults().getQuery().length();
 
-        int endIdx = textMatch.getIndex() + infoModel.getSearchResults().getQuery().length();
+		text.setSpan(
+				backgroundSpan,
+				textMatch.getIndex(),
+				endIdx,
+				SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
 
-        text.setSpan(
-                backgroundSpan,
-                textMatch.getIndex(),
-                endIdx,
-                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+		text.setSpan(
+				foregroundColorSpan,
+				textMatch.getIndex(),
+				endIdx,
+				SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
 
-        text.setSpan(
-                foregroundColorSpan,
-                textMatch.getIndex(),
-                endIdx,
-                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+		tv.setText(text, TextView.BufferType.SPANNABLE);
+		tv.bringPointIntoView(textMatch.getIndex());
+	}
 
-        tv.setText(text, TextView.BufferType.SPANNABLE);
-    }
+	private void buildOutput(Map<String, String> infoMap) {
+		scrollContainer.addView(getDivider());
 
-    private void buildOutput(Map<String, String> infoMap) {
-        scrollContainer.addView(getDivider());
+		Set<String> keys = infoMap.keySet();
+		for (String key : keys) {
+			addTextBubble(key, Html.fromHtml(infoMap.get(key), Html.FROM_HTML_MODE_LEGACY));
+		}
 
-        Set<String> keys = infoMap.keySet();
-        for (String key : keys) {
-            addTextBubble(key, SpannableString.valueOf(Html.fromHtml(infoMap.get(key), Html.FROM_HTML_SEPARATOR_LINE_BREAK_BLOCKQUOTE)));
-        }
+		scrollContainer.requestLayout();
+		scrollContainer.invalidate();
+	}
 
-        scrollContainer.requestLayout();
-        scrollContainer.invalidate();
-    }
+	private void addTextBubble(String header, Spanned description) {
+		ViewGroup view = getInflatedBubbleView();
+		view.setTag(header);
 
-    private void addTextBubble(String header, SpannableString description) {
-        ViewGroup view = getInflatedBubbleView();
-        view.setTag(header);
+		((TextView) view.findViewById(R.id.headerText)).setText(header);
+		((TextView) view.findViewById(R.id.descriptionText)).setText(description, TextView.BufferType.SPANNABLE);
 
-        ((TextView) view.findViewById(R.id.headerText)).setText(header, TextView.BufferType.SPANNABLE);
-        ((TextView) view.findViewById(R.id.descriptionText)).setText(description, TextView.BufferType.SPANNABLE);
+		scrollContainer.addView(view);
+		scrollContainer.addView(getDivider());
 
-        scrollContainer.addView(view);
-        scrollContainer.addView(getDivider());
+		jumpToList.add(header);
+	}
 
-        jumpToList.add(header);
-    }
+	private ViewGroup getInflatedBubbleView() {
+		LayoutInflater inflater = (LayoutInflater) requireContext()
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-    private ViewGroup getInflatedBubbleView() {
-        LayoutInflater inflater = (LayoutInflater) requireContext()
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		return (ViewGroup) inflater.inflate(R.layout.text_bubble, null);
+	}
 
-        return (ViewGroup) inflater.inflate(R.layout.text_bubble, null);
-    }
-
-    private View getDivider() {
-        View divider = new View(getContext());
-        divider.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 16));
-        divider.setBackgroundColor(Color.TRANSPARENT);
-        return divider;
-    }
+	private View getDivider() {
+		View divider = new View(getContext());
+		divider.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 16));
+		divider.setBackgroundColor(Color.TRANSPARENT);
+		return divider;
+	}
 
 
 }

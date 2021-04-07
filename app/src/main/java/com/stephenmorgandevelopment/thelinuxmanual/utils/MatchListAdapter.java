@@ -1,6 +1,10 @@
 package com.stephenmorgandevelopment.thelinuxmanual.utils;
 
 import android.content.Context;
+import android.text.Html;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.SpannedString;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,11 +13,16 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
+import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,27 +40,29 @@ import okhttp3.Response;
 
 public class MatchListAdapter extends BaseAdapter {
     public static final String TAG = MatchListAdapter.class.getSimpleName();
+    private static final SpannableString EMPTY_HTML_SPAN =
+            SpannableString.valueOf(Html.fromHtml("", Html.FROM_HTML_MODE_LEGACY));
 
-    public static CompositeDisposable disposables;
-    public static List<Thread> helperThreads;
+    private final UbuntuRepository repository;
 
-    private List<SimpleCommand> matches;
-    private LayoutInflater inflater;
-    private LinearLayout.LayoutParams layoutParams;
+    private final LifecycleOwner lifecycleOwner;
+    private final List<LiveData<String>> liveDataList;
 
-    private static Scheduler threadPool;
+    private final List<SimpleCommand> matches;
+    private final LayoutInflater inflater;
+    private final LinearLayout.LayoutParams layoutParams;
 
     public MatchListAdapter(Context ctx) {
         matches = new ArrayList<>();
         this.inflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        disposables = new CompositeDisposable();
 
         layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutParams.bottomMargin = 5;
 
-        helperThreads = new ArrayList<>();
-        Executor executor = Executors.newFixedThreadPool((int) (Runtime.getRuntime().availableProcessors() * .75));
-        threadPool = Schedulers.from(executor);
+        lifecycleOwner = (LifecycleOwner) ctx;
+        liveDataList = new ArrayList<>();
+
+        repository = UbuntuRepository.getInstance();
     }
 
     public void setMatches(List<SimpleCommand> matches) {
@@ -60,7 +71,14 @@ public class MatchListAdapter extends BaseAdapter {
     }
 
     public void clear() {
+        removeObservers();
         this.matches.clear();
+    }
+
+    public void removeObservers() {
+        for(LiveData<String> lv : liveDataList) {
+            lv.removeObservers(lifecycleOwner);
+        }
     }
 
     @Override
@@ -89,56 +107,30 @@ public class MatchListAdapter extends BaseAdapter {
 
         ((TextView) view.findViewById(R.id.matchListCommand)).setText(match.getName());
 
-        String description = match.getDescription();
+        SpannableString description = SpannableString.valueOf(Html.fromHtml(match.getDescription(), Html.FROM_HTML_MODE_LEGACY));
 
-        if (!description.equals("")) {
+        if (!description.equals(EMPTY_HTML_SPAN)) {
             descriptionView.setText(description);
         } else {
             descriptionView.setText(R.string.fetching_data);
 
-            Thread helperThread = new Thread(() -> {
-                updateDescription(descriptionView, match);
-            });
+            final LiveData<String> liveDescription = repository.updateDescription(match);
+            final Observer<String> disposableObserver = updatedDescription -> setFormattedText(updatedDescription, descriptionView);
 
-            helperThreads.add(helperThread);
-            helperThread.start();
+            liveDescription.observe(lifecycleOwner, disposableObserver);
+            liveDataList.add(liveDescription);
         }
 
         return view;
     }
 
-    private void updateDescription(TextView descriptionView, SimpleCommand match) {
-        Disposable disposable = fetchDescription(match)
-                .subscribeOn(threadPool)
-                .flatMap(response -> {
-                    UbuntuHtmlAdapter.addDescriptionToSimpleCommand(match, response.body().string());
+    private void setFormattedText(String text, TextView descriptionView) {
+        Spanned htmlText = Html.fromHtml(text,Html.FROM_HTML_MODE_LEGACY);
 
-                    return Single.just(match);
-                })
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSuccess(success -> {
-                    String desc = match.getDescription().length() > 150
-                            ? match.getDescription().substring(0, 149)
-                            : match.getDescription();
+        Spanned spannedText = htmlText.length() > 150
+                ? (Spanned) htmlText.subSequence(0, 149)
+                : htmlText;
 
-                    descriptionView.setText(desc);
-                })
-                .doOnError(error -> {
-                    descriptionView.setText(R.string.unable_to_fetch);
-                })
-                .observeOn(Schedulers.computation())
-                .subscribe(response -> {
-                            DatabaseHelper.getInstance().updateCommand(match);
-                        }
-                        , error -> {
-                            Log.e(TAG, error.toString());
-                        });
-
-        disposables.add(disposable);
-    }
-
-    Single<Response> fetchDescription(SimpleCommand command) {
-        Request request = new Request.Builder().url(command.getUrl()).build();
-        return Single.defer(() -> Single.just(HttpClient.getClient().newCall(request).execute()));
+        descriptionView.setText(spannedText, TextView.BufferType.SPANNABLE);
     }
 }
