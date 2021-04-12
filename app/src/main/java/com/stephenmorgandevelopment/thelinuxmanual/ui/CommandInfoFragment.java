@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Html;
+import android.text.Layout;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.SpannedString;
@@ -59,6 +60,8 @@ public class CommandInfoFragment extends Fragment {
 	private TextView searchTextDisplay;
 	private TextView numberOfTextMatches;
 
+	private LayoutInflater inflater;
+
 	private static final String KEY_ID = "id";
 
 	public static CommandInfoFragment newInstance(long id) {
@@ -92,6 +95,8 @@ public class CommandInfoFragment extends Fragment {
 		searchTextDisplay = view.findViewById(R.id.searchTextDisplay);
 		numberOfTextMatches = view.findViewById(R.id.numberOfTextMatches);
 
+		inflater  = (LayoutInflater) requireContext()
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		long id = requireArguments().getLong(KEY_ID);
 		Command command = viewModel.getCommandFromListById(id);
@@ -151,7 +156,7 @@ public class CommandInfoFragment extends Fragment {
 		}
 
 		if (jumpToList.contains(item.getTitle().toString())) {
-			jumpTo(item.getTitle().toString());
+			jumpToTopSection(item.getTitle().toString());
 			return true;
 		}
 
@@ -184,12 +189,21 @@ public class CommandInfoFragment extends Fragment {
 	};
 
 	View.OnClickListener onClickPrevButton = v -> {
-//		SingleTextMatch textMatch = infoModel.getPrevMatch();
-		gotoMatch(infoModel.getPrevMatch());
+		SingleTextMatch lastMatch = infoModel.getCurrentMatch();
+		SingleTextMatch match = infoModel.getPrevMatch();
+		if(!match.getSection().equals(lastMatch.getSection())) {
+			clearSpan(lastMatch);
+		}
+		gotoMatch(match);
 	};
 
 	View.OnClickListener onClickNextButton = v -> {
-		gotoMatch(infoModel.getNextMatch());
+		SingleTextMatch lastMatch = infoModel.getCurrentMatch();
+		SingleTextMatch match = infoModel.getNextMatch();
+		if(!match.getSection().equals(lastMatch.getSection())) {
+			clearSpan(lastMatch);
+		}
+		gotoMatch(match);
 	};
 
 	private void gotoMatch(SingleTextMatch textMatch) {
@@ -198,14 +212,35 @@ public class CommandInfoFragment extends Fragment {
 			return;
 		}
 
-		jumpTo(textMatch.getSection());
+		jumpToTextMatch(textMatch);
 		highlightCurrentMatch(textMatch);
 		updateCurrentMatchDisplay();
 	}
 
-	private void jumpTo(String section) {
+	private void jumpToTopSection(String section) {
 		View v = scrollContainer.findViewWithTag(section);
 		rootScrollView.scrollTo(0, v.getTop() - 12);
+	}
+
+	private void jumpToTextMatch(SingleTextMatch textMatch) {
+		View v = scrollContainer.findViewWithTag(textMatch.getSection());
+		int sectionTop = v.getTop() - 12;
+
+		TextView descriptionText = ((TextView)v.findViewById(R.id.descriptionText));
+		Layout layout = descriptionText.getLayout();
+		int line = layout.getLineForOffset(textMatch.getIndex());
+		int lineTop = layout.getLineTop(line) - 64;
+
+		rootScrollView.scrollTo(0, sectionTop + lineTop);
+	}
+
+	private void clearSpan(SingleTextMatch textMatch) {
+		View v = scrollContainer.findViewWithTag(textMatch.getSection());
+		TextView tv = ((TextView)v.findViewById(R.id.descriptionText));
+
+		SpannableString text = (SpannableString) tv.getText();
+		text.removeSpan(SingleTextMatch.backgroundSpan);
+		text.removeSpan(SingleTextMatch.foregroundColorSpan);
 	}
 
 	private void displaySearchResults() {
@@ -223,8 +258,10 @@ public class CommandInfoFragment extends Fragment {
 	private void toggleSearchBarDisplay() {
 		if (searchBar.getVisibility() == View.GONE) {
 			searchBar.setVisibility(View.VISIBLE);
+			searchControlBar.setVisibility(View.VISIBLE);
 		} else {
 			searchBar.setVisibility(View.GONE);
+			searchControlBar.setVisibility(View.GONE);
 		}
 	}
 
@@ -232,27 +269,20 @@ public class CommandInfoFragment extends Fragment {
 		View bubble = scrollContainer.findViewWithTag(textMatch.getSection());
 		TextView tv = bubble.findViewById(R.id.descriptionText);
 
-		String info = viewModel.getCommandFromListById(infoModel.getId()).getData().get(textMatch.getSection());
-		SpannableString text = SpannableString.valueOf(Html.fromHtml(info, Html.FROM_HTML_MODE_LEGACY));
-
-		ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(
-				requireContext().getColor(R.color.colorPrimaryDark));
-
-		BackgroundColorSpan backgroundSpan = new BackgroundColorSpan(
-				requireContext().getColor(R.color.textBubblesFont));
-
-		int endIdx = textMatch.getIndex() + infoModel.getSearchResults().getQuery().length();
+//		String info = viewModel.getCommandFromListById(infoModel.getId()).getData().get(textMatch.getSection());
+//		SpannableString text = SpannableString.valueOf(Html.fromHtml(info, Html.FROM_HTML_MODE_LEGACY));
+		SpannableString text = (SpannableString) tv.getText();
 
 		text.setSpan(
-				backgroundSpan,
+				SingleTextMatch.backgroundSpan,
 				textMatch.getIndex(),
-				endIdx,
+				infoModel.calcEndIndex(textMatch.getIndex()),
 				SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
 
 		text.setSpan(
-				foregroundColorSpan,
+				SingleTextMatch.foregroundColorSpan,
 				textMatch.getIndex(),
-				endIdx,
+				infoModel.calcEndIndex(textMatch.getIndex()),
 				SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
 
 		tv.setText(text, TextView.BufferType.SPANNABLE);
@@ -264,19 +294,20 @@ public class CommandInfoFragment extends Fragment {
 
 		Set<String> keys = infoMap.keySet();
 		for (String key : keys) {
-			addTextBubble(key, Html.fromHtml(infoMap.get(key), Html.FROM_HTML_MODE_LEGACY));
+			addTextBubble(key, infoMap.get(key));
 		}
 
 		scrollContainer.requestLayout();
 		scrollContainer.invalidate();
 	}
 
-	private void addTextBubble(String header, Spanned description) {
+	private void addTextBubble(String header, String description) {
 		ViewGroup view = getInflatedBubbleView();
 		view.setTag(header);
 
 		((TextView) view.findViewById(R.id.headerText)).setText(header);
-		((TextView) view.findViewById(R.id.descriptionText)).setText(description, TextView.BufferType.SPANNABLE);
+		SpannableString span = SpannableString.valueOf(Html.fromHtml(description));//Html.FROM_HTML_MODE_LEGACY);
+		((TextView) view.findViewById(R.id.descriptionText)).setText(span, TextView.BufferType.SPANNABLE);
 
 		scrollContainer.addView(view);
 		scrollContainer.addView(getDivider());
@@ -285,10 +316,7 @@ public class CommandInfoFragment extends Fragment {
 	}
 
 	private ViewGroup getInflatedBubbleView() {
-		LayoutInflater inflater = (LayoutInflater) requireContext()
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-		return (ViewGroup) inflater.inflate(R.layout.text_bubble, null);
+		return (ViewGroup) inflater.inflate(R.layout.text_bubble, scrollContainer, false);
 	}
 
 	private View getDivider() {

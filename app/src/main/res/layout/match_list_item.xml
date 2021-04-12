@@ -7,6 +7,9 @@
     android:paddingEnd="7dp"
     android:layout_marginBottom="8dp"
     android:background="@color/matchListItem"
+    android:drawingCacheQuality="auto"
+    android:elevation="16dp"
+    android:persistentDrawingCache="scrolling"
     >
 
     <TextView
@@ -17,6 +20,7 @@
         android:layout_marginTop="3dp"
         android:text="@string/header"
         android:textColor="@color/matchListItemFont"
+
         />
 
     <TextView

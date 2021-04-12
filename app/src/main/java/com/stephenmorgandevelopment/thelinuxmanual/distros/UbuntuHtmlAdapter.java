@@ -8,6 +8,7 @@ import android.util.ArrayMap;
 import android.util.Log;
 
 import com.google.gson.stream.JsonWriter;
+import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 
 import org.jsoup.Jsoup;
@@ -18,9 +19,12 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.reactivex.Single;
+import io.reactivex.internal.fuseable.SimplePlainQueue;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.Response;
 
 

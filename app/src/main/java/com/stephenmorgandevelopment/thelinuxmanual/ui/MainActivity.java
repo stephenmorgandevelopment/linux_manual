@@ -105,10 +105,6 @@ public class MainActivity extends AppCompatActivity {
 		viewModel.getOnErrorData().removeObservers(this);
 
 		if (isFinishing()) {
-			if (lookupFragment != null) {
-				lookupFragment.cleanup();
-			}
-
 			if (!CommandSyncService.isWorking()) {
 				DatabaseHelper.getInstance().close();
 			}

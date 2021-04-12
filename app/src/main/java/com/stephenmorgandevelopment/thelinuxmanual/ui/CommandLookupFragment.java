@@ -17,14 +17,22 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
+import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandInfoViewModel;
+import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandLookupViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
 import java.util.List;
@@ -36,17 +44,17 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class CommandLookupFragment extends Fragment {
+public class CommandLookupFragment extends Fragment
+		implements TextWatcher, AdapterView.OnItemClickListener {
 	public static final String TAG = CommandLookupFragment.class.getSimpleName();
-	private CompositeDisposable disposables;
+//	private ListView matchListView;
+	private LiveData<List<SimpleCommand>> matchListData;
 
 	private EditText searchText;
-	private ListView matchListView;
 	private MatchListAdapter matchListAdapter;
 
 	private MainActivityViewModel viewModel;
-
-	private final String searchTextTrimRegex = "^(/W/s)$";
+	private CommandLookupViewModel listModel;
 
 	public static CommandLookupFragment newInstance() {
 		return new CommandLookupFragment();
@@ -55,7 +63,7 @@ public class CommandLookupFragment extends Fragment {
 	@Nullable
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.command_lookup_fragment, null);
+		View view = inflater.inflate(R.layout.command_lookup_fragment, container, false);
 		view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
 		return view;
@@ -64,149 +72,113 @@ public class CommandLookupFragment extends Fragment {
 	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
+
 		searchText = view.findViewById(R.id.searchText);
-		matchListView = view.findViewById(R.id.matchList);
-
-		disposables = new CompositeDisposable();
-
-		matchListView.setDividerHeight(5);
 		matchListAdapter = new MatchListAdapter(requireContext());
 
+		ListView matchListView = view.findViewById(R.id.matchList);
+		matchListView.setDividerHeight(5);
 		matchListView.setAdapter(matchListAdapter);
-		matchListView.setOnItemClickListener(itemClicked);
+		matchListView.setOnItemClickListener(this);
 
-		searchText.addTextChangedListener(onChangedText);
+		searchText.addTextChangedListener(this);
+
+		requireActivity().getOnBackPressedDispatcher().addCallback(backPressedCallback);
+
+		listModel.getMatchListData().observe(getViewLifecycleOwner(), this::updateMatchList);
 	}
 
 	@Override
 	public void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		requireActivity().getOnBackPressedDispatcher().addCallback(backPressedCallback);
-
 		viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
-	}
-
-	@Override
-	public void onStart() {
-		super.onStart();
-
+		listModel = new ViewModelProvider(this).get(CommandLookupViewModel.class);
 	}
 
 	@Override
 	public void onPrepareOptionsMenu(@NonNull Menu menu) {
 		menu.clear();
-
 		super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override
 	public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
+
+		if(menu.findItem(R.id.closeButton) != null) {
+			this.onPrepareOptionsMenu(menu);
+		}
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
 
-		Objects.requireNonNull(
-				((AppCompatActivity) requireActivity())
-						.getSupportActionBar()).setTitle("Search");
+		ActionBar actionbar = Objects.requireNonNull(
+				((AppCompatActivity) getActivity())).getSupportActionBar();
+
+		if(actionbar != null) {
+			actionbar.setTitle("Search - ".concat(UbuntuHtmlAdapter.getReleaseString()));
+		}
 
 		if (matchListAdapter == null) {
 			matchListAdapter = new MatchListAdapter(requireContext());
 		}
 
-		if (viewModel.getSearchText() != null) {
-			searchText.setText(viewModel.getSearchText());
+		if (listModel.getSearchText() != null) {
+			searchText.setText(listModel.getSearchText());
+		}
+
+		listModel.getMatchListData().observe(((LifecycleOwner)requireContext()), this::updateMatchList);
+	}
+
+	@Override
+	public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+	}
+
+	@Override
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+	}
+
+	@Override
+	public void afterTextChanged(Editable s) {
+		if (s.length() >= 2) {
+			listModel.searchForMatchesByName(s);
+		} else {
+			listModel.setSavedSearchText(null);
+			matchListAdapter.clear();
+			matchListAdapter.notifyDataSetChanged();
+		}
+	}
+
+	public void updateMatchList(List<SimpleCommand> list) {
+		if (list.size() > 0) {
+			matchListAdapter.setMatches(list);
+			matchListAdapter.notifyDataSetChanged();
 		}
 	}
 
 	@Override
-	public void onPause() {
-		super.onPause();
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		long cmdId = matchListAdapter.getItemId(position);
 
-		if (disposables.size() > 0) {
-			disposables.clear();
+		if (viewModel.isLoading(cmdId) || viewModel.commandsListHasId(cmdId)) {
+			return;
 		}
+
+		viewModel.setLoading(matchListAdapter.getItemId(position), true);
+		viewModel.loadManpage(matchListAdapter.getItem(position));
 	}
-
-	public void cleanup() {
-		if (disposables != null) {
-			disposables.clear();
-		}
-
-		if(matchListAdapter != null) {
-			matchListAdapter.removeObservers();
-		}
-	}
-
-	TextWatcher onChangedText = new TextWatcher() {
-		@Override
-		public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-		}
-
-		@Override
-		public void onTextChanged(CharSequence s, int start, int before, int count) {
-		}
-
-		@Override
-		public void afterTextChanged(Editable s) {
-			if (s.length() >= 2) {
-				String searchQuery = String.valueOf(s).replaceAll("'", "");
-				searchQuery = searchQuery.replaceAll("%", "");
-				searchQuery = searchQuery.replaceAll(searchTextTrimRegex, "");
-
-				Disposable disposable = Single.just(
-						DatabaseHelper.getInstance().partialMatches(searchQuery))
-						.subscribeOn(Schedulers.io())
-						.observeOn(Schedulers.io())
-						.observeOn(AndroidSchedulers.mainThread())
-						.doOnError(error -> {
-							Toast.makeText(getContext(), "Invalid character entered", Toast.LENGTH_LONG).show();
-						})
-						.subscribe(this::updateMatchList
-								, error ->
-										Log.d(TAG, "SQL error: " + error.toString())
-						);
-
-				viewModel.setSearchText(s.toString());
-				disposables.add(disposable);
-			} else {
-				viewModel.setSearchText(null);
-				matchListAdapter.clear();
-				matchListAdapter.notifyDataSetChanged();
-			}
-		}
-
-		private void updateMatchList(List<SimpleCommand> list) {
-			if (list.size() > 0) {
-				matchListAdapter.setMatches(list);
-				matchListAdapter.notifyDataSetChanged();
-			}
-		}
-	};
-
-	AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener() {
-		@Override
-		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            long cmdId = matchListAdapter.getItemId(position);
-
-			if (viewModel.isLoading(cmdId) || viewModel.commandsListHasId(cmdId)) {
-				return;
-			}
-
-			viewModel.setLoading(matchListAdapter.getItemId(position), true);
-			viewModel.loadManpage(matchListAdapter.getItem(position));
-		}
-	};
 
 	OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
 		@Override
 		public void handleOnBackPressed() {
 			if (searchText.getText() == null || searchText.length() == 0) {
 				setEnabled(false);
-				getActivity().onBackPressed();
+				Objects.requireNonNull(getActivity()).onBackPressed();
 			}
 
 			clear();
@@ -214,9 +186,7 @@ public class CommandLookupFragment extends Fragment {
 	};
 
 	public void clear() {
-		cleanup();
-
-		viewModel.setSearchText(null);
+		listModel.setSavedSearchText(null);
 		matchListAdapter.clear();
 		matchListAdapter.notifyDataSetChanged();
 

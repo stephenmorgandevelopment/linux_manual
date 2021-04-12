@@ -68,4 +68,16 @@ public class Helpers {
     public static void cleanup() {
         applicationContext = null;
     }
+
+    public static String string(int id) {
+        return applicationContext.getString(id);
+    }
+
+    public static CharSequence text(int id) {
+        return applicationContext.getText(id);
+    }
+
+    public static int color(int id) {
+        return applicationContext.getColor(id);
+    }
 }

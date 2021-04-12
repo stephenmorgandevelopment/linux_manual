@@ -48,6 +48,10 @@ public class SimpleCommand {
     public void setUrl(String url) {this.url = url;}
     public void setManN(int manN) {this.manN = manN;}
 
+    public boolean needsDescription() {
+        return description.equals(empty);
+    }
+
     public static SimpleCommand fromJsonString(String json) {
         try {
             return fromJsonObject(new JSONObject(json));

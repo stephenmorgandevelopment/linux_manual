@@ -68,6 +68,10 @@ public class CommandInfoViewModel extends ViewModel {
         return searchResults.getMatch(currentMatchIndex-1);
     }
 
+    public int calcEndIndex(int startIndex) {
+        return startIndex + searchResults.getQuery().length();
+    }
+
     public long getId() {
         return id;
     }
