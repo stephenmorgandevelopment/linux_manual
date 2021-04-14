@@ -3,7 +3,6 @@ package com.stephenmorgandevelopment.thelinuxmanual.ui;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -12,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -20,44 +18,39 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
-import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
-import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
-import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandInfoViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandLookupViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
 import java.util.List;
 import java.util.Objects;
 
-import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-
 public class CommandLookupFragment extends Fragment
 		implements TextWatcher, AdapterView.OnItemClickListener {
+
 	public static final String TAG = CommandLookupFragment.class.getSimpleName();
-//	private ListView matchListView;
-	private LiveData<List<SimpleCommand>> matchListData;
 
 	private EditText searchText;
 	private MatchListAdapter matchListAdapter;
 
 	private MainActivityViewModel viewModel;
-	private CommandLookupViewModel listModel;
+	private CommandLookupViewModel lookupModel;
 
 	public static CommandLookupFragment newInstance() {
 		return new CommandLookupFragment();
+	}
+
+	@Override
+	public void onCreate(@Nullable Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
+		lookupModel = new ViewModelProvider(this).get(CommandLookupViewModel.class);
 	}
 
 	@Nullable
@@ -85,15 +78,7 @@ public class CommandLookupFragment extends Fragment
 
 		requireActivity().getOnBackPressedDispatcher().addCallback(backPressedCallback);
 
-		listModel.getMatchListData().observe(getViewLifecycleOwner(), this::updateMatchList);
-	}
-
-	@Override
-	public void onCreate(@Nullable Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
-		listModel = new ViewModelProvider(this).get(CommandLookupViewModel.class);
+		lookupModel.getMatchListData().observe(getViewLifecycleOwner(), this::updateMatchList);
 	}
 
 	@Override
@@ -126,11 +111,9 @@ public class CommandLookupFragment extends Fragment
 			matchListAdapter = new MatchListAdapter(requireContext());
 		}
 
-		if (listModel.getSearchText() != null) {
-			searchText.setText(listModel.getSearchText());
+		if (lookupModel.getSearchText() != null) {
+			searchText.setText(lookupModel.getSearchText());
 		}
-
-		listModel.getMatchListData().observe(((LifecycleOwner)requireContext()), this::updateMatchList);
 	}
 
 	@Override
@@ -146,9 +129,9 @@ public class CommandLookupFragment extends Fragment
 	@Override
 	public void afterTextChanged(Editable s) {
 		if (s.length() >= 2) {
-			listModel.searchForMatchesByName(s);
+			lookupModel.searchForMatchesByName(s);
 		} else {
-			listModel.setSavedSearchText(null);
+			lookupModel.setSavedSearchText(null);
 			matchListAdapter.clear();
 			matchListAdapter.notifyDataSetChanged();
 		}
@@ -169,7 +152,7 @@ public class CommandLookupFragment extends Fragment
 			return;
 		}
 
-		viewModel.setLoading(matchListAdapter.getItemId(position), true);
+		viewModel.setLoading(cmdId, true);
 		viewModel.loadManpage(matchListAdapter.getItem(position));
 	}
 
@@ -186,7 +169,7 @@ public class CommandLookupFragment extends Fragment
 	};
 
 	public void clear() {
-		listModel.setSavedSearchText(null);
+		lookupModel.setSavedSearchText(null);
 		matchListAdapter.clear();
 		matchListAdapter.notifyDataSetChanged();
 

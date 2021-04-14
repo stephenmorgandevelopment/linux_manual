@@ -29,6 +29,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandLookupViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
 public class MainActivity extends AppCompatActivity {
@@ -109,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
 				DatabaseHelper.getInstance().close();
 			}
 
-			UbuntuRepository.cleanBackgroundThreads();
+			CommandLookupViewModel.cleanup();
 
 			lookupFragment = null;
 		}

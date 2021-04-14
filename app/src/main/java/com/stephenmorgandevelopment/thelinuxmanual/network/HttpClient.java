@@ -84,4 +84,8 @@ public class HttpClient {
         Request req = new Request.Builder().url(url).build();
         return Single.just(HttpClient.getClient().newCall(req).execute());
     }
+
+    public static Request buildRequest(String url) {
+        return new Request.Builder().url(url).build();
+    }
 }

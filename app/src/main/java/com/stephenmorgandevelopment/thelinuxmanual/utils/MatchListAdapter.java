@@ -28,6 +28,8 @@ import com.stephenmorgandevelopment.thelinuxmanual.models.SingleTextMatch;
 import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
+import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandLookupViewModel;
+import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +55,6 @@ public class MatchListAdapter extends BaseAdapter {
     private final LinearLayout.LayoutParams layoutParams;
 
 
-    //    private String
     public MatchListAdapter(Context ctx) {
         this.inflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -66,20 +67,8 @@ public class MatchListAdapter extends BaseAdapter {
     }
 
     public void clear() {
-//        removeObservers();
         this.matches.clear();
     }
-
-//    public void removeObservers() {
-//        for(LiveData<String> lv : liveDataList) {
-//            lv.removeObservers(lifecycleOwner);
-//        }
-//    }
-
-//    public void setFontSizes(float headerTextSize, float descriptionTextSize) {
-//        this.headerTextSize = headerTextSize;
-//        this.descriptionTextSize = descriptionTextSize;
-//    }
 
     @Override
     public int getCount() {
@@ -133,20 +122,18 @@ public class MatchListAdapter extends BaseAdapter {
                         Html.FROM_HTML_MODE_LEGACY));
 
         if (description.equals(EMPTY_HTML_SPAN)) {
+            CommandLookupViewModel.addDisposable(
+                    UbuntuRepository
+                            .getInstance()
+                            .addDescription(match)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doFinally(this::notifyDataSetChanged)
+                            .subscribe());
+
             return new SpannableString(Helpers.text(R.string.fetching_data));
         } else {
             return description;
         }
-    }
-
-    private void setFormattedText(String text, TextView descriptionView) {
-        Spanned htmlText = Html.fromHtml(text,Html.FROM_HTML_MODE_LEGACY);
-
-        Spanned spannedText = htmlText.length() > 150
-                ? (Spanned) htmlText.subSequence(0, 149)
-                : htmlText;
-
-        descriptionView.setText(spannedText, TextView.BufferType.SPANNABLE);
     }
 
     private static class MatchViewHolder {

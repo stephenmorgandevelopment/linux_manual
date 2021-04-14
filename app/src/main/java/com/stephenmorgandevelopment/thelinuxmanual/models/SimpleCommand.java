@@ -48,6 +48,11 @@ public class SimpleCommand {
     public void setUrl(String url) {this.url = url;}
     public void setManN(int manN) {this.manN = manN;}
 
+    public SimpleCommand setDescriptionReturnSimpleCommand(String description) {
+        this.description = description;
+        return this;
+    }
+
     public boolean needsDescription() {
         return description.equals(empty);
     }

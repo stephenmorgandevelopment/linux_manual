@@ -56,12 +56,6 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
         }
     }
 
-    public void clearAll() {
-        idList.clear();
-        titleList.clear();
-        notifyDataSetChanged();
-    }
-
     @NonNull
     @Override
     public Fragment createFragment(int position) {

@@ -1,9 +1,8 @@
 package com.stephenmorgandevelopment.thelinuxmanual.viewmodels;
 
-import android.app.Application;
 import android.util.Log;
 
-import androidx.lifecycle.AndroidViewModel;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
@@ -17,6 +16,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
@@ -27,16 +27,13 @@ public class MainActivityViewModel extends ViewModel {
 	private final static String TAG = "MainActivityViewModel";
 	private final static String COMMANDS_LIST_KEY = "COMMANDS_LIST";
 
-	private static volatile Map<Long, Boolean> loadingInfo = new LinkedHashMap<>();
+	private static final Map<Long, Boolean> loadingInfo = new LinkedHashMap<>();
 	private LiveData<String> syncProgress;
 	private final MutableLiveData<Command> addPageData = new MutableLiveData<>();
 	private final MutableLiveData<Throwable> onErrorData = new MutableLiveData<>();
 	private final List<Command> commandsList;
 	private final SavedStateHandle savedStateHandler;
 	private final static CompositeDisposable disposables = new CompositeDisposable();
-
-//	private String searchText;
-	private final static String SEARCH_TEXT_KEY = "SEARCH_KEY";
 
 	public MainActivityViewModel(SavedStateHandle savedStateHandle) {
 		super();
@@ -45,10 +42,6 @@ public class MainActivityViewModel extends ViewModel {
 		commandsList = savedStateHandler.contains(COMMANDS_LIST_KEY)
 				? savedStateHandler.get(COMMANDS_LIST_KEY)
 				: new ArrayList<>();
-
-//		searchText = savedStateHandler.contains(SEARCH_TEXT_KEY)
-//				? savedStateHandler.get(SEARCH_TEXT_KEY)
-//				: null;
 	}
 
 	public void syncDatabase() {
@@ -68,11 +61,6 @@ public class MainActivityViewModel extends ViewModel {
 									+ simpleCommand.getName());
 				})
 				.subscribe(addPageData::postValue, onErrorData::postValue);
-
-//                        error -> {
-//                    Log.d(TAG, "Error in fetchCommandPage");
-//                    error.printStackTrace();
-//                });
 
 		disposables.add(disposable);
 	}
@@ -147,6 +135,10 @@ public class MainActivityViewModel extends ViewModel {
 
 	public static void addDisposable(Disposable disposable) {
 		disposables.add(disposable);
+	}
+
+	public static void cleanup() {
+		disposables.clear();
 	}
 
 //	public void setSavedSearchText(String text) {

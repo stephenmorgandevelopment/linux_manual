@@ -6,10 +6,6 @@ import android.os.Bundle;
 import android.text.Html;
 import android.text.Layout;
 import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.SpannedString;
-import android.text.style.BackgroundColorSpan;
-import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -180,11 +176,6 @@ public class CommandInfoFragment extends Fragment {
 
 			gotoMatch(infoModel.getCurrentMatch());
 			displaySearchResults();
-//			SingleTextMatch textMatch = infoModel.getCurrentMatch();
-//
-//			jumpTo(textMatch.getSection());
-//			highlightCurrentMatch(textMatch);
-//			displaySearchResults();
 		}
 	};
 
@@ -269,8 +260,6 @@ public class CommandInfoFragment extends Fragment {
 		View bubble = scrollContainer.findViewWithTag(textMatch.getSection());
 		TextView tv = bubble.findViewById(R.id.descriptionText);
 
-//		String info = viewModel.getCommandFromListById(infoModel.getId()).getData().get(textMatch.getSection());
-//		SpannableString text = SpannableString.valueOf(Html.fromHtml(info, Html.FROM_HTML_MODE_LEGACY));
 		SpannableString text = (SpannableString) tv.getText();
 
 		text.setSpan(
