@@ -28,5 +28,4 @@ public class SingleTextMatch {
 
     public static final BackgroundColorSpan backgroundSpan
             = new BackgroundColorSpan(Helpers.color(R.color.textBubblesFont));
-
 }

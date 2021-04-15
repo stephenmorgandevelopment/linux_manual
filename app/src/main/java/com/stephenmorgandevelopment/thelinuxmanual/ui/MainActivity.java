@@ -25,7 +25,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
-import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;

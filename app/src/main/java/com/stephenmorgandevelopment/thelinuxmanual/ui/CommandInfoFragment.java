@@ -240,7 +240,7 @@ public class CommandInfoFragment extends Fragment {
 				clearSpan(infoModel.getCurrentMatch());
 			} else {
 				setEnabled(false);
-				Objects.requireNonNull(getActivity()).onBackPressed();
+				getActivity().onBackPressed();
 			}
 		}
 	};
@@ -249,7 +249,7 @@ public class CommandInfoFragment extends Fragment {
 		View v = scrollContainer.findViewWithTag(textMatch.getSection());
 		TextView tv = ((TextView)v.findViewById(R.id.descriptionText));
 
-		SpannableString text = (SpannableString) tv.getText();
+		SpannableStringBuilder text = (SpannableStringBuilder) tv.getText();
 		text.removeSpan(SingleTextMatch.backgroundSpan);
 		text.removeSpan(SingleTextMatch.foregroundColorSpan);
 	}
@@ -292,15 +292,15 @@ public class CommandInfoFragment extends Fragment {
 				SingleTextMatch.backgroundSpan,
 				textMatch.getIndex(),
 				infoModel.calcEndIndex(textMatch.getIndex()),
-				SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
+				SpannableStringBuilder.SPAN_INCLUSIVE_INCLUSIVE);
 
 		text.setSpan(
 				SingleTextMatch.foregroundColorSpan,
 				textMatch.getIndex(),
 				infoModel.calcEndIndex(textMatch.getIndex()),
-				SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
+				SpannableStringBuilder.SPAN_INCLUSIVE_INCLUSIVE);
 
-		tv.setText(text, TextView.BufferType.SPANNABLE);
+//		tv.setText(text, TextView.BufferType.SPANNABLE);
 		tv.bringPointIntoView(textMatch.getIndex());
 	}
 
@@ -322,10 +322,13 @@ public class CommandInfoFragment extends Fragment {
 
 		//TODO Replace with span parsed from HtmlNewlinePreserver
 //		SpannableString span = SpannableString.valueOf(Html.fromHtml(description, Html.FROM_HTML_MODE_LEGACY));
-		SpannableStringBuilder spannableStringBuilder = SpannableStringBuilder.valueOf(Html.fromHtml(description, Html.FROM_HTML_SEPARATOR_LINE_BREAK_PARAGRAPH));
+//		SpannableStringBuilder spannableStringBuilder = SpannableStringBuilder.valueOf(Html.fromHtml(description, Html.FROM_HTML_SEPARATOR_LINE_BREAK_PARAGRAPH));
 //		SpannableString span = HtmlNewlinePreserver.parse(description);
 
 		((TextView) view.findViewById(R.id.headerText)).setText(header);
+
+		SpannableStringBuilder spannableStringBuilder =
+				HtmlNewlinePreserver.replaceNLinesWithLBreaks(description);
 
 		TextView descriptionView = ((TextView) view.findViewById(R.id.descriptionText));
 		descriptionView.setSpannableFactory(spannableFactory);

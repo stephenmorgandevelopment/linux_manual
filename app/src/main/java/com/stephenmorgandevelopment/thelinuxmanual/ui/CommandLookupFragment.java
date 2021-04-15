@@ -170,9 +170,14 @@ public class CommandLookupFragment extends Fragment
 
 	public void clear() {
 		lookupModel.setSavedSearchText(null);
-		matchListAdapter.clear();
-		matchListAdapter.notifyDataSetChanged();
 
-		searchText.setText("");
+		if(matchListAdapter != null) {
+			matchListAdapter.clear();
+			matchListAdapter.notifyDataSetChanged();
+		}
+
+		if(searchText != null) {
+			searchText.setText("");
+		}
 	}
 }

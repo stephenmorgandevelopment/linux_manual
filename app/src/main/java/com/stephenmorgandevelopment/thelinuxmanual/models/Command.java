@@ -1,21 +1,18 @@
 package com.stephenmorgandevelopment.thelinuxmanual.models;
 
 import android.text.Html;
-import android.text.SpannableString;
-import android.util.Log;
+import android.text.SpannableStringBuilder;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.HtmlNewlinePreserver;
 
 import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import io.reactivex.Single;
 
 public class Command {
     private final long id;
@@ -30,14 +27,12 @@ public class Command {
         return id;
     }
 
+    public Map<String, String> getData() {
+        return data;
+    }
+
     public String getShortName() {
-        String name = String.valueOf(Html.fromHtml(data.get("NAME")));
-        Log.i("Command", "shortName: " + name);
-
-        if (name == null) {
-            return "unknown-error";
-        }
-
+        String name = String.valueOf(Html.fromHtml(data.get("NAME"), Html.FROM_HTML_MODE_LEGACY));
         name = name.substring(0, name.indexOf(" "));
 
         if (name.contains(",")) {
@@ -47,26 +42,16 @@ public class Command {
         return name;
     }
 
-    public Map<String, String> getData() {
-        return data;
+    public static Command fromJson(long id, String dataJson) {
+        return new Command(id, parseMapFromJson(dataJson));
     }
 
     public static Map<String, String> parseMapFromJson(String json) {
         JsonReader reader = new JsonReader(new StringReader(json));
         reader.setLenient(true);
 
-        Type dataMapType = new TypeToken<Map<String, String>>() {
-        }.getType();
+        Type dataMapType = new TypeToken<Map<String, String>>(){}.getType();
         return new Gson().fromJson(reader, dataMapType);
-    }
-
-    public static Command fromJson(long id, String dataJson) {
-        return new Command(id, parseMapFromJson(dataJson));
-    }
-
-    public String toJsonString() {
-        Gson gson = new Gson();
-        return gson.toJson(this);
     }
 
     public String dataMapToJsonString() {
@@ -79,12 +64,18 @@ public class Command {
         List<SingleTextMatch> matchIndexes = new ArrayList<>();
 
         for (Map.Entry<String, String> entry : data.entrySet()) {
-            if (entry.getValue().toLowerCase().contains(query.toLowerCase())) {
-                List<SingleTextMatch> indexes =
-                        getMatchIndexes(query.toLowerCase(), entry);
+            String tmpText = entry.getValue().toLowerCase();
+
+            if (tmpText.contains(query.toLowerCase())) {
+                SpannableStringBuilder spannableStringBuilder =
+                        HtmlNewlinePreserver.replaceNLinesWithLBreaks(tmpText);
+
+                List<SingleTextMatch> indexes = getMatchIndexes(
+                                query.toLowerCase(),
+                                String.valueOf(spannableStringBuilder),
+                                entry.getKey());
 
                 count += indexes.size();
-
                 matchIndexes.addAll(indexes);
             }
         }
@@ -92,17 +83,14 @@ public class Command {
         return new TextSearchResult(query, matchIndexes, count);
     }
 
-    private List<SingleTextMatch> getMatchIndexes(String query, Map.Entry<String, String> entry) {
+    private List<SingleTextMatch> getMatchIndexes(String query, String text, String header) {
         List<SingleTextMatch> indexes = new ArrayList<>();
-        SpannableString spannableString = SpannableString.valueOf(Html.fromHtml(entry.getValue(), Html.FROM_HTML_SEPARATOR_LINE_BREAK_BLOCKQUOTE));
-
-        String tmpText = String.valueOf(spannableString).toLowerCase();
 
         int runningIndex = 0;
-        while (tmpText.contains(query)) {
-            int idx = tmpText.indexOf(query); // + runningIndex;
-            indexes.add(new SingleTextMatch(entry.getKey(), idx + runningIndex));
-            tmpText = tmpText.substring(idx + query.length());
+        while (text.contains(query)) {
+            int idx = text.indexOf(query);
+            indexes.add(new SingleTextMatch(header, idx + runningIndex));
+            text = text.substring(idx + query.length());
 
             runningIndex += (idx + query.length());
         }
