@@ -3,7 +3,9 @@ package com.stephenmorgandevelopment.thelinuxmanual.distros;
 import android.util.Log;
 
 import com.google.gson.stream.JsonWriter;
+import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -100,10 +102,14 @@ public class UbuntuHtmlAdapter {
         }
     }
 
-    public static synchronized String crawlForDescription(String pageHtml) {
+    public static String crawlForDescription(String pageHtml) {
         Document document = Jsoup.parse(pageHtml);
         Elements h4List = document.select("#tableWrapper h4");
         Elements preList = document.select("#tableWrapper pre");
+
+        if(preList.size() == 0) {
+            return "No description available.";
+        }
 
         preList.remove(0);
 

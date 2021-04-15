@@ -1,7 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual.models;
 
 import java.util.List;
-import java.util.Map;
 
 public class TextSearchResult {
 	private final String query;
@@ -18,10 +17,6 @@ public class TextSearchResult {
 
 	public int getCount() {
 		return matchIndexes.size();
-	}
-
-	public List<SingleTextMatch> getMatchIndexes() {
-		return matchIndexes;
 	}
 
 	public SingleTextMatch getMatch(int index) {

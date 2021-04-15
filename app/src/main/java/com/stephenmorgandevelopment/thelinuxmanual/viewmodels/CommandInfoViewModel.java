@@ -1,13 +1,10 @@
 package com.stephenmorgandevelopment.thelinuxmanual.viewmodels;
 
-import android.util.JsonReader;
-
 import androidx.lifecycle.ViewModel;
 
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SingleTextMatch;
 import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult;
-import com.stephenmorgandevelopment.thelinuxmanual.ui.CommandInfoFragment;
 
 public class CommandInfoViewModel extends ViewModel {
     public static final String TAG = CommandInfoViewModel.class.getSimpleName();
@@ -36,8 +33,12 @@ public class CommandInfoViewModel extends ViewModel {
         }
     }
 
+    public boolean hasSearchResults() {
+        return !(searchResults == null || searchResults.getCount() == 0);
+    }
+
     public SingleTextMatch getCurrentMatch() {
-        if(searchResults.getCount() == 0) {
+        if(searchResults == null || searchResults.getCount() == 0) {
             return null;
         }
 
@@ -45,7 +46,7 @@ public class CommandInfoViewModel extends ViewModel {
     }
 
     public SingleTextMatch getNextMatch() {
-        if(searchResults.getCount() == 0) {
+        if(searchResults == null || searchResults.getCount() == 0) {
             return null;
         }
 
@@ -57,7 +58,7 @@ public class CommandInfoViewModel extends ViewModel {
     }
 
     public SingleTextMatch getPrevMatch() {
-        if(searchResults.getCount() == 0) {
+        if(searchResults == null || searchResults.getCount() == 0) {
             return null;
         }
 
@@ -83,8 +84,6 @@ public class CommandInfoViewModel extends ViewModel {
     public TextSearchResult getSearchResults() {
         return searchResults;
     }
-
-
 
     public int getCurrentMatchIndex() {
         return currentMatchIndex;

@@ -2,10 +2,14 @@ package com.stephenmorgandevelopment.thelinuxmanual.ui;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.text.LineBreaker;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Layout;
+import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.style.ParagraphStyle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,6 +24,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +35,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SingleTextMatch;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.HtmlNewlinePreserver;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandInfoViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
@@ -69,48 +75,6 @@ public class CommandInfoFragment extends Fragment {
 		return fragment;
 	}
 
-	@Nullable
-	@Override
-	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.command_info_fragment, null);
-		view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-		return view;
-	}
-
-	@Override
-	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-		super.onViewCreated(view, savedInstanceState);
-		scrollContainer = view.findViewById(R.id.scrollContainer);
-		rootScrollView = view.findViewById(R.id.rootScrollView);
-
-		searchBar = view.findViewById(R.id.textSearchBox);
-		searchEditText = view.findViewById(R.id.searchEditText);
-
-		searchControlBar = view.findViewById(R.id.searchControlBar);
-		searchTextDisplay = view.findViewById(R.id.searchTextDisplay);
-		numberOfTextMatches = view.findViewById(R.id.numberOfTextMatches);
-
-		inflater  = (LayoutInflater) requireContext()
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-		long id = requireArguments().getLong(KEY_ID);
-		Command command = viewModel.getCommandFromListById(id);
-
-		if(command != null) {
-			infoModel.init(command);
-			buildOutput(command.getData());
-		}
-
-		ImageButton searchBarButton = view.findViewById(R.id.searchBarButton);
-		Button prevSearchButton = view.findViewById(R.id.prevSearchButton);
-		Button nextSearchButton = view.findViewById(R.id.nextSearchButton);
-
-		searchBarButton.setOnClickListener(onClickSearchBarButton);
-		nextSearchButton.setOnClickListener(onClickNextButton);
-		prevSearchButton.setOnClickListener(onClickPrevButton);
-	}
-
 	@Override
 	public void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -123,9 +87,56 @@ public class CommandInfoFragment extends Fragment {
 		jumpToList = new ArrayList<>();
 	}
 
+	@Nullable
 	@Override
-	public void onPrepareOptionsMenu(@NonNull Menu menu) {
-		super.onPrepareOptionsMenu(menu);
+	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+		View view = inflater.inflate(R.layout.command_info_fragment, null);
+		view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+		return view;
+	}
+
+	@Override
+	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+
+		inflater  = (LayoutInflater) requireContext()
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+		scrollContainer = view.findViewById(R.id.scrollContainer);
+		rootScrollView = view.findViewById(R.id.rootScrollView);
+
+		long id = requireArguments().getLong(KEY_ID);
+		Command command = viewModel.getCommandFromListById(id);
+
+		if(command != null) {
+			infoModel.init(command);
+			buildOutput(command.getData());
+		}
+
+		initSearchUi(view);
+		initSearchButtons(view);
+
+		requireActivity().getOnBackPressedDispatcher().addCallback(onBackPressedCallback);
+	}
+
+	private void initSearchUi(View view) {
+		searchBar = view.findViewById(R.id.textSearchBox);
+		searchEditText = view.findViewById(R.id.searchEditText);
+
+		searchControlBar = view.findViewById(R.id.searchControlBar);
+		searchTextDisplay = view.findViewById(R.id.searchTextDisplay);
+		numberOfTextMatches = view.findViewById(R.id.numberOfTextMatches);
+	}
+
+	private void initSearchButtons(View view) {
+		ImageButton searchBarButton = view.findViewById(R.id.searchBarButton);
+		Button prevSearchButton = view.findViewById(R.id.prevSearchButton);
+		Button nextSearchButton = view.findViewById(R.id.nextSearchButton);
+
+		searchBarButton.setOnClickListener(onClickSearchBarButton);
+		nextSearchButton.setOnClickListener(onClickNextButton);
+		prevSearchButton.setOnClickListener(onClickPrevButton);
 	}
 
 	@Override
@@ -169,32 +180,29 @@ public class CommandInfoFragment extends Fragment {
 	}
 
 	View.OnClickListener onClickSearchBarButton = v -> {
-		if (searchEditText.getText().length() >= 2) {
-			infoModel.searchTextFor(
-					searchEditText.getText().toString(),
-					viewModel.getCommandFromListById(infoModel.getId()));
+		String query = searchEditText.getText().toString();
+
+		if (query.length() >= 2) {
+			infoModel.searchTextFor(query, viewModel.getCommandFromListById(infoModel.getId()));
 
 			gotoMatch(infoModel.getCurrentMatch());
-			displaySearchResults();
+
+			if(searchControlBar.getVisibility() == View.GONE) {
+				toggleSearchResults();
+			}
+
+			updateCurrentMatchDisplay();
 		}
 	};
 
 	View.OnClickListener onClickPrevButton = v -> {
-		SingleTextMatch lastMatch = infoModel.getCurrentMatch();
-		SingleTextMatch match = infoModel.getPrevMatch();
-		if(!match.getSection().equals(lastMatch.getSection())) {
-			clearSpan(lastMatch);
-		}
-		gotoMatch(match);
+		clearSpan(infoModel.getCurrentMatch());
+		gotoMatch(infoModel.getPrevMatch());
 	};
 
 	View.OnClickListener onClickNextButton = v -> {
-		SingleTextMatch lastMatch = infoModel.getCurrentMatch();
-		SingleTextMatch match = infoModel.getNextMatch();
-		if(!match.getSection().equals(lastMatch.getSection())) {
-			clearSpan(lastMatch);
-		}
-		gotoMatch(match);
+		clearSpan(infoModel.getCurrentMatch());
+		gotoMatch(infoModel.getNextMatch());
 	};
 
 	private void gotoMatch(SingleTextMatch textMatch) {
@@ -217,13 +225,25 @@ public class CommandInfoFragment extends Fragment {
 		View v = scrollContainer.findViewWithTag(textMatch.getSection());
 		int sectionTop = v.getTop() - 12;
 
-		TextView descriptionText = ((TextView)v.findViewById(R.id.descriptionText));
-		Layout layout = descriptionText.getLayout();
+		Layout layout = ((TextView)v.findViewById(R.id.descriptionText)).getLayout();
 		int line = layout.getLineForOffset(textMatch.getIndex());
 		int lineTop = layout.getLineTop(line) - 64;
 
 		rootScrollView.scrollTo(0, sectionTop + lineTop);
 	}
+
+	private final OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(true) {
+		@Override
+		public void handleOnBackPressed() {
+			if(searchBar.getVisibility() == View.VISIBLE) {
+				toggleSearchBarDisplay();
+				clearSpan(infoModel.getCurrentMatch());
+			} else {
+				setEnabled(false);
+				Objects.requireNonNull(getActivity()).onBackPressed();
+			}
+		}
+	};
 
 	private void clearSpan(SingleTextMatch textMatch) {
 		View v = scrollContainer.findViewWithTag(textMatch.getSection());
@@ -234,14 +254,18 @@ public class CommandInfoFragment extends Fragment {
 		text.removeSpan(SingleTextMatch.foregroundColorSpan);
 	}
 
-	private void displaySearchResults() {
-		searchControlBar.setVisibility(View.VISIBLE);
-		searchTextDisplay.setText(infoModel.getSearchResults().getQuery());
+	private void toggleSearchResults() {
+		if(searchControlBar.getVisibility() == View.GONE) {
+			searchControlBar.setVisibility(View.VISIBLE);
+		} else {
+			searchControlBar.setVisibility(View.GONE);
+		}
 
-		updateCurrentMatchDisplay();
 	}
 
 	private void updateCurrentMatchDisplay() {
+		searchTextDisplay.setText(infoModel.getSearchResults().getQuery());
+
 		String numberTextMatchesText = infoModel.getCurrentMatchIndex() + "/" + infoModel.getResultsCount();
 		numberOfTextMatches.setText(numberTextMatchesText);
 	}
@@ -249,7 +273,9 @@ public class CommandInfoFragment extends Fragment {
 	private void toggleSearchBarDisplay() {
 		if (searchBar.getVisibility() == View.GONE) {
 			searchBar.setVisibility(View.VISIBLE);
-			searchControlBar.setVisibility(View.VISIBLE);
+			if(infoModel.hasSearchResults()) {
+				searchControlBar.setVisibility(View.VISIBLE);
+			}
 		} else {
 			searchBar.setVisibility(View.GONE);
 			searchControlBar.setVisibility(View.GONE);
@@ -260,7 +286,7 @@ public class CommandInfoFragment extends Fragment {
 		View bubble = scrollContainer.findViewWithTag(textMatch.getSection());
 		TextView tv = bubble.findViewById(R.id.descriptionText);
 
-		SpannableString text = (SpannableString) tv.getText();
+		SpannableStringBuilder text = (SpannableStringBuilder) tv.getText();
 
 		text.setSpan(
 				SingleTextMatch.backgroundSpan,
@@ -294,9 +320,17 @@ public class CommandInfoFragment extends Fragment {
 		ViewGroup view = getInflatedBubbleView();
 		view.setTag(header);
 
+		//TODO Replace with span parsed from HtmlNewlinePreserver
+//		SpannableString span = SpannableString.valueOf(Html.fromHtml(description, Html.FROM_HTML_MODE_LEGACY));
+		SpannableStringBuilder spannableStringBuilder = SpannableStringBuilder.valueOf(Html.fromHtml(description, Html.FROM_HTML_SEPARATOR_LINE_BREAK_PARAGRAPH));
+//		SpannableString span = HtmlNewlinePreserver.parse(description);
+
 		((TextView) view.findViewById(R.id.headerText)).setText(header);
-		SpannableString span = SpannableString.valueOf(Html.fromHtml(description));//Html.FROM_HTML_MODE_LEGACY);
-		((TextView) view.findViewById(R.id.descriptionText)).setText(span, TextView.BufferType.SPANNABLE);
+
+		TextView descriptionView = ((TextView) view.findViewById(R.id.descriptionText));
+		descriptionView.setSpannableFactory(spannableFactory);
+		descriptionView.setText(spannableStringBuilder, TextView.BufferType.SPANNABLE);
+
 
 		scrollContainer.addView(view);
 		scrollContainer.addView(getDivider());
@@ -315,5 +349,10 @@ public class CommandInfoFragment extends Fragment {
 		return divider;
 	}
 
-
+	private final Spannable.Factory spannableFactory = new Spannable.Factory() {
+		@Override
+		public Spannable newSpannable(CharSequence source) {
+			return (Spannable) source;
+		}
+	};
 }

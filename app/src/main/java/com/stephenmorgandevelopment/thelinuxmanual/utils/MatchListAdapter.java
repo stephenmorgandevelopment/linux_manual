@@ -121,7 +121,7 @@ public class MatchListAdapter extends BaseAdapter {
                         match.getDescription(),
                         Html.FROM_HTML_MODE_LEGACY));
 
-        if (description.equals(EMPTY_HTML_SPAN)) {
+        if (description.equals(EMPTY_HTML_SPAN) && Helpers.hasInternet()) {
             CommandLookupViewModel.addDisposable(
                     UbuntuRepository
                             .getInstance()
@@ -132,6 +132,10 @@ public class MatchListAdapter extends BaseAdapter {
 
             return new SpannableString(Helpers.text(R.string.fetching_data));
         } else {
+            if(description.equals(EMPTY_HTML_SPAN) && !Helpers.hasInternet()) {
+                return new SpannableString(Helpers.text(R.string.no_internet_descriptions));
+            }
+
             return description;
         }
     }

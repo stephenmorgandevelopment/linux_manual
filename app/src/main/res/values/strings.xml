@@ -73,6 +73,7 @@
     <string name="trusty">trusty</string>
     <string name="xenial">xenial</string>
     <string name="fetching_data">Loading&#8230;</string>
+    <string name="no_internet_descriptions">Must have internet to populate descriptions in database.  They will be saved in app data after the initial pull.</string>
     <string name="info_key_name">NAME</string>
     <string name="info_key_synopsis">SYNOPSIS</string>
     <string name="info_key_example">EXAMPLE</string>
