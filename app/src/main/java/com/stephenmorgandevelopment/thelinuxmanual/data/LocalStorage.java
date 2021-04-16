@@ -27,9 +27,7 @@ public class LocalStorage {
     }
 
     private LocalStorage() {
-        commandsDir = Helpers.getApplicationContext()
-                .getDir("commands", Context.MODE_PRIVATE);
-
+        commandsDir = Helpers.getApplicationContext().getDir("commands", Context.MODE_PRIVATE);
     }
 
     public boolean hasCommand(long id) {
@@ -55,7 +53,6 @@ public class LocalStorage {
             reader.close();
         }
 
-        Log.i(TAG, "Seems to have loaded from local persistence.");
         return Command.fromJson(id, json.toString().trim());
     }
 

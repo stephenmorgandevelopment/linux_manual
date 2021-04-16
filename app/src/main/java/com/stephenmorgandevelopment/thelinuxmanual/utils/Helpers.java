@@ -8,7 +8,7 @@ import android.util.Log;
 
 import androidx.core.os.LocaleListCompat;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 
 import java.io.File;
 
@@ -22,12 +22,12 @@ public class Helpers {
     public static void init(Application app) {
         setApplicationContext(app);
         setCacheDir(app.getCacheDir());
-        setLocal();
+        setLocale();
 
-        UbuntuHtmlAdapter.setRelease(UbuntuHtmlAdapter.Release.fromString(Preferences.getRelease()));
+        UbuntuHtmlApiConverter.setRelease(UbuntuHtmlApiConverter.Release.fromString(Preferences.getRelease()));
     }
 
-    private static void setLocal() {
+    private static void setLocale() {
         String languageTag = LocaleListCompat.getAdjustedDefault().get(0).toLanguageTag().substring(0, 2);
         Log.i(TAG, "Language tag: " + languageTag);
         local = languageTag;
@@ -45,7 +45,7 @@ public class Helpers {
         return false;
     }
 
-    public static String getLocal() {
+    public static String getLocale() {
         return local;
     }
 

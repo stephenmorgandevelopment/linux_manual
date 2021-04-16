@@ -1,13 +1,8 @@
 package com.stephenmorgandevelopment.thelinuxmanual.utils;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.service.autofill.FieldClassification;
 import android.text.Html;
 import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.SpannedString;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,40 +10,19 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.annotation.Dimension;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
-
 import com.stephenmorgandevelopment.thelinuxmanual.R;
-import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
-import com.stephenmorgandevelopment.thelinuxmanual.models.SingleTextMatch;
-import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult;
-import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandLookupViewModel;
-import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
-import io.reactivex.Scheduler;
-import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class MatchListAdapter extends BaseAdapter {
     public static final String TAG = MatchListAdapter.class.getSimpleName();
     private static final SpannableString EMPTY_HTML_SPAN = new SpannableString("");
-//            SpannableString.valueOf(Html.fromHtml("", Html.FROM_HTML_MODE_LEGACY));
 
     private final List<SimpleCommand> matches;
     private final LayoutInflater inflater;

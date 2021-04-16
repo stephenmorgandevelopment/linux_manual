@@ -8,7 +8,7 @@ import androidx.lifecycle.LiveData;
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
@@ -60,7 +60,7 @@ public class UbuntuRepository implements ManPageRepository {
 		return HttpClient.fetchCommandManPage(pageUrl)
 				.subscribeOn(Schedulers.io())
 				.observeOn(Schedulers.computation())
-				.flatMap(UbuntuHtmlAdapter::crawlForCommandInfo);
+				.flatMap(UbuntuHtmlApiConverter::crawlForCommandInfo);
 	}
 
 	public synchronized Single<List<SimpleCommand>> getPartialMatches(String searchQuery) {
@@ -93,7 +93,7 @@ public class UbuntuRepository implements ManPageRepository {
 		//TODO Blob n the question???  Blob = more effecient / Non = better readable....
 		return Single.just(
 				match.setDescriptionReturnSimpleCommand(
-						UbuntuHtmlAdapter.crawlForDescription(response.body().string())));
+						UbuntuHtmlApiConverter.crawlForDescription(response.body().string())));
 
 //		String description = UbuntuHtmlAdapter.crawlForDescription(response.body().string());
 //		match.setDescription(description);
@@ -104,7 +104,7 @@ public class UbuntuRepository implements ManPageRepository {
 	public LiveData<String> launchSyncService() {
 		if (!CommandSyncService.isWorking()) {
 			Intent intent = new Intent();
-			intent.putExtra(CommandSyncService.DISTRO, UbuntuHtmlAdapter.NAME);
+			intent.putExtra(CommandSyncService.DISTRO, UbuntuHtmlApiConverter.NAME);
 
 			return CommandSyncService.enqueueWork(Helpers.getApplicationContext(), intent);
 		}

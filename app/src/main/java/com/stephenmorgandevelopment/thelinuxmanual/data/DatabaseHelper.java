@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
@@ -19,13 +19,14 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TAG = DatabaseHelper.class.getSimpleName();
     private static final String simpleCommandsName = "simple_commands";
+
     private final static int version = 2;
 
     private SQLiteDatabase database;
     private static DatabaseHelper helperInstance;
 
     private static final String TABLE_NAME_POSTFIX = "_SimpleCommands";
-    private static String TABLE_NAME_PREFIX = UbuntuHtmlAdapter.getReleaseString();
+    private static String TABLE_NAME_PREFIX = UbuntuHtmlApiConverter.getReleaseString();
 
     private static final String KEY_ID = "id";
     private static final String KEY_NAME = "name";
@@ -53,7 +54,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        for (UbuntuHtmlAdapter.Release release : UbuntuHtmlAdapter.Release.values()) {
+        for (UbuntuHtmlApiConverter.Release release : UbuntuHtmlApiConverter.Release.values()) {
             String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS "
                     + release.getName() + TABLE_NAME_POSTFIX + "("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
@@ -65,7 +66,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        for (UbuntuHtmlAdapter.Release release : UbuntuHtmlAdapter.Release.values()) {
+        for (UbuntuHtmlApiConverter.Release release : UbuntuHtmlApiConverter.Release.values()) {
             String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS "
                     + release.getName() + TABLE_NAME_POSTFIX + "("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
@@ -76,7 +77,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void addCommands(List<SimpleCommand> commands) {
-        TABLE_NAME_PREFIX = UbuntuHtmlAdapter.getReleaseString();
+        TABLE_NAME_PREFIX = UbuntuHtmlApiConverter.getReleaseString();
 
         if (commands == null) {
             Log.e(TAG, "Failed adding commands to database.  commands == null");

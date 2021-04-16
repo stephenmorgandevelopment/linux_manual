@@ -21,7 +21,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MatchListAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandLookupViewModel;
@@ -76,7 +76,7 @@ public class CommandLookupFragment extends Fragment
 
 		searchText.addTextChangedListener(this);
 
-		requireActivity().getOnBackPressedDispatcher().addCallback(backPressedCallback);
+		requireActivity().getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
 
 		lookupModel.getMatchListData().observe(getViewLifecycleOwner(), this::updateMatchList);
 	}
@@ -104,7 +104,7 @@ public class CommandLookupFragment extends Fragment
 				((AppCompatActivity) getActivity())).getSupportActionBar();
 
 		if(actionbar != null) {
-			actionbar.setTitle("Search - ".concat(UbuntuHtmlAdapter.getReleaseString()));
+			actionbar.setTitle("Search - ".concat(UbuntuHtmlApiConverter.getReleaseString()));
 		}
 
 		if (matchListAdapter == null) {
@@ -159,12 +159,12 @@ public class CommandLookupFragment extends Fragment
 	OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
 		@Override
 		public void handleOnBackPressed() {
-			if (searchText.getText() == null || searchText.length() == 0) {
+			if(searchText.getText() != null && searchText.length() > 0) {
+				clear();
+			} else {
 				setEnabled(false);
-				Objects.requireNonNull(getActivity()).onBackPressed();
+				requireActivity().onBackPressed();
 			}
-
-			clear();
 		}
 	};
 
@@ -178,6 +178,15 @@ public class CommandLookupFragment extends Fragment
 
 		if(searchText != null) {
 			searchText.setText("");
+		}
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+
+		if(requireActivity().isFinishing()) {
+			getViewModelStore().clear();
 		}
 	}
 }

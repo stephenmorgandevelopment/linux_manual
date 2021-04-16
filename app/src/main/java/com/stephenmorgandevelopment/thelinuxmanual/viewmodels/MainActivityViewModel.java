@@ -8,9 +8,13 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
 
+import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
+import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -46,6 +50,16 @@ public class MainActivityViewModel extends ViewModel {
 
 	public void syncDatabase() {
 		syncProgress = UbuntuRepository.getInstance().launchSyncService();
+	}
+
+	public void changeRelease(UbuntuHtmlApiConverter.Release release) {
+		Preferences.setRelease(release.getName());
+		UbuntuHtmlApiConverter.setRelease(release);
+		DatabaseHelper.changeTable(release.getName());
+
+		LocalStorage.getInstance().wipeAll();
+
+		syncDatabase();
 	}
 
 	public void loadManpage(SimpleCommand simpleCommand) {
@@ -104,7 +118,6 @@ public class MainActivityViewModel extends ViewModel {
 				return command;
 			}
 		}
-
 		return null;
 	}
 
@@ -140,13 +153,4 @@ public class MainActivityViewModel extends ViewModel {
 	public static void cleanup() {
 		disposables.clear();
 	}
-
-//	public void setSavedSearchText(String text) {
-//		searchText = text;
-//		savedStateHandler.set(SEARCH_TEXT_KEY, text);
-//	}
-//
-//	public String getSearchText() {
-//		return searchText;
-//	}
 }

@@ -3,13 +3,13 @@ package com.stephenmorgandevelopment.thelinuxmanual.distros;
 import android.util.Log;
 
 import com.google.gson.stream.JsonWriter;
-import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.HtmlTextFormat;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Entities;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
@@ -20,8 +20,8 @@ import java.util.Map;
 import io.reactivex.Single;
 import okhttp3.Response;
 
-public class UbuntuHtmlAdapter {
-    public static final String TAG = UbuntuHtmlAdapter.class.getSimpleName();
+public class UbuntuHtmlApiConverter {
+    public static final String TAG = UbuntuHtmlApiConverter.class.getSimpleName();
     public static final String NAME = "Ubuntu";
     public static final String BASE_URL = "https://manpages.ubuntu.com/manpages/";
     private static final String CRAWLER_SELECTOR = "#tableWrapper pre a";
@@ -54,7 +54,7 @@ public class UbuntuHtmlAdapter {
     }
 
     public static void setRelease(Release release) {
-        UbuntuHtmlAdapter.release = release;
+        UbuntuHtmlApiConverter.release = release;
     }
 
     public static String getReleaseString() {
@@ -69,13 +69,16 @@ public class UbuntuHtmlAdapter {
         Map<String, String> info = new LinkedHashMap<>();
 
         Document document = Jsoup.parse(pageHtml);
+        document.outputSettings(new Document.OutputSettings().prettyPrint(false));
         Elements h4List = document.select("#tableWrapper h4");
         Elements preList = document.select("#tableWrapper pre");
         preList.remove(0);
 
         for (Element h4 : h4List) {
             int idx = h4List.indexOf(h4);
-            info.put(h4.text(), preList.get(idx).outerHtml());
+//            info.put(h4.text(), preList.get(idx).outerHtml());
+            info.put(h4.text(), HtmlTextFormat.replaceNewLinesWithLineBreaks(
+                    preList.get(idx).outerHtml()));
         }
 
         return info;

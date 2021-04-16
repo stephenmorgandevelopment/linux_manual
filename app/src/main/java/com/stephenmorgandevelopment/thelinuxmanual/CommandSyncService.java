@@ -10,7 +10,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
@@ -56,7 +56,7 @@ public class CommandSyncService extends JobIntentService {
             globalDisposable = new CompositeDisposable();
         }
 
-        updateProgress("\n\nConnecting to " + UbuntuHtmlAdapter.BASE_URL + ".");
+        updateProgress("\n\nConnecting to " + UbuntuHtmlApiConverter.BASE_URL + ".");
 
 
         try {
@@ -94,7 +94,7 @@ public class CommandSyncService extends JobIntentService {
                     + "\nProcessing data...");
         }
 
-        List<SimpleCommand> pageCommands = UbuntuHtmlAdapter.crawlForManPages(response.body().string(), reqUrl);
+        List<SimpleCommand> pageCommands = UbuntuHtmlApiConverter.crawlForManPages(response.body().string(), reqUrl);
 
         updateProgress("\nSaving data locally...");
 
@@ -105,9 +105,9 @@ public class CommandSyncService extends JobIntentService {
 
     public Observable<Request> mapHtmlToManDirs(Response response) throws IOException {
         if (response.isSuccessful() && response.code() == 200) {
-            String url = UbuntuHtmlAdapter.BASE_URL + UbuntuHtmlAdapter.getReleaseString() + "/" + Helpers.getLocal() + "/";
+            String url = UbuntuHtmlApiConverter.BASE_URL + UbuntuHtmlApiConverter.getReleaseString() + "/" + Helpers.getLocale() + "/";
 
-            List<String> dirPaths = UbuntuHtmlAdapter.crawlForManDirs(response.body().string());
+            List<String> dirPaths = UbuntuHtmlApiConverter.crawlForManDirs(response.body().string());
             List<Request> requests = new ArrayList<>();
 
             for (String path : dirPaths) {

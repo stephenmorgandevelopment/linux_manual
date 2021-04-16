@@ -1,6 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual.network;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import java.io.File;
@@ -13,7 +13,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.getLocal;
+import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.getLocale;
 
 public class UbuntuApi implements HttpApi{
     private static UbuntuApi instance;
@@ -56,7 +56,7 @@ public class UbuntuApi implements HttpApi{
 
 
     private Single<Response> fetchDirsHtml() throws IOException {
-        String url = UbuntuHtmlAdapter.BASE_URL + UbuntuHtmlAdapter.getReleaseString() + "/" + getLocal();
+        String url = UbuntuHtmlApiConverter.BASE_URL + UbuntuHtmlApiConverter.getReleaseString() + "/" + getLocale();
         Request req = new Request.Builder().url(url).build();
 
         return Single.just(okClient.newCall(req).execute());

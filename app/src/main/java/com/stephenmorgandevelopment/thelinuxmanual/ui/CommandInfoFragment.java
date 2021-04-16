@@ -2,14 +2,11 @@ package com.stephenmorgandevelopment.thelinuxmanual.ui;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.text.LineBreaker;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Layout;
 import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
-import android.text.style.ParagraphStyle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -31,11 +28,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelStoreOwner;
 
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SingleTextMatch;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.HtmlNewlinePreserver;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.HtmlTextFormat;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandInfoViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
@@ -80,7 +78,7 @@ public class CommandInfoFragment extends Fragment {
 		super.onCreate(savedInstanceState);
 
 		viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
-		infoModel = new ViewModelProvider(this).get(CommandInfoViewModel.class);
+		infoModel = new ViewModelProvider((ViewModelStoreOwner) this).get(CommandInfoViewModel.class);
 
 		setHasOptionsMenu(true);
 
@@ -117,7 +115,7 @@ public class CommandInfoFragment extends Fragment {
 		initSearchUi(view);
 		initSearchButtons(view);
 
-		requireActivity().getOnBackPressedDispatcher().addCallback(onBackPressedCallback);
+		requireActivity().getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
 	}
 
 	private void initSearchUi(View view) {
@@ -154,6 +152,7 @@ public class CommandInfoFragment extends Fragment {
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 		if (item.getItemId() == R.id.closeButton) {
 			((MainActivity) requireActivity()).removePage(infoModel.getId());
+			getViewModelStore().clear();
 			return true;
 		}
 
@@ -235,15 +234,28 @@ public class CommandInfoFragment extends Fragment {
 	private final OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(true) {
 		@Override
 		public void handleOnBackPressed() {
-			if(searchBar.getVisibility() == View.VISIBLE) {
-				toggleSearchBarDisplay();
-				clearSpan(infoModel.getCurrentMatch());
-			} else {
+			if(!hideSearch()) {
 				setEnabled(false);
-				getActivity().onBackPressed();
+				requireActivity().onBackPressed();
 			}
 		}
 	};
+
+	private boolean hideSearch() {
+		boolean consumed = false;
+
+		if(searchBar.getVisibility() == View.VISIBLE) {
+			toggleSearchBarDisplay();
+			consumed = true;
+		}
+
+		if(infoModel.hasSearchResults()) {
+			clearSpan(infoModel.getCurrentMatch());
+			consumed = true;
+		}
+
+		return consumed;
+	}
 
 	private void clearSpan(SingleTextMatch textMatch) {
 		View v = scrollContainer.findViewWithTag(textMatch.getSection());
@@ -260,7 +272,6 @@ public class CommandInfoFragment extends Fragment {
 		} else {
 			searchControlBar.setVisibility(View.GONE);
 		}
-
 	}
 
 	private void updateCurrentMatchDisplay() {
@@ -300,7 +311,6 @@ public class CommandInfoFragment extends Fragment {
 				infoModel.calcEndIndex(textMatch.getIndex()),
 				SpannableStringBuilder.SPAN_INCLUSIVE_INCLUSIVE);
 
-//		tv.setText(text, TextView.BufferType.SPANNABLE);
 		tv.bringPointIntoView(textMatch.getIndex());
 	}
 
@@ -312,23 +322,17 @@ public class CommandInfoFragment extends Fragment {
 			addTextBubble(key, infoMap.get(key));
 		}
 
-		scrollContainer.requestLayout();
 		scrollContainer.invalidate();
 	}
 
 	private void addTextBubble(String header, String description) {
-		ViewGroup view = getInflatedBubbleView();
+		ViewGroup view = (ViewGroup) inflater.inflate(R.layout.text_bubble, scrollContainer, false);
 		view.setTag(header);
-
-		//TODO Replace with span parsed from HtmlNewlinePreserver
-//		SpannableString span = SpannableString.valueOf(Html.fromHtml(description, Html.FROM_HTML_MODE_LEGACY));
-//		SpannableStringBuilder spannableStringBuilder = SpannableStringBuilder.valueOf(Html.fromHtml(description, Html.FROM_HTML_SEPARATOR_LINE_BREAK_PARAGRAPH));
-//		SpannableString span = HtmlNewlinePreserver.parse(description);
 
 		((TextView) view.findViewById(R.id.headerText)).setText(header);
 
 		SpannableStringBuilder spannableStringBuilder =
-				HtmlNewlinePreserver.replaceNLinesWithLBreaks(description);
+				new SpannableStringBuilder(Html.fromHtml(description, Html.FROM_HTML_MODE_LEGACY));	//HtmlTextFormat.replaceNewLinesWithLineBreaks(description);
 
 		TextView descriptionView = ((TextView) view.findViewById(R.id.descriptionText));
 		descriptionView.setSpannableFactory(spannableFactory);
@@ -337,17 +341,12 @@ public class CommandInfoFragment extends Fragment {
 
 		scrollContainer.addView(view);
 		scrollContainer.addView(getDivider());
-
 		jumpToList.add(header);
-	}
-
-	private ViewGroup getInflatedBubbleView() {
-		return (ViewGroup) inflater.inflate(R.layout.text_bubble, scrollContainer, false);
 	}
 
 	private View getDivider() {
 		View divider = new View(getContext());
-		divider.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 16));
+		divider.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 12));
 		divider.setBackgroundColor(Color.TRANSPARENT);
 		return divider;
 	}
@@ -358,4 +357,6 @@ public class CommandInfoFragment extends Fragment {
 			return (Spannable) source;
 		}
 	};
+
+
 }

@@ -20,8 +20,6 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
     private final List<Long> idList = new ArrayList<>();
     private CommandLookupFragment lookupFragment;
 
-    private static final String INFO_KEY_NAME = "NAME";
-
     public PrimaryPagerAdapter(FragmentActivity activity, CommandLookupFragment lookupFragment) {
         super(activity);
         this.lookupFragment = lookupFragment;
@@ -49,10 +47,8 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
         int idx = idList.indexOf(id);
 
         if(idx != -1) {
-            String title = titleList.remove(idx);
-            long removedId = idList.remove(idx);
-            Log.i(TAG, "Successfully removed: " + removedId + " - " + title);
-            return;
+            titleList.remove(idx);
+            idList.remove(idx);
         }
     }
 

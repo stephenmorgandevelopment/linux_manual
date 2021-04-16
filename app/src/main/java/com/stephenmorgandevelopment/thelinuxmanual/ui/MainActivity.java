@@ -11,19 +11,18 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlAdapter;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
@@ -32,8 +31,8 @@ import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandLookupViewM
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
 public class MainActivity extends AppCompatActivity {
-	private static final String TAG = "MainActivity";
 	private CommandLookupFragment lookupFragment;
+	private LinearProgressIndicator loadingIndicator;
 	private TextView progressDialog;
 	private ScrollView progressScroller;
 	private ViewPager2 viewPager;
@@ -48,13 +47,13 @@ public class MainActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_main);
 
 		Helpers.init(MainActivity.this.getApplication());
+		viewModel = new ViewModelProvider(MainActivity.this).get(MainActivityViewModel.class);
 
-		viewModel = new ViewModelProvider((ViewModelStoreOwner) MainActivity.this).get(MainActivityViewModel.class);
-
-		String title = getString(R.string.app_name) + " - " + UbuntuHtmlAdapter.getReleaseString();
 		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
-		toolbar.setTitle(title);
+		toolbar.setTitle(R.string.app_name);
+
+		loadingIndicator = findViewById(R.id.loadingIndicator);
 
 		progressDialog = findViewById(R.id.progressTextView);
 		progressScroller = findViewById(R.id.progressScroller);
@@ -73,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
 			return;
 		}
 
+		loadingIndicator.setActivated(true);
+		loadingIndicator.setVisibility(View.VISIBLE);
 		pagerAdapter.addPage(command.getId(), command.getShortName());
 		viewModel.addCommandToCommandList(command);
 		pagerAdapter.notifyDataSetChanged();
@@ -88,7 +89,8 @@ public class MainActivity extends AppCompatActivity {
 		if (DatabaseHelper.hasDatabase() && DatabaseHelper.getInstance().hasData() && !CommandSyncService.isWorking()) {
 			addLookupFragment();
 		} else if (Helpers.hasInternet()) {
-			startDatabaseSync();
+			viewModel.syncDatabase();
+			viewModel.getSyncProgress().observe(this, syncProgressCallback);
 
 			progressDialog.setVisibility(View.VISIBLE);
 			progressScroller.setVisibility(View.VISIBLE);
@@ -122,76 +124,44 @@ public class MainActivity extends AppCompatActivity {
 		if(menu.findItem(R.id.refreshMenuBtn) == null) {
 			getMenuInflater().inflate(R.menu.toolbar_menu, menu);
 		}
-
 		return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.refreshMenuBtn:
-				if (!CommandSyncService.isWorking()) {
-					if (Helpers.hasInternet()) {
-						reSyncDataAndReset();
-					} else {
-						Toast.makeText(MainActivity.this, "Must be connected to the internet.", Toast.LENGTH_LONG).show();
-					}
-				} else {
-					Toast.makeText(this, "Already working on it.", Toast.LENGTH_LONG).show();
-				}
+		if(item.getItemId() == R.id.refreshMenuBtn) {
+			if (CommandSyncService.isWorking()) {
+				Toast.makeText(this, "Sync service is already running.", Toast.LENGTH_LONG).show();
+				return true;
+			}
 
-				return true;
-			case R.id.artful:
-				changeRelease(UbuntuHtmlAdapter.Release.ARTFUL);
-				return true;
-			case R.id.bionic:
-				changeRelease(UbuntuHtmlAdapter.Release.BIONIC);
-				return true;
-			case R.id.cosmic:
-				changeRelease(UbuntuHtmlAdapter.Release.COSMIC);
-				return true;
-			case R.id.disco:
-				changeRelease(UbuntuHtmlAdapter.Release.DISCO);
-				return true;
-			case R.id.eoan:
-				changeRelease(UbuntuHtmlAdapter.Release.EOAN);
-				return true;
-			case R.id.focal:
-				changeRelease(UbuntuHtmlAdapter.Release.FOCAL);
-				return true;
-			case R.id.groovy:
-				changeRelease(UbuntuHtmlAdapter.Release.GROOVY);
-				return true;
-			case R.id.hirsute:
-				changeRelease(UbuntuHtmlAdapter.Release.HIRSUTE);
-				return true;
-			case R.id.precise:
-				changeRelease(UbuntuHtmlAdapter.Release.PRECISE);
-				return true;
-			case R.id.trusty:
-				changeRelease(UbuntuHtmlAdapter.Release.TRUSY);
-				return true;
-			case R.id.xenial:
-				changeRelease(UbuntuHtmlAdapter.Release.XENIAL);
-				return true;
-			default:
+			if (Helpers.hasInternet()) {
+				reSyncDataAndReset();
+			} else {
+				Toast.makeText(MainActivity.this, "Must be connected to the internet.", Toast.LENGTH_LONG).show();
+			}
 
-				break;
+			return true;
+		} else if(item.getGroupId() == R.id.releaseSubMenu) {
+			viewModel.changeRelease(UbuntuHtmlApiConverter.Release.fromString(
+					String.valueOf(item.getTitle())));
+
+			clearPagerAndCommandList();
+			recreate();
+			return true;
 		}
+
 		return super.onOptionsItemSelected(item);
 	}
 
-	boolean exitClick = false;
-
 	@Override
 	public void onBackPressed() {
-		FragmentManager fragMan = getSupportFragmentManager();
-
-		if (viewModel.isLoading(-1L) && !exitClick) {
-			Toast.makeText(this, "Syncing data, press again to exit.", Toast.LENGTH_LONG).show();
-			exitClick = true;
-			return;
-		}
+//		if (viewModel.isLoading(-1L) && !exitClick) {
+//			Toast.makeText(this, "Syncing data, press again to exit.", Toast.LENGTH_LONG).show();
+//			exitClick = true;
+//			return;
+//		}
+		//TODO Fix a bug causing app crashes upon exiting. the app.
 
 		if (viewPager.getCurrentItem() != 0) {
 			viewPager.setCurrentItem(0);
@@ -206,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
 		LocalStorage.getInstance().wipeAll();
 		DatabaseHelper.getInstance().wipeTable();
 
-		startDatabaseSync();
+		viewModel.syncDatabase();
 		recreate();
 	}
 
@@ -222,35 +192,24 @@ public class MainActivity extends AppCompatActivity {
 		viewModel.clearCommandsList();
 	}
 
-	protected void changeRelease(UbuntuHtmlAdapter.Release release) {
-		Preferences.setRelease(release.getName());
-		UbuntuHtmlAdapter.setRelease(release);
-		DatabaseHelper.changeTable(release.getName());
+//	private void startDatabaseSync() {
+//		viewModel.syncDatabase();
+//		viewModel.getSyncProgress().observe(this, syncProgressCallback);
+//	}
 
-		clearPagerAndCommandList();
-		LocalStorage.getInstance().wipeAll();
+	private final Observer<String> syncProgressCallback = (syncProgress) -> {
+		if (syncProgress.equals(CommandSyncService.COMPLETE_TAG)) {
+			progressDialog.setVisibility(View.GONE);
+			progressScroller.setVisibility(View.GONE);
 
-		startDatabaseSync();
-		recreate();
-	}
+			addLookupFragment();
 
-	private void startDatabaseSync() {
-		viewModel.syncDatabase();
+			viewModel.getSyncProgress().removeObservers(this);
+			return;
+		}
 
-		viewModel.getSyncProgress().observe(this, (syncProgress) -> {
-			if (syncProgress.equals(CommandSyncService.COMPLETE_TAG)) {
-				progressDialog.setVisibility(View.GONE);
-				progressScroller.setVisibility(View.GONE);
-
-				addLookupFragment();
-
-				viewModel.getSyncProgress().removeObservers(this);
-				return;
-			}
-
-			progressDialog.append(syncProgress);
-		});
-	}
+		progressDialog.append(syncProgress);
+	};
 
 	public void removePage(long id) {
 		removePage(viewModel.getCommandFromListById(id));
