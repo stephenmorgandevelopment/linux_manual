@@ -6,7 +6,6 @@ import android.text.SpannableStringBuilder;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.HtmlTextFormat;
 
 import java.io.StringReader;
 import java.lang.reflect.Type;
@@ -59,46 +58,6 @@ public class Command {
         return gson.toJson(this.data);
     }
 
-//    public static List<SingleTextMatch> searchTextForMatch(String query, String text, String header) {
-//        query = query.toLowerCase();
-//
-//        int count = 0;
-//        List<SingleTextMatch> matchIndexes = new ArrayList<>();
-//
-//        for (Map.Entry<String, String> entry : data.entrySet()) {
-//            String tmpText = entry.getValue().toLowerCase();
-//
-//            if (tmpText.contains(query)) {
-//                List<SingleTextMatch> indexes = getMatchIndexes(query, tmpText,entry.getKey());
-//
-//                count += indexes.size();
-//                matchIndexes.addAll(indexes);
-//            }
-//        }
-//
-//        return matchIndexes;
-//    }
-
-//    public TextSearchResult searchDataForTextMatch(String query) {
-//        query = query.toLowerCase();
-//
-//        int count = 0;
-//        List<SingleTextMatch> matchIndexes = new ArrayList<>();
-//
-//        for (Map.Entry<String, String> entry : data.entrySet()) {
-//            String tmpText = entry.getValue().toLowerCase();
-//
-//            if (tmpText.contains(query)) {
-//                List<SingleTextMatch> indexes = getMatchIndexes(query, tmpText,entry.getKey());
-//
-//                count += indexes.size();
-//                matchIndexes.addAll(indexes);
-//            }
-//        }
-//
-//        return new TextSearchResult(query, matchIndexes, count);
-//    }
-
     public TextSearchResult searchDataForTextMatch(String query) {
         int count = 0;
         List<SingleTextMatch> matchIndexes = new ArrayList<>();
@@ -109,7 +68,6 @@ public class Command {
             if (tmpText.contains(query.toLowerCase())) {
                 SpannableStringBuilder spannableStringBuilder =
                         new SpannableStringBuilder(Html.fromHtml(tmpText, Html.FROM_HTML_MODE_LEGACY));
-//                        HtmlTextFormat.replaceNewLinesWithLineBreaks();
 
                 List<SingleTextMatch> indexes = getMatchIndexes(
                         query.toLowerCase(),
@@ -138,22 +96,4 @@ public class Command {
 
         return indexes;
     }
-
-//    private List<SingleTextMatch> getMatchIndexes(String query, String text, String header) {
-//        List<SingleTextMatch> indexes = new ArrayList<>();
-
-//        SpannableStringBuilder spannedText = new SpannableStringBuilder(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY));
-//        String tmpText = String.valueOf(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY));
-//
-//        int runningIndex = 0;
-//        while (text.contains(query)) {
-//            int idx = text.indexOf(query);
-//            indexes.add(new SingleTextMatch(header, idx + runningIndex));
-//            text = text.substring(idx + query.length());
-//
-//            runningIndex += (idx + query.length());
-//        }
-//
-//        return indexes;
-//    }
 }

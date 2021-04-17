@@ -20,8 +20,7 @@ public class CommandLookupViewModel extends ViewModel {
 	private static final String TAG = CommandLookupViewModel.class.getSimpleName();
 
 	private final SavedStateHandle savedStateHandler;
-	private final MutableLiveData<List<SimpleCommand>> matchListData =
-			new MutableLiveData<>();
+	private final MutableLiveData<List<SimpleCommand>> matchListData = new MutableLiveData<>();
 
 
 	private String searchText;

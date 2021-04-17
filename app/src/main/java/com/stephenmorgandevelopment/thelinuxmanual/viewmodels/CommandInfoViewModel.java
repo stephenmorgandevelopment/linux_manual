@@ -85,12 +85,8 @@ public class CommandInfoViewModel extends ViewModel {
         return searchResults;
     }
 
-    public int getCurrentMatchIndex() {
-        return currentMatchIndex;
-    }
-
-    public int getResultsCount() {
-        return searchResults.getCount();
+    public String getPositionOfSizeString() {
+        return currentMatchIndex + "/" + searchResults.getCount();
     }
 
     @Override

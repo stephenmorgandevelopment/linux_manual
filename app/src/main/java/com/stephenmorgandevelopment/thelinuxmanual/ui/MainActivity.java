@@ -121,35 +121,36 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		if(menu.findItem(R.id.refreshMenuBtn) == null) {
-			getMenuInflater().inflate(R.menu.toolbar_menu, menu);
-		}
-		return true;
+//		if(menu.findItem(R.id.refreshMenuBtn) == null) {
+//			getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+//		}
+//		return true;
+		return super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-		if(item.getItemId() == R.id.refreshMenuBtn) {
-			if (CommandSyncService.isWorking()) {
-				Toast.makeText(this, "Sync service is already running.", Toast.LENGTH_LONG).show();
-				return true;
-			}
-
-			if (Helpers.hasInternet()) {
-				reSyncDataAndReset();
-			} else {
-				Toast.makeText(MainActivity.this, "Must be connected to the internet.", Toast.LENGTH_LONG).show();
-			}
-
-			return true;
-		} else if(item.getGroupId() == R.id.releaseSubMenu) {
-			viewModel.changeRelease(UbuntuHtmlApiConverter.Release.fromString(
-					String.valueOf(item.getTitle())));
-
-			clearPagerAndCommandList();
-			recreate();
-			return true;
-		}
+//		if(item.getItemId() == R.id.refreshMenuBtn) {
+//			if (CommandSyncService.isWorking()) {
+//				Toast.makeText(this, "Sync service is already running.", Toast.LENGTH_LONG).show();
+//				return true;
+//			}
+//
+//			if (Helpers.hasInternet()) {
+//				reSyncDataAndReset();
+//			} else {
+//				Toast.makeText(MainActivity.this, "Must be connected to the internet.", Toast.LENGTH_LONG).show();
+//			}
+//
+//			return true;
+//		} else if(item.getGroupId() == R.id.releaseSubMenu) {
+//			viewModel.changeRelease(UbuntuHtmlApiConverter.Release.fromString(
+//					String.valueOf(item.getTitle())));
+//
+//			clearPagerAndCommandList();
+//			recreate();
+//			return true;
+//		}
 
 		return super.onOptionsItemSelected(item);
 	}
@@ -171,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
 		super.onBackPressed();
 	}
 
-	private void reSyncDataAndReset() {
+	public void reSyncDataAndReset() {
 		clearPagerAndCommandList();
 		LocalStorage.getInstance().wipeAll();
 		DatabaseHelper.getInstance().wipeTable();
@@ -180,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
 		recreate();
 	}
 
-	private void clearPagerAndCommandList() {
+	public void clearPagerAndCommandList() {
 		viewPager.setCurrentItem(0);
 		viewModel.clearAddPageData();
 

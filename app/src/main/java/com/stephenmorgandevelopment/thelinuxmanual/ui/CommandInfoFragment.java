@@ -104,6 +104,13 @@ public class CommandInfoFragment extends Fragment {
 		scrollContainer = view.findViewById(R.id.scrollContainer);
 		rootScrollView = view.findViewById(R.id.rootScrollView);
 
+		searchBar = view.findViewById(R.id.textSearchBox);
+		searchEditText = view.findViewById(R.id.searchEditText);
+
+		searchControlBar = view.findViewById(R.id.searchControlBar);
+		searchTextDisplay = view.findViewById(R.id.searchTextDisplay);
+		numberOfTextMatches = view.findViewById(R.id.numberOfTextMatches);
+
 		long id = requireArguments().getLong(KEY_ID);
 		Command command = viewModel.getCommandFromListById(id);
 
@@ -112,19 +119,9 @@ public class CommandInfoFragment extends Fragment {
 			buildOutput(command.getData());
 		}
 
-		initSearchUi(view);
 		initSearchButtons(view);
 
-		requireActivity().getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
-	}
-
-	private void initSearchUi(View view) {
-		searchBar = view.findViewById(R.id.textSearchBox);
-		searchEditText = view.findViewById(R.id.searchEditText);
-
-		searchControlBar = view.findViewById(R.id.searchControlBar);
-		searchTextDisplay = view.findViewById(R.id.searchTextDisplay);
-		numberOfTextMatches = view.findViewById(R.id.numberOfTextMatches);
+		requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), onBackPressedCallback);
 	}
 
 	private void initSearchButtons(View view) {
@@ -136,6 +133,44 @@ public class CommandInfoFragment extends Fragment {
 		nextSearchButton.setOnClickListener(onClickNextButton);
 		prevSearchButton.setOnClickListener(onClickPrevButton);
 	}
+
+	private final OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(true) {
+		@Override
+		public void handleOnBackPressed() {
+			if(searchBar.getVisibility() == View.VISIBLE) {
+				toggleSearchBarDisplay();
+				clearSpan(infoModel.getCurrentMatch());
+			} else {
+				setEnabled(false);
+				requireActivity().onBackPressed();
+			}
+		}
+	};
+
+	private final View.OnClickListener onClickSearchBarButton = v -> {
+		String query = searchEditText.getText().toString();
+
+		if (query.length() >= 2) {
+			infoModel.searchTextFor(query, viewModel.getCommandFromListById(infoModel.getId()));
+			gotoMatch(infoModel.getCurrentMatch());
+
+			if(searchControlBar.getVisibility() == View.GONE) {
+				toggleSearchResults();
+			}
+
+			updateCurrentMatchDisplay();
+		}
+	};
+
+	private final View.OnClickListener onClickPrevButton = v -> {
+		clearSpan(infoModel.getCurrentMatch());
+		gotoMatch(infoModel.getPrevMatch());
+	};
+
+	private final View.OnClickListener onClickNextButton = v -> {
+		clearSpan(infoModel.getCurrentMatch());
+		gotoMatch(infoModel.getNextMatch());
+	};
 
 	@Override
 	public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
@@ -178,32 +213,6 @@ public class CommandInfoFragment extends Fragment {
 						.getSupportActionBar()).setTitle(infoModel.getShortName());
 	}
 
-	View.OnClickListener onClickSearchBarButton = v -> {
-		String query = searchEditText.getText().toString();
-
-		if (query.length() >= 2) {
-			infoModel.searchTextFor(query, viewModel.getCommandFromListById(infoModel.getId()));
-
-			gotoMatch(infoModel.getCurrentMatch());
-
-			if(searchControlBar.getVisibility() == View.GONE) {
-				toggleSearchResults();
-			}
-
-			updateCurrentMatchDisplay();
-		}
-	};
-
-	View.OnClickListener onClickPrevButton = v -> {
-		clearSpan(infoModel.getCurrentMatch());
-		gotoMatch(infoModel.getPrevMatch());
-	};
-
-	View.OnClickListener onClickNextButton = v -> {
-		clearSpan(infoModel.getCurrentMatch());
-		gotoMatch(infoModel.getNextMatch());
-	};
-
 	private void gotoMatch(SingleTextMatch textMatch) {
 		if (textMatch == null) {
 			Toast.makeText(getContext(), "No matches found.", Toast.LENGTH_SHORT).show();
@@ -231,39 +240,15 @@ public class CommandInfoFragment extends Fragment {
 		rootScrollView.scrollTo(0, sectionTop + lineTop);
 	}
 
-	private final OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(true) {
-		@Override
-		public void handleOnBackPressed() {
-			if(!hideSearch()) {
-				setEnabled(false);
-				requireActivity().onBackPressed();
-			}
-		}
-	};
-
-	private boolean hideSearch() {
-		boolean consumed = false;
-
-		if(searchBar.getVisibility() == View.VISIBLE) {
-			toggleSearchBarDisplay();
-			consumed = true;
-		}
-
-		if(infoModel.hasSearchResults()) {
-			clearSpan(infoModel.getCurrentMatch());
-			consumed = true;
-		}
-
-		return consumed;
-	}
-
 	private void clearSpan(SingleTextMatch textMatch) {
-		View v = scrollContainer.findViewWithTag(textMatch.getSection());
-		TextView tv = ((TextView)v.findViewById(R.id.descriptionText));
+		if(infoModel.hasSearchResults()) {
+			View v = scrollContainer.findViewWithTag(textMatch.getSection());
+			TextView tv = ((TextView)v.findViewById(R.id.descriptionText));
 
-		SpannableStringBuilder text = (SpannableStringBuilder) tv.getText();
-		text.removeSpan(SingleTextMatch.backgroundSpan);
-		text.removeSpan(SingleTextMatch.foregroundColorSpan);
+			SpannableStringBuilder text = (SpannableStringBuilder) tv.getText();
+			text.removeSpan(SingleTextMatch.backgroundSpan);
+			text.removeSpan(SingleTextMatch.foregroundColorSpan);
+		}
 	}
 
 	private void toggleSearchResults() {
@@ -275,10 +260,12 @@ public class CommandInfoFragment extends Fragment {
 	}
 
 	private void updateCurrentMatchDisplay() {
+		searchControlBar.setVisibility(View.VISIBLE);
+
 		searchTextDisplay.setText(infoModel.getSearchResults().getQuery());
 
-		String numberTextMatchesText = infoModel.getCurrentMatchIndex() + "/" + infoModel.getResultsCount();
-		numberOfTextMatches.setText(numberTextMatchesText);
+//		String numberTextMatchesText = infoModel.getCurrentMatchIndex() + "/" + infoModel.getResultsCount();
+		numberOfTextMatches.setText(infoModel.getPositionOfSizeString());
 	}
 
 	private void toggleSearchBarDisplay() {

@@ -22,8 +22,8 @@ public class TextSearchTest {
 
 
 
-    private Command getTestCommand() {
-        StringBuilder manPageHtml = new StringBuilder();
+//    private Command getTestCommand() {
+//        StringBuilder manPageHtml = new StringBuilder();
 
 //        try {
 //            File testFile = new File("src/main/assets/curlManPage.html");
@@ -48,6 +48,6 @@ public class TextSearchTest {
 //            Log.d("TextSearchText", "getTestCommand io error: " + ioe.getMessage());
 //        }
 
-        return new Command(1, UbuntuHtmlApiConverter.crawlForCommandInfo(manPageHtml.toString()));
-    }
+//        return new Command(1, UbuntuHtmlApiConverter.crawlForCommandInfo(manPageHtml.toString()));
+//    }
 }
