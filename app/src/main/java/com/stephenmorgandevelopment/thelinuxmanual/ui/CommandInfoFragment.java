@@ -7,6 +7,7 @@ import android.text.Html;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -137,10 +138,13 @@ public class CommandInfoFragment extends Fragment {
 	private final OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(true) {
 		@Override
 		public void handleOnBackPressed() {
+			Log.i(TAG, "handleOnBackPressed called.");
 			if(searchBar.getVisibility() == View.VISIBLE) {
+				Log.i(TAG, "searchBar.visible");
 				toggleSearchBarDisplay();
 				clearSpan(infoModel.getCurrentMatch());
 			} else {
+				Log.i(TAG, "else statement called.");
 				setEnabled(false);
 				requireActivity().onBackPressed();
 			}

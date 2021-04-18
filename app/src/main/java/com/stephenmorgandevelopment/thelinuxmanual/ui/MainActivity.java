@@ -1,6 +1,7 @@
 package com.stephenmorgandevelopment.thelinuxmanual.ui;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -112,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 
 			CommandLookupViewModel.cleanup();
+			MainActivityViewModel.cleanup();
 
 			lookupFragment = null;
 		}
@@ -120,50 +122,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
-//		if(menu.findItem(R.id.refreshMenuBtn) == null) {
-//			getMenuInflater().inflate(R.menu.toolbar_menu, menu);
-//		}
-//		return true;
-		return super.onPrepareOptionsMenu(menu);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-//		if(item.getItemId() == R.id.refreshMenuBtn) {
-//			if (CommandSyncService.isWorking()) {
-//				Toast.makeText(this, "Sync service is already running.", Toast.LENGTH_LONG).show();
-//				return true;
-//			}
-//
-//			if (Helpers.hasInternet()) {
-//				reSyncDataAndReset();
-//			} else {
-//				Toast.makeText(MainActivity.this, "Must be connected to the internet.", Toast.LENGTH_LONG).show();
-//			}
-//
-//			return true;
-//		} else if(item.getGroupId() == R.id.releaseSubMenu) {
-//			viewModel.changeRelease(UbuntuHtmlApiConverter.Release.fromString(
-//					String.valueOf(item.getTitle())));
-//
-//			clearPagerAndCommandList();
-//			recreate();
-//			return true;
-//		}
-
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
 	public void onBackPressed() {
-//		if (viewModel.isLoading(-1L) && !exitClick) {
-//			Toast.makeText(this, "Syncing data, press again to exit.", Toast.LENGTH_LONG).show();
-//			exitClick = true;
-//			return;
-//		}
-		//TODO Fix a bug causing app crashes upon exiting. the app.
-
 		if (viewPager.getCurrentItem() != 0) {
 			viewPager.setCurrentItem(0);
 			return;
@@ -192,11 +151,6 @@ public class MainActivity extends AppCompatActivity {
 
 		viewModel.clearCommandsList();
 	}
-
-//	private void startDatabaseSync() {
-//		viewModel.syncDatabase();
-//		viewModel.getSyncProgress().observe(this, syncProgressCallback);
-//	}
 
 	private final Observer<String> syncProgressCallback = (syncProgress) -> {
 		if (syncProgress.equals(CommandSyncService.COMPLETE_TAG)) {
@@ -234,18 +188,26 @@ public class MainActivity extends AppCompatActivity {
 
 		pagerAdapter = new PrimaryPagerAdapter(MainActivity.this, lookupFragment);
 
+		if(viewModel.isLoading(-8)) {
+			waitUntilLoaded();
+		}
+
 		if (viewModel.getCommandsList().size() > 0) {
 			pagerAdapter.addAllPages(viewModel.getCommandsList());
 		}
 
 		viewPager.setAdapter(pagerAdapter);
 
-		new TabLayoutMediator(
-				tabLayout,
-				viewPager,
-				(tab, position) ->
-						tab.setText(pagerAdapter.getPageTitle(position))
-		).attach();
+		new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(pagerAdapter.getPageTitle(position))).attach();
+	}
+
+	private void waitUntilLoaded() {
+		while(viewModel.isLoading(-8)) {
+			try {Thread.sleep(25);}
+			catch (Exception e) {
+				Log.i("MainActivity", "Thread interupted waiting for loading of commands.");
+			}
+		}
 	}
 
 	private void displayNoDataNoInternetMessage() {

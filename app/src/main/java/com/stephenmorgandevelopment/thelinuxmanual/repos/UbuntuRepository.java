@@ -53,7 +53,19 @@ public class UbuntuRepository implements ManPageRepository {
 					});
 		}
 
-		return Single.error(new Throwable("Must have internet." ));
+		return Single.error(new Throwable("Must have internet."));
+	}
+
+	public Command getCommandFromStorage(SimpleCommand simpleCommand) {
+		final LocalStorage storage = LocalStorage.getInstance();
+
+		try {
+			return storage.loadCommand(simpleCommand.getId());
+		} catch (IOException ioe) {
+			Log.i(TAG, "Unexpected file error loading - " + simpleCommand.getName() + ": " + ioe.getMessage());
+		}
+
+		return null;
 	}
 
 	public Single<Map<String, String>> fetchCommandData(String pageUrl) {

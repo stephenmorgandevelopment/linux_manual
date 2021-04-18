@@ -56,40 +56,4 @@ public class SimpleCommand {
     public boolean needsDescription() {
         return description.equals(empty);
     }
-
-    public static SimpleCommand fromJsonString(String json) {
-        try {
-            return fromJsonObject(new JSONObject(json));
-        } catch (JSONException je) {
-            Log.e(SimpleCommand.class.getSimpleName(), "JSON parsing error.");
-            je.printStackTrace();
-            return null;
-        }
-    }
-
-    public static SimpleCommand fromJsonObject(JSONObject object) {
-        try {
-            return new SimpleCommand(object.getString("name"), object.getString("description"), object.getString("url"), object.getInt("manN"));
-        } catch (JSONException je) {
-            Log.e(SimpleCommand.class.getSimpleName(), "JSON parsing error.");
-            je.printStackTrace();
-            return null;
-        }
-    }
-
-    public JSONObject toJSONObject() {
-        JSONObject object = new JSONObject();
-        try {
-            object.put("id", id);
-            object.put("name", name);
-            object.put("description", description);
-            object.put("url", url);
-            object.put("manN", manN);
-        } catch (JSONException e) {
-            Log.e("SimpleCommand", "Parse error for " + name + ". " + e.toString());
-            e.printStackTrace();
-        }
-
-        return object;
-    }
 }

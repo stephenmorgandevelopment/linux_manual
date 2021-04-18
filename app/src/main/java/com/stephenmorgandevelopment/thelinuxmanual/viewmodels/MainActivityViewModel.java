@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -43,9 +44,13 @@ public class MainActivityViewModel extends ViewModel {
 		super();
 		this.savedStateHandler = savedStateHandle;
 
-		commandsList = savedStateHandler.contains(COMMANDS_LIST_KEY)
-				? savedStateHandler.get(COMMANDS_LIST_KEY)
-				: new ArrayList<>();
+		commandsList = new ArrayList<>();
+
+		if(savedStateHandler.contains(COMMANDS_LIST_KEY)) {
+			setLoading(-8, true);
+
+			loadCommands(savedStateHandler.get(COMMANDS_LIST_KEY));
+		}
 	}
 
 	public void syncDatabase() {
@@ -60,6 +65,21 @@ public class MainActivityViewModel extends ViewModel {
 		LocalStorage.getInstance().wipeAll();
 
 		syncDatabase();
+	}
+
+	public void loadCommands(List<Long> ids) {
+		List<SimpleCommand> simpleCommands = DatabaseHelper.getInstance().getCommandsByIds(ids);
+
+		Disposable disposable = Observable.fromIterable(simpleCommands)
+				.concatMap(simpleCommand -> {
+					return Observable.just(UbuntuRepository.getInstance()
+							.getCommandFromStorage(simpleCommand));
+				})
+				.doOnComplete(() -> setLoading(-8, false))
+				.subscribeOn(Schedulers.io())
+				.subscribe(commandsList::add);
+
+		disposables.add(disposable);
 	}
 
 	public void loadManpage(SimpleCommand simpleCommand) {
@@ -97,7 +117,15 @@ public class MainActivityViewModel extends ViewModel {
 	public void addCommandToCommandList(Command command) {
 		commandsList.add(command);
 		removeLoadingKey(command.getId());
-		savedStateHandler.set(COMMANDS_LIST_KEY, commandsList);
+		savedStateHandler.set(COMMANDS_LIST_KEY, getIdsFromCommandList());
+	}
+
+	public List<Long> getIdsFromCommandList() {
+		List<Long> ids = new ArrayList<>();
+		for(Command command : commandsList) {
+			ids.add(command.getId());
+		}
+		return ids;
 	}
 
 	public void removeCommandFromCommandList(Command command) {

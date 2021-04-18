@@ -217,7 +217,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return null;
     }
 
-
     public SimpleCommand getCommandById(long id) {
         if (database == null) {
             database = getReadableDatabase();
@@ -233,6 +232,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         return null;
+    }
+
+    public List<SimpleCommand> getCommandsByIds(List<Long> ids) {
+        if (database == null) {
+            database = getReadableDatabase();
+        }
+
+        final String query = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX
+                + " WHERE " + KEY_ID + "=?";
+
+        Cursor cursor = database.rawQuery(query, convertIdsToStrings(ids));
+
+        List<SimpleCommand> simpleCommands = new ArrayList<>();
+        if(cursor.moveToFirst()) {
+            do {
+                simpleCommands.add(
+                        new SimpleCommand(cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4)));
+            } while(cursor.moveToNext());
+        }
+
+        return simpleCommands;
+    }
+
+    private String[] convertIdsToStrings(List<Long> ids) {
+        List<String> tmp = new ArrayList<>();
+        for(Long id : ids) {
+            tmp.add(String.valueOf(id));
+        }
+        return tmp.toArray(new String[0]);
     }
 
     public static boolean hasDatabase() {

@@ -55,7 +55,7 @@ public class CommandLookupFragment extends Fragment
 		super.onCreate(savedInstanceState);
 
 		viewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
-		lookupModel = new ViewModelProvider((ViewModelStoreOwner) this).get(CommandLookupViewModel.class);
+		lookupModel = new ViewModelProvider(requireActivity()).get(CommandLookupViewModel.class);
 
 		setHasOptionsMenu(true);
 	}
