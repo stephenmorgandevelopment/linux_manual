@@ -35,7 +35,6 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
         titleList.clear();
 
         for(Command command : commands) {
-            Log.i(TAG, "Adding from addAllPages(): " + command.getShortName());
             idList.add(command.getId());
             titleList.add(command.getShortName());
         }
