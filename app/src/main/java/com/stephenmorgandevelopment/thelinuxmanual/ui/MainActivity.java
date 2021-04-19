@@ -1,33 +1,25 @@
 package com.stephenmorgandevelopment.thelinuxmanual.ui;
 
-import android.content.res.Configuration;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandLookupViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
@@ -38,7 +30,6 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 	private CommandLookupFragment lookupFragment;
-	private LinearProgressIndicator loadingIndicator;
 	private TextView progressDialog;
 	private ScrollView progressScroller;
 	private ViewPager2 viewPager;
@@ -59,8 +50,6 @@ public class MainActivity extends AppCompatActivity {
 		setSupportActionBar(toolbar);
 		toolbar.setTitle(R.string.app_name);
 
-		loadingIndicator = findViewById(R.id.loadingIndicator);
-
 		progressDialog = findViewById(R.id.progressTextView);
 		progressScroller = findViewById(R.id.progressScroller);
 
@@ -78,8 +67,6 @@ public class MainActivity extends AppCompatActivity {
 			return;
 		}
 
-		loadingIndicator.setActivated(true);
-		loadingIndicator.setVisibility(View.VISIBLE);
 		pagerAdapter.addPage(command.getId(), command.getShortName());
 		viewModel.addCommandToCommandList(command);
 		pagerAdapter.notifyDataSetChanged();

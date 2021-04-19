@@ -21,10 +21,12 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
@@ -34,7 +36,6 @@ import androidx.lifecycle.ViewModelStoreOwner;
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SingleTextMatch;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.HtmlTextFormat;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandInfoViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
 
@@ -46,6 +47,8 @@ import java.util.Set;
 
 public class CommandInfoFragment extends Fragment {
 	public static final String TAG = CommandInfoFragment.class.getSimpleName();
+
+	private ActionBar actionBar;
 
 	private MainActivityViewModel viewModel;
 	private CommandInfoViewModel infoModel;
@@ -111,6 +114,8 @@ public class CommandInfoFragment extends Fragment {
 		searchControlBar = view.findViewById(R.id.searchControlBar);
 		searchTextDisplay = view.findViewById(R.id.searchTextDisplay);
 		numberOfTextMatches = view.findViewById(R.id.numberOfTextMatches);
+
+		actionBar = ((AppCompatActivity) requireActivity()).getSupportActionBar();
 
 		long id = requireArguments().getLong(KEY_ID);
 		Command command = viewModel.getCommandFromListById(id);
@@ -214,9 +219,7 @@ public class CommandInfoFragment extends Fragment {
 	public void onResume() {
 		super.onResume();
 
-		Objects.requireNonNull(
-				((AppCompatActivity) requireActivity())
-						.getSupportActionBar()).setTitle(infoModel.getShortName());
+		actionBar.setTitle(infoModel.getShortName());
 
 		onBackPressedCallback.setEnabled(true);
 		setMenuVisibility(true);
@@ -236,6 +239,7 @@ public class CommandInfoFragment extends Fragment {
 			return;
 		}
 
+		actionBar.setTitle(infoModel.getShortName().concat(" - ").concat(textMatch.getSection()));
 		jumpToTextMatch(textMatch);
 		highlightCurrentMatch(textMatch);
 		updateCurrentMatchDisplay();
@@ -291,6 +295,7 @@ public class CommandInfoFragment extends Fragment {
 				searchControlBar.setVisibility(View.VISIBLE);
 			}
 		} else {
+			actionBar.setTitle(infoModel.getShortName());
 			searchBar.setVisibility(View.GONE);
 			searchControlBar.setVisibility(View.GONE);
 		}
@@ -335,7 +340,7 @@ public class CommandInfoFragment extends Fragment {
 		((TextView) view.findViewById(R.id.headerText)).setText(header);
 
 		SpannableStringBuilder spannableStringBuilder =
-				new SpannableStringBuilder(Html.fromHtml(description, Html.FROM_HTML_MODE_LEGACY));	//HtmlTextFormat.replaceNewLinesWithLineBreaks(description);
+				new SpannableStringBuilder(Html.fromHtml(description, Html.FROM_HTML_MODE_LEGACY));
 
 		TextView descriptionView = ((TextView) view.findViewById(R.id.descriptionText));
 		descriptionView.setSpannableFactory(spannableFactory);
