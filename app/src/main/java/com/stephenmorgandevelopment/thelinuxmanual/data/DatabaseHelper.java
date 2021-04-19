@@ -14,6 +14,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
@@ -115,6 +116,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void wipeTable() {
         database.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX);
+
         database.execSQL("CREATE TABLE "
                 + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX + "("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
@@ -141,30 +143,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } else {
             Log.d(TAG, "Database already closed.");
         }
-    }
-
-    /**
-     * Searches local database for a match by command name.
-     *
-     * @param command
-     * @return Returns command's id on match, or -1 if not found.
-     */
-    public long contains(SimpleCommand command) {
-        if (database == null) {
-            database = getReadableDatabase();
-        }
-
-        final String query = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX
-                + " WHERE " + KEY_NAME + "=?";// + command.getName();
-
-        Cursor cursor = database.rawQuery(query, new String[]{command.getName()});
-
-        long id = cursor.moveToFirst() ?
-                cursor.getLong(cursor.getColumnIndex(KEY_ID))
-                : -1;
-
-        cursor.close();
-        return id;
     }
 
     public List<SimpleCommand> partialMatches(String searchText) throws SQLiteException {
@@ -195,28 +173,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return matches;
     }
 
-    public List<SimpleCommand> getCommandsByName(String name) {
-        if (database == null) {
-            database = getReadableDatabase();
-        }
-
-        final String query = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX
-                + " WHERE " + KEY_NAME + "=?";
-
-        Cursor cursor = database.rawQuery(query, new String[]{name});
-
-        List<SimpleCommand> exactMatches = new ArrayList<>();
-        if (cursor.moveToFirst()) {
-            do {
-                exactMatches.add(new SimpleCommand(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4)));
-            } while(cursor.moveToNext());
-
-            return exactMatches;
-        }
-
-        return null;
-    }
-
     public SimpleCommand getCommandById(long id) {
         if (database == null) {
             database = getReadableDatabase();
@@ -225,10 +181,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         final String query = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX
                 + " WHERE " + KEY_ID + "=?";
 
-        Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(id)});
+        try (Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(id)})) {
 
-        if (cursor.moveToFirst()) {
-            return new SimpleCommand(id, cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4));
+            if (cursor.moveToFirst()) {
+                return new SimpleCommand(id, cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4));
+            }
         }
 
         return null;
@@ -240,9 +197,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         final String query = "SELECT * FROM " + TABLE_NAME_PREFIX + TABLE_NAME_POSTFIX
-                + " WHERE " + KEY_ID + "=?";
+                + " WHERE " + KEY_ID + "IN (?)";
 
-        Cursor cursor = database.rawQuery(query, convertIdsToStrings(ids));
+        Cursor cursor = database.rawQuery(query, convertIdsToString(ids));
 
         List<SimpleCommand> simpleCommands = new ArrayList<>();
         if(cursor.moveToFirst()) {
@@ -251,16 +208,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         new SimpleCommand(cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4)));
             } while(cursor.moveToNext());
         }
+        cursor.close();
 
         return simpleCommands;
     }
 
-    private String[] convertIdsToStrings(List<Long> ids) {
-        List<String> tmp = new ArrayList<>();
+    private String[] convertIdsToString(List<Long> ids) {
+        StringBuilder idString = new StringBuilder("");
         for(Long id : ids) {
-            tmp.add(String.valueOf(id));
+            idString.append(String.valueOf(id));
+            idString.append(",");
         }
-        return tmp.toArray(new String[0]);
+        String out = idString.toString().substring(0, idString.lastIndexOf(","));
+        return new String[] {out};
     }
 
     public static boolean hasDatabase() {

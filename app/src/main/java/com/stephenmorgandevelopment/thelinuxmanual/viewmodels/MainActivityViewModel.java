@@ -1,6 +1,7 @@
 package com.stephenmorgandevelopment.thelinuxmanual.viewmodels;
 
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
@@ -8,12 +9,14 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
 
+import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 
 import java.util.ArrayList;
@@ -22,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
@@ -45,12 +49,6 @@ public class MainActivityViewModel extends ViewModel {
 		this.savedStateHandler = savedStateHandle;
 
 		commandsList = new ArrayList<>();
-
-		if(savedStateHandler.contains(COMMANDS_LIST_KEY)) {
-			setLoading(-8, true);
-
-			loadCommands(savedStateHandler.get(COMMANDS_LIST_KEY));
-		}
 	}
 
 	public void syncDatabase() {
@@ -61,26 +59,45 @@ public class MainActivityViewModel extends ViewModel {
 		Preferences.setRelease(release.getName());
 		UbuntuHtmlApiConverter.setRelease(release);
 		DatabaseHelper.changeTable(release.getName());
+		savedStateHandler.remove(COMMANDS_LIST_KEY);
 
-		LocalStorage.getInstance().wipeAll();
+		if(DatabaseHelper.getInstance().hasData()) {
+			return;
+		}
 
-		syncDatabase();
+		if(Helpers.hasInternet()) {
+			syncDatabase();
+			LocalStorage.getInstance().wipeAll();
+		}
+
+		onErrorData.postValue(
+				new Throwable(Helpers.string(R.string.release_sync_no_data_no_internet)));
 	}
 
-	public void loadCommands(List<Long> ids) {
-		List<SimpleCommand> simpleCommands = DatabaseHelper.getInstance().getCommandsByIds(ids);
+	public Observable<Command> loadSavedCommands() {
+		List<SimpleCommand> simpleCommands = DatabaseHelper.getInstance()
+				.getCommandsByIds(savedStateHandler.get(COMMANDS_LIST_KEY));
 
-		Disposable disposable = Observable.fromIterable(simpleCommands)
-				.concatMap(simpleCommand -> {
-					return Observable.just(UbuntuRepository.getInstance()
-							.getCommandFromStorage(simpleCommand));
-				})
-				.doOnComplete(() -> setLoading(-8, false))
-				.subscribeOn(Schedulers.io())
-				.subscribe(commandsList::add);
-
-		disposables.add(disposable);
+		return Observable.fromIterable(simpleCommands)
+				.concatMap(simpleCommand -> Observable.just(
+						UbuntuRepository.getInstance().getCommandFromStorage(simpleCommand))
+				).subscribeOn(Schedulers.io());
 	}
+
+//	public void loadCommands(List<Long> ids) {
+//		List<SimpleCommand> simpleCommands = DatabaseHelper.getInstance().getCommandsByIds(ids);
+//
+//		Disposable disposable = Observable.fromIterable(simpleCommands)
+//				.concatMap(simpleCommand -> {
+//					return Observable.just(UbuntuRepository.getInstance()
+//							.getCommandFromStorage(simpleCommand));
+//				})
+//				.doOnComplete(() -> setLoading(-8, false))
+//				.subscribeOn(Schedulers.io())
+//				.subscribe(commandsList::add);
+//
+//		disposables.add(disposable);
+//	}
 
 	public void loadManpage(SimpleCommand simpleCommand) {
 		Disposable disposable = UbuntuRepository.getInstance()
@@ -158,6 +175,11 @@ public class MainActivityViewModel extends ViewModel {
 		return false;
 	}
 
+	public boolean hasSavedState() {
+		return savedStateHandler.get(COMMANDS_LIST_KEY) != null
+				&& ((List<Long>)savedStateHandler.get(COMMANDS_LIST_KEY)).size() > 0;
+	}
+
 	public LiveData<String> getSyncProgress() {
 		return syncProgress;
 	}
@@ -180,5 +202,13 @@ public class MainActivityViewModel extends ViewModel {
 
 	public static void cleanup() {
 		disposables.clear();
+	}
+
+	@Override
+	protected void onCleared() {
+		super.onCleared();
+
+		this.savedStateHandler.remove(COMMANDS_LIST_KEY);
+		this.commandsList.clear();
 	}
 }

@@ -1,5 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual.ui;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -30,6 +31,10 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.PrimaryPagerAdapter;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.CommandLookupViewModel;
 import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewModel;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 	private CommandLookupFragment lookupFragment;
@@ -88,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
 		super.onResume();
 
 		if (DatabaseHelper.hasDatabase() && DatabaseHelper.getInstance().hasData() && !CommandSyncService.isWorking()) {
-			addLookupFragment();
+			checkSavedStateAndAddLookupFragment();
 		} else if (Helpers.hasInternet()) {
 			viewModel.syncDatabase();
 			viewModel.getSyncProgress().observe(this, syncProgressCallback);
@@ -97,6 +102,20 @@ public class MainActivity extends AppCompatActivity {
 			progressScroller.setVisibility(View.VISIBLE);
 		} else {
 			displayNoDataNoInternetMessage();
+		}
+	}
+
+	private void checkSavedStateAndAddLookupFragment() {
+		if(viewModel.hasSavedState() && viewModel.getCommandsList().size() == 0) {
+			Disposable disposable = viewModel.loadSavedCommands()
+					.observeOn(AndroidSchedulers.mainThread())
+					.doOnComplete(this::addLookupFragment)
+					.observeOn(Schedulers.io())
+					.subscribe(viewModel::addCommandToCommandList);
+
+			MainActivityViewModel.addDisposable(disposable);
+		} else {
+			addLookupFragment();
 		}
 	}
 
@@ -188,26 +207,14 @@ public class MainActivity extends AppCompatActivity {
 
 		pagerAdapter = new PrimaryPagerAdapter(MainActivity.this, lookupFragment);
 
-		if(viewModel.isLoading(-8)) {
-			waitUntilLoaded();
-		}
-
 		if (viewModel.getCommandsList().size() > 0) {
 			pagerAdapter.addAllPages(viewModel.getCommandsList());
 		}
 
 		viewPager.setAdapter(pagerAdapter);
 
-		new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(pagerAdapter.getPageTitle(position))).attach();
-	}
-
-	private void waitUntilLoaded() {
-		while(viewModel.isLoading(-8)) {
-			try {Thread.sleep(25);}
-			catch (Exception e) {
-				Log.i("MainActivity", "Thread interupted waiting for loading of commands.");
-			}
-		}
+		new TabLayoutMediator(tabLayout, viewPager,
+				(tab, position) -> tab.setText(pagerAdapter.getPageTitle(position))).attach();
 	}
 
 	private void displayNoDataNoInternetMessage() {

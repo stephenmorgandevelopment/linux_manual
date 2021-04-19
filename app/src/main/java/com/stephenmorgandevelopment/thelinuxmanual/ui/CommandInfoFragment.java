@@ -135,12 +135,12 @@ public class CommandInfoFragment extends Fragment {
 		prevSearchButton.setOnClickListener(onClickPrevButton);
 	}
 
-	private final OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(true) {
+	public OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(true) {
 		@Override
 		public void handleOnBackPressed() {
 			Log.i(TAG, "handleOnBackPressed called.");
-			if(searchBar.getVisibility() == View.VISIBLE) {
-				Log.i(TAG, "searchBar.visible");
+			if(searchBar.getVisibility() != View.GONE) {
+				Log.i(TAG, "searchBar !GONE");
 				toggleSearchBarDisplay();
 				clearSpan(infoModel.getCurrentMatch());
 			} else {
@@ -190,7 +190,9 @@ public class CommandInfoFragment extends Fragment {
 	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 		if (item.getItemId() == R.id.closeButton) {
-			((MainActivity) requireActivity()).removePage(infoModel.getId());
+			if(viewModel.getCommandFromListById(infoModel.getId()) != null) {
+				((MainActivity) requireActivity()).removePage(infoModel.getId());
+			}
 			getViewModelStore().clear();
 			return true;
 		}
@@ -215,6 +217,17 @@ public class CommandInfoFragment extends Fragment {
 		Objects.requireNonNull(
 				((AppCompatActivity) requireActivity())
 						.getSupportActionBar()).setTitle(infoModel.getShortName());
+
+		onBackPressedCallback.setEnabled(true);
+		setMenuVisibility(true);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+
+		onBackPressedCallback.setEnabled(false);
+		setMenuVisibility(false);
 	}
 
 	private void gotoMatch(SingleTextMatch textMatch) {
@@ -268,7 +281,6 @@ public class CommandInfoFragment extends Fragment {
 
 		searchTextDisplay.setText(infoModel.getSearchResults().getQuery());
 
-//		String numberTextMatchesText = infoModel.getCurrentMatchIndex() + "/" + infoModel.getResultsCount();
 		numberOfTextMatches.setText(infoModel.getPositionOfSizeString());
 	}
 

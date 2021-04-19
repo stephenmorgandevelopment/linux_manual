@@ -86,6 +86,7 @@
     <string name="jump_to">Jump To</string>
     <string name="hirsute">hirsute</string>
     <string name="no_data_no_internet">Must have internet to build the local database of commands.  Please restart the app when you are connected to the internet, or press the Re-Sync Data button once connected.</string>
+    <string name="release_sync_no_data_no_internet">No data found on device for this release.\nPlease try again when connected to internet.</string>
     <string name="search">Search</string>
     <string name="styles">Font Size Settings</string>
     <string name="colors">Colors</string>

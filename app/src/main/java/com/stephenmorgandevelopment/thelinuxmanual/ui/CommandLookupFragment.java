@@ -3,7 +3,6 @@ package com.stephenmorgandevelopment.thelinuxmanual.ui;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,8 +21,8 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelStoreOwner;
 
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter.Release;
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
@@ -102,17 +101,16 @@ public class CommandLookupFragment extends Fragment
 			}
 
 			if (Helpers.hasInternet()) {
-				((MainActivity)getActivity()).reSyncDataAndReset();
+				((MainActivity)requireActivity()).reSyncDataAndReset();
 			} else {
 				Toast.makeText(getContext(), "Must be connected to the internet.", Toast.LENGTH_LONG).show();
 			}
 
 			return true;
 		} else if(item.getGroupId() == R.id.releaseSubMenu) {
-			viewModel.changeRelease(UbuntuHtmlApiConverter.Release.fromString(
-					String.valueOf(item.getTitle())));
+			viewModel.changeRelease(Release.fromString(String.valueOf(item.getTitle())));
 
-			((MainActivity)getActivity()).clearPagerAndCommandList();
+			((MainActivity)requireActivity()).clearPagerAndCommandList();
 			requireActivity().recreate();
 			return true;
 		}
@@ -123,6 +121,8 @@ public class CommandLookupFragment extends Fragment
 	@Override
 	public void onResume() {
 		super.onResume();
+
+		backPressedCallback.setEnabled(true);
 
 		ActionBar actionbar = Objects.requireNonNull(
 				((AppCompatActivity) getActivity())).getSupportActionBar();
@@ -138,6 +138,13 @@ public class CommandLookupFragment extends Fragment
 		if (lookupModel.getSearchText() != null) {
 			searchText.setText(lookupModel.getSearchText());
 		}
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+
+		backPressedCallback.setEnabled(false);
 	}
 
 	@Override
@@ -180,7 +187,7 @@ public class CommandLookupFragment extends Fragment
 		viewModel.loadManpage(matchListAdapter.getItem(position));
 	}
 
-	OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
+	public OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
 		@Override
 		public void handleOnBackPressed() {
 			if (searchText.getText() != null && searchText.length() > 0) {
@@ -210,9 +217,5 @@ public class CommandLookupFragment extends Fragment
 		super.onDestroy();
 
 		lookupModel.setSavedSearchText(String.valueOf(searchText.getText()));
-
-//		if(requireActivity().isFinishing()) {
-//			getViewModelStore().clear();
-//		}
 	}
 }
