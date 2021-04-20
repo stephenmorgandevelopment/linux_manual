@@ -1,18 +1,12 @@
 package com.stephenmorgandevelopment.thelinuxmanual.models;
 
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.util.Log;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class SimpleCommand {
     private long id;
     private String name;
     private String description;
     private String url;
     private int manN;
+    private final static String empty = "";
 
     public SimpleCommand() {
 
@@ -23,7 +17,6 @@ public class SimpleCommand {
         this.id = id;
     }
 
-    private static String empty = "";
     public SimpleCommand(String name, String url, int manN) {
         this(name, empty, url, manN);
     }
@@ -44,9 +37,6 @@ public class SimpleCommand {
 
     public void setId(long id) {this.id = id;}
     public void setName(String name) {this.name = name;}
-    public void setDescription(String description) {this.description = description;}
-    public void setUrl(String url) {this.url = url;}
-    public void setManN(int manN) {this.manN = manN;}
 
     public SimpleCommand setDescriptionReturnSimpleCommand(String description) {
         this.description = description;
@@ -54,6 +44,6 @@ public class SimpleCommand {
     }
 
     public boolean needsDescription() {
-        return description.equals(empty);
+        return description.isEmpty();
     }
 }

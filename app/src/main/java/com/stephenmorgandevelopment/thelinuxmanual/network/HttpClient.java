@@ -33,16 +33,8 @@ public class HttpClient {
                 .cache(cache)
                 .readTimeout(10, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true)
-//                .followRedirects(true)
                 .build();
     }
-
-//    public static HttpClient getInstance() {
-//        if(instance == null) {
-//            instance = new HttpClient();
-//        }
-//        return instance;
-//    }
 
     private HttpClient() {}
 
@@ -74,17 +66,4 @@ public class HttpClient {
         Request request = new Request.Builder().url(command.getUrl()).build();
         return Single.defer(() -> Single.just(okClient.newCall(request).execute()));
     }
-//
-//    public static Single<Response> fetchManPageList(Request request) throws IOException {
-//        return Single.just(HttpClient.getClient().newCall(request).execute());
-//    }
-//
-//    public static Single<Response> fetchManPageList(String url) throws IOException {
-//        Request req = new Request.Builder().url(url).build();
-//        return Single.just(HttpClient.getClient().newCall(req).execute());
-//    }
-//
-//    public static Request buildRequest(String url) {
-//        return new Request.Builder().url(url).build();
-//    }
 }

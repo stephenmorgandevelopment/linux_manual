@@ -48,6 +48,7 @@ public class UbuntuRepository implements ManPageRepository {
 
 		if (Helpers.hasInternet()) {
 			return fetchCommandData(simpleCommand.getUrl())
+					.observeOn(Schedulers.io())
 					.doAfterSuccess((dataMap) -> {
 						storage.saveCommand(new Command(simpleCommand.getId(), dataMap));
 					});
@@ -81,12 +82,6 @@ public class UbuntuRepository implements ManPageRepository {
 				.subscribeOn(Schedulers.io());
 	}
 
-//	public List<SimpleCommand> addDescriptionsAndUpdateDb(List<SimpleCommand> simpleCommands) {
-//		simpleCommands.clear();
-//
-//		return simpleCommands;
-//	}
-
 	public Single<SimpleCommand> addDescription(SimpleCommand match) {
 		return HttpClient.fetchDescription(match)
 				.subscribeOn(Schedulers.io())
@@ -102,13 +97,16 @@ public class UbuntuRepository implements ManPageRepository {
 			throws IOException {
 
 		//TODO or not
-		//TODO Blob n the question???  Blob = more effecient / Non = better readable....
+		//TODO Blob n the question???
+
+		//TODO Blob = more effecient:
 		return Single.just(
 				match.setDescriptionReturnSimpleCommand(
 						UbuntuHtmlApiConverter.crawlForDescription(response.body().string())));
 
+		//TODO NonBlob = better readable:
 //		String description = UbuntuHtmlAdapter.crawlForDescription(response.body().string());
-//		match.setDescription(description);
+//		match.setDescriptionReturnSimpleCommand(description);
 //
 //		return Single.just(match);
 	}

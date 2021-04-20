@@ -1,9 +1,7 @@
 package com.stephenmorgandevelopment.thelinuxmanual.viewmodels;
 
 import android.util.Log;
-import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
@@ -23,9 +21,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
@@ -84,21 +80,6 @@ public class MainActivityViewModel extends ViewModel {
 				).subscribeOn(Schedulers.io());
 	}
 
-//	public void loadCommands(List<Long> ids) {
-//		List<SimpleCommand> simpleCommands = DatabaseHelper.getInstance().getCommandsByIds(ids);
-//
-//		Disposable disposable = Observable.fromIterable(simpleCommands)
-//				.concatMap(simpleCommand -> {
-//					return Observable.just(UbuntuRepository.getInstance()
-//							.getCommandFromStorage(simpleCommand));
-//				})
-//				.doOnComplete(() -> setLoading(-8, false))
-//				.subscribeOn(Schedulers.io())
-//				.subscribe(commandsList::add);
-//
-//		disposables.add(disposable);
-//	}
-
 	public void loadManpage(SimpleCommand simpleCommand) {
 		Disposable disposable = UbuntuRepository.getInstance()
 				.getCommandData(simpleCommand)
@@ -132,7 +113,7 @@ public class MainActivityViewModel extends ViewModel {
 	}
 
 	public void addCommandToCommandList(Command command) {
-		commandsList.add(command);
+		commandsList.add(0, command);
 		removeLoadingKey(command.getId());
 		savedStateHandler.set(COMMANDS_LIST_KEY, getIdsFromCommandList());
 	}

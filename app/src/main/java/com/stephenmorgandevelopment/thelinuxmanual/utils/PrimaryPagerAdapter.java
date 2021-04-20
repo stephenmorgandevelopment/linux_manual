@@ -1,7 +1,5 @@
 package com.stephenmorgandevelopment.thelinuxmanual.utils;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -26,8 +24,8 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
     }
 
     public void addPage(long id, String shortName) {
-        titleList.add(shortName);
-        idList.add(id);
+        titleList.add(0, shortName);
+        idList.add(0, id);
     }
 
     public void addAllPages(List<Command> commands) {
@@ -35,8 +33,8 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
         titleList.clear();
 
         for(Command command : commands) {
-            idList.add(command.getId());
-            titleList.add(command.getShortName());
+            idList.add(0, command.getId());
+            titleList.add(0, command.getShortName());
         }
 
         notifyDataSetChanged();
@@ -93,5 +91,4 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
         }
         return titleList.get(position - 1);
     }
-
 }

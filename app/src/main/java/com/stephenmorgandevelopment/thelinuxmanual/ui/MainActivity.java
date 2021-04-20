@@ -1,6 +1,7 @@
 package com.stephenmorgandevelopment.thelinuxmanual.ui;
 
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
 		viewPager = findViewById(R.id.viewPager);
 		tabLayout = findViewById(R.id.tabLayout);
+		viewPager.setOffscreenPageLimit(2);
 
 		lookupFragment = CommandLookupFragment.newInstance();
 
@@ -104,6 +106,11 @@ public class MainActivity extends AppCompatActivity {
 		} else {
 			addLookupFragment();
 		}
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		return super.onCreateOptionsMenu(menu);
 	}
 
 	@Override

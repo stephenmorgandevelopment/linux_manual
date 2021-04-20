@@ -2,14 +2,12 @@ package com.stephenmorgandevelopment.thelinuxmanual.distros;
 
 import android.util.Log;
 
-import com.google.gson.stream.JsonWriter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.HtmlTextFormat;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Entities;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
@@ -76,33 +74,11 @@ public class UbuntuHtmlApiConverter {
 
         for (Element h4 : h4List) {
             int idx = h4List.indexOf(h4);
-//            info.put(h4.text(), preList.get(idx).outerHtml());
             info.put(h4.text(), HtmlTextFormat.replaceNewLinesWithLineBreaks(
                     preList.get(idx).outerHtml()));
         }
 
         return info;
-    }
-
-    public static synchronized void addDescriptionToSimpleCommand(SimpleCommand command, String pageHtml) {
-        Document document = Jsoup.parse(pageHtml);
-        Elements h4List = document.select("#tableWrapper h4");
-        Elements preList = document.select("#tableWrapper pre");
-
-        preList.remove(0);
-
-        for (Element h4 : h4List) {
-            if (h4.text().toUpperCase().contains("DESCRIPTION")) {
-                command.setDescription(preList.get(h4List.indexOf(h4)).outerHtml());
-                if (h4.text().equals("DESCRIPTION")) {
-                    break;
-                }
-            }
-        }
-
-        if (command.getDescription().equals("")) {
-            command.setDescription("No description available.");
-        }
     }
 
     public static String crawlForDescription(String pageHtml) {
@@ -177,15 +153,5 @@ public class UbuntuHtmlApiConverter {
         }
 
         return dirs;
-    }
-
-    public static synchronized void writeCommand(JsonWriter writer, SimpleCommand command) throws IOException {
-        writer.beginObject();
-        writer.name("id").value(command.getId());
-        writer.name("name").value(command.getName());
-        writer.name("description").value(command.getDescription());
-        writer.name("url").value(command.getUrl());
-        writer.name("manN").value(command.getManN());
-        writer.endObject();
     }
 }

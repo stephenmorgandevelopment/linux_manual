@@ -1,5 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual.ui;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -9,9 +10,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -48,8 +46,17 @@ public class CommandLookupFragment extends Fragment
 	private MainActivityViewModel viewModel;
 	private CommandLookupViewModel lookupModel;
 
+	private Menu optionsMenu;
+
 	public static CommandLookupFragment newInstance() {
 		return new CommandLookupFragment();
+	}
+
+	@Override
+	public void onAttach(@NonNull Context context) {
+		super.onAttach(context);
+
+		requireActivity().getOnBackPressedDispatcher().addCallback(this, clearCommandsSearchOnBack);
 	}
 
 	@Override
@@ -85,14 +92,15 @@ public class CommandLookupFragment extends Fragment
 
 		searchText.addTextChangedListener(this);
 
-		requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), backPressedCallback);
-
 		lookupModel.getMatchListData().observe(getViewLifecycleOwner(), this::updateMatchList);
 	}
 
 	@Override
 	public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
 		inflater.inflate(R.menu.toolbar_menu, menu);
+
+		optionsMenu = menu;
 	}
 
 	@Override
@@ -125,8 +133,6 @@ public class CommandLookupFragment extends Fragment
 	public void onResume() {
 		super.onResume();
 
-		backPressedCallback.setEnabled(true);
-
 		ActionBar actionbar = Objects.requireNonNull(
 				((AppCompatActivity) getActivity())).getSupportActionBar();
 
@@ -141,13 +147,6 @@ public class CommandLookupFragment extends Fragment
 		if (lookupModel.getSearchText() != null) {
 			searchText.setText(lookupModel.getSearchText());
 		}
-	}
-
-	@Override
-	public void onPause() {
-		super.onPause();
-
-		backPressedCallback.setEnabled(false);
 	}
 
 	@Override
@@ -190,7 +189,7 @@ public class CommandLookupFragment extends Fragment
 		viewModel.loadManpage(matchListAdapter.getItem(position));
 	}
 
-	public OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
+	public OnBackPressedCallback clearCommandsSearchOnBack = new OnBackPressedCallback(true) {
 		@Override
 		public void handleOnBackPressed() {
 			if (searchText.getText() != null && searchText.length() > 0) {

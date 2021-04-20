@@ -7,7 +7,6 @@ import android.text.Html;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,7 +20,6 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -42,7 +40,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.viewmodels.MainActivityViewMo
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 public class CommandInfoFragment extends Fragment {
@@ -75,6 +72,13 @@ public class CommandInfoFragment extends Fragment {
 		CommandInfoFragment fragment = new CommandInfoFragment();
 		fragment.setArguments(args);
 		return fragment;
+	}
+
+	@Override
+	public void onAttach(@NonNull Context context) {
+		super.onAttach(context);
+
+		requireActivity().getOnBackPressedDispatcher().addCallback(this, closeTextSearchControlsOnBack);
 	}
 
 	@Override
@@ -126,8 +130,6 @@ public class CommandInfoFragment extends Fragment {
 		}
 
 		initSearchButtons(view);
-
-		requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), onBackPressedCallback);
 	}
 
 	private void initSearchButtons(View view) {
@@ -140,16 +142,13 @@ public class CommandInfoFragment extends Fragment {
 		prevSearchButton.setOnClickListener(onClickPrevButton);
 	}
 
-	public OnBackPressedCallback onBackPressedCallback = new OnBackPressedCallback(true) {
+	public OnBackPressedCallback closeTextSearchControlsOnBack = new OnBackPressedCallback(true) {
 		@Override
 		public void handleOnBackPressed() {
-			Log.i(TAG, "handleOnBackPressed called.");
 			if(searchBar.getVisibility() != View.GONE) {
-				Log.i(TAG, "searchBar !GONE");
 				toggleSearchBarDisplay();
 				clearSpan(infoModel.getCurrentMatch());
 			} else {
-				Log.i(TAG, "else statement called.");
 				setEnabled(false);
 				requireActivity().onBackPressed();
 			}
@@ -183,6 +182,8 @@ public class CommandInfoFragment extends Fragment {
 
 	@Override
 	public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+
 		inflater.inflate(R.menu.command_info_menu, menu);
 
 		Menu dropDownMenu = menu.findItem(R.id.dropDown).getSubMenu();
@@ -220,17 +221,6 @@ public class CommandInfoFragment extends Fragment {
 		super.onResume();
 
 		actionBar.setTitle(infoModel.getShortName());
-
-		onBackPressedCallback.setEnabled(true);
-		setMenuVisibility(true);
-	}
-
-	@Override
-	public void onPause() {
-		super.onPause();
-
-		onBackPressedCallback.setEnabled(false);
-		setMenuVisibility(false);
 	}
 
 	private void gotoMatch(SingleTextMatch textMatch) {

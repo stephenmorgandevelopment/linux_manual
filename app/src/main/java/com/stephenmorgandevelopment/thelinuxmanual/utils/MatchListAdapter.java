@@ -2,7 +2,8 @@ package com.stephenmorgandevelopment.thelinuxmanual.utils;
 
 import android.content.Context;
 import android.text.Html;
-import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.SpannedString;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,11 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 
 public class MatchListAdapter extends BaseAdapter {
 	public static final String TAG = MatchListAdapter.class.getSimpleName();
-	private static final SpannableString EMPTY_HTML_SPAN = new SpannableString("");
 
 	private final List<SimpleCommand> matches;
 	private final LayoutInflater inflater;
@@ -90,29 +89,25 @@ public class MatchListAdapter extends BaseAdapter {
 		return convertView;
 	}
 
-	private SpannableString getFetchDescription(SimpleCommand match, TextView tv) {
-		SpannableString description =
-				SpannableString.valueOf(Html.fromHtml(
-						match.getDescription(),
-						Html.FROM_HTML_MODE_LEGACY));
+	private Spanned getFetchDescription(SimpleCommand match, TextView tv) {
+		if (!match.needsDescription()) {
+			return Html.fromHtml(match.getDescription(), Html.FROM_HTML_MODE_LEGACY);
+		}
 
-		if (description.equals(EMPTY_HTML_SPAN) && Helpers.hasInternet()) {
+		if (Helpers.hasInternet()) {
 			CommandLookupViewModel.addDisposable(
 					UbuntuRepository.getInstance()
 							.addDescription(match)
 							.observeOn(AndroidSchedulers.mainThread())
 							.subscribe(
-									simpleCommand ->
-											tv.setText(new SpannableString(simpleCommand.getDescription())),
-									error ->
-											Log.e(TAG, error.getMessage())));
+									simpleCommand -> tv.setText(Html.fromHtml(
+											simpleCommand.getDescription(), Html.FROM_HTML_MODE_LEGACY)),
+									error -> Log.e(TAG, error.getMessage())));
 
-			return new SpannableString(Helpers.text(R.string.fetching_data));
-		} else if (description.equals(EMPTY_HTML_SPAN) && !Helpers.hasInternet()) {
-			return new SpannableString(Helpers.text(R.string.no_internet_descriptions));
+			return new SpannedString(Helpers.string(R.string.fetching_data));
+		} else {
+			return new SpannedString(Helpers.string(R.string.no_internet_descriptions));
 		}
-
-		return description;
 	}
 
 	private static class MatchViewHolder {
