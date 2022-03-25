@@ -9,6 +9,7 @@ import android.util.Log;
 import androidx.core.os.LocaleListCompat;
 
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
+import com.stephenmorgandevelopment.thelinuxmanual.models.Release;
 
 import java.io.File;
 
@@ -24,7 +25,7 @@ public class Helpers {
         setCacheDir(app.getCacheDir());
         setLocale();
 
-        UbuntuHtmlApiConverter.setRelease(UbuntuHtmlApiConverter.Release.fromString(Preferences.getRelease()));
+        UbuntuHtmlApiConverter.setRelease(Release.fromString(Preferences.getRelease()));
     }
 
     private static void setLocale() {

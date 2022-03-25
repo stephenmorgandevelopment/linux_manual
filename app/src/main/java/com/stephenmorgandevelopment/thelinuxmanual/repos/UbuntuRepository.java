@@ -1,5 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual.repos;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.util.Log;
 
@@ -10,6 +11,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
+import com.stephenmorgandevelopment.thelinuxmanual.models.Release;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;

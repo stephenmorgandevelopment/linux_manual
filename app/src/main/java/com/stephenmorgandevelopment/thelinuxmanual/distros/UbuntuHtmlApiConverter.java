@@ -2,6 +2,7 @@ package com.stephenmorgandevelopment.thelinuxmanual.distros;
 
 import android.util.Log;
 
+import com.stephenmorgandevelopment.thelinuxmanual.models.Release;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.HtmlTextFormat;
 
@@ -25,31 +26,6 @@ public class UbuntuHtmlApiConverter {
     private static final String CRAWLER_SELECTOR = "#tableWrapper pre a";
 
     private static Release release;
-
-    public enum Release {
-        ARTFUL("artful"), BIONIC("bionic"), COSMIC("cosmic"), DISCO("disco"), EOAN("eoan"), FOCAL("focal"), GROOVY("groovy"), HIRSUTE("hirsute"), PRECISE("precise"), TRUSY("trusty"), XENIAL("xenial");
-
-        private String name;
-
-        Release(String path) {
-            this.name = path;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public static Release fromString(String releaseString) {
-            for (Release release : Release.values()) {
-                if (releaseString.equalsIgnoreCase(release.getName())) {
-                    return release;
-                }
-            }
-
-            Log.d(TAG, "Error matching release string: " + releaseString);
-            return FOCAL;
-        }
-    }
 
     public static void setRelease(Release release) {
         UbuntuHtmlApiConverter.release = release;

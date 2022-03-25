@@ -12,6 +12,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
+import com.stephenmorgandevelopment.thelinuxmanual.models.Release;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
@@ -51,7 +52,7 @@ public class MainActivityViewModel extends ViewModel {
 		syncProgress = UbuntuRepository.getInstance().launchSyncService();
 	}
 
-	public void changeRelease(UbuntuHtmlApiConverter.Release release) {
+	public void changeRelease(Release release) {
 		Preferences.setRelease(release.getName());
 		UbuntuHtmlApiConverter.setRelease(release);
 		DatabaseHelper.changeTable(release.getName());

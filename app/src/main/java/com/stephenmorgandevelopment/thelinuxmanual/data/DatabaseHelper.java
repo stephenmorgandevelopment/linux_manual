@@ -8,20 +8,21 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
+import com.stephenmorgandevelopment.thelinuxmanual.BuildConfig;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
+import com.stephenmorgandevelopment.thelinuxmanual.models.Release;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TAG = DatabaseHelper.class.getSimpleName();
     private static final String simpleCommandsName = "simple_commands";
 
-    private final static int version = 2;
+    private final static int version = BuildConfig.VERSION_CODE;
 
     private SQLiteDatabase database;
     private static DatabaseHelper helperInstance;
@@ -55,7 +56,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        for (UbuntuHtmlApiConverter.Release release : UbuntuHtmlApiConverter.Release.values()) {
+        for (Release release : Release.values()) {
             String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS "
                     + release.getName() + TABLE_NAME_POSTFIX + "("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "
@@ -67,7 +68,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        for (UbuntuHtmlApiConverter.Release release : UbuntuHtmlApiConverter.Release.values()) {
+        for (Release release : Release.values()) {
             String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS "
                     + release.getName() + TABLE_NAME_POSTFIX + "("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, "

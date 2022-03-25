@@ -23,7 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter.Release;
+import com.stephenmorgandevelopment.thelinuxmanual.models.Release;
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
 import com.stephenmorgandevelopment.thelinuxmanual.R;
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
@@ -119,10 +119,15 @@ public class CommandLookupFragment extends Fragment
 
 			return true;
 		} else if(item.getGroupId() == R.id.releaseSubMenu) {
+			if(!Helpers.hasInternet()) {
+				return true;
+			}
+
 			viewModel.changeRelease(Release.fromString(String.valueOf(item.getTitle())));
 
 			((MainActivity)requireActivity()).clearPagerAndCommandList();
 			requireActivity().recreate();
+
 			return true;
 		}
 

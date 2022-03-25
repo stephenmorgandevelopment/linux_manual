@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
+import com.stephenmorgandevelopment.thelinuxmanual.models.Release;
 
 public class Preferences {
     private static final String RELEASE = "RELEASE";
@@ -24,7 +24,7 @@ public class Preferences {
 
     public static String getRelease() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext());
-        return prefs.getString(RELEASE, UbuntuHtmlApiConverter.Release.FOCAL.getName());
+        return prefs.getString(RELEASE, Release.FOCAL.getName());
     }
 
     public static int getListFontSize() {
