@@ -126,7 +126,7 @@ public class CommandInfoFragment extends Fragment {
 
 		if(command != null) {
 			infoModel.init(command);
-			buildOutput(command.getData());
+			buildOutput(command.data());
 		}
 
 		initSearchButtons(view);

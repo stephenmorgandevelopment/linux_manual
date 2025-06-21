@@ -26,7 +26,7 @@ public class HttpClient {
         if(cache == null) {
             cache = new okhttp3.Cache(
                     new File(Helpers.getCacheDir(), "http_cache"),
-                    10485760);
+                    10_485_760);
         }
 
         okClient = new OkHttpClient.Builder()

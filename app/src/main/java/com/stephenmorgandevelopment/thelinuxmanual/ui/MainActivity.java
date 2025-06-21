@@ -69,7 +69,8 @@ public class MainActivity extends AppCompatActivity {
 			return;
 		}
 
-		pagerAdapter.addPage(command.getId(), command.getShortName());
+
+		pagerAdapter.addPage(command.id(), command.getShortName());
 		viewModel.addCommandToCommandList(command);
 		pagerAdapter.notifyDataSetChanged();
 	};
@@ -158,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
 		viewModel.clearAddPageData();
 
 		for (Command command : viewModel.getCommandsList()) {
-			pagerAdapter.removePage(command.getId());
+			pagerAdapter.removePage(command.id());
 			pagerAdapter.notifyDataSetChanged();
 		}
 
@@ -186,8 +187,8 @@ public class MainActivity extends AppCompatActivity {
 	public void removePage(Command command) {
 		int position = viewPager.getCurrentItem();
 
-		if (command.getId() == pagerAdapter.getItemId(position)) {
-			pagerAdapter.removePage(command.getId());
+		if (command.id() == pagerAdapter.getItemId(position)) {
+			pagerAdapter.removePage(command.id());
 			viewModel.removeCommandFromCommandList(command);
 			pagerAdapter.notifyDataSetChanged();
 			viewPager.setCurrentItem(position - 1);

@@ -19,7 +19,7 @@ public class CommandInfoViewModel extends ViewModel {
     }
 
     public void init(Command command) {
-        this.id = command.getId();
+        this.id = command.id();
         this.shortName = command.getShortName();
     }
 

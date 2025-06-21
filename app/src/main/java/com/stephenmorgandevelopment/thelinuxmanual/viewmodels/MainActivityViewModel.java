@@ -114,14 +114,14 @@ public class MainActivityViewModel extends ViewModel {
 
 	public void addCommandToCommandList(Command command) {
 		commandsList.add(0, command);
-		removeLoadingKey(command.getId());
+		removeLoadingKey(command.id());
 		savedStateHandler.set(COMMANDS_LIST_KEY, getIdsFromCommandList());
 	}
 
 	public List<Long> getIdsFromCommandList() {
 		List<Long> ids = new ArrayList<>();
 		for(Command command : commandsList) {
-			ids.add(command.getId());
+			ids.add(command.id());
 		}
 		return ids;
 	}
@@ -140,7 +140,7 @@ public class MainActivityViewModel extends ViewModel {
 
 	public Command getCommandFromListById(long id) {
 		for (Command command : commandsList) {
-			if (command.getId() == id) {
+			if (command.id() == id) {
 				return command;
 			}
 		}
@@ -149,7 +149,7 @@ public class MainActivityViewModel extends ViewModel {
 
 	public boolean commandsListHasId(long id) {
 		for (Command command : commandsList) {
-			if (command.getId() == id) {
+			if (command.id() == id) {
 				return true;
 			}
 		}

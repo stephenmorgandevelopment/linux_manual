@@ -33,7 +33,7 @@ public class PrimaryPagerAdapter extends FragmentStateAdapter {
         titleList.clear();
 
         for(Command command : commands) {
-            idList.add(0, command.getId());
+            idList.add(0, command.id());
             titleList.add(0, command.getShortName());
         }
 

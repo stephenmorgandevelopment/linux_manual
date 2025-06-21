@@ -57,7 +57,7 @@ public class LocalStorage {
     }
 
     public void saveCommand(Command command) {
-        File commandFile = new File(commandsDir, String.valueOf(command.getId()));
+        File commandFile = new File(commandsDir, String.valueOf(command.id()));
 
         if (!commandFile.exists()) {
             try {

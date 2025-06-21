@@ -40,7 +40,7 @@ public class UbuntuRepository implements ManPageRepository {
 
 		if (storage.hasCommand(simpleCommand.getId())) {
 			try {
-				return Single.just(storage.loadCommand(simpleCommand.getId()).getData());
+				return Single.just(storage.loadCommand(simpleCommand.getId()).data());
 			} catch (IOException ioe) {
 				Log.i(TAG, "Unexpected file error loading - " + simpleCommand.getName() + ": " + ioe.getMessage());
 			}

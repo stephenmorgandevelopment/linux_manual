@@ -13,22 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Command {
-    private final long id;
-    private final Map<String, String> data;
-
-    public Command(long id, Map<String, String> data) {
-        this.id = id;
-        this.data = data;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public Map<String, String> getData() {
-        return data;
-    }
+public record Command(long id, Map<String, String> data) {
 
     public String getShortName() {
         String name = String.valueOf(Html.fromHtml(data.get("NAME"), Html.FROM_HTML_MODE_LEGACY));
@@ -49,7 +34,8 @@ public class Command {
         JsonReader reader = new JsonReader(new StringReader(json));
         reader.setLenient(true);
 
-        Type dataMapType = new TypeToken<Map<String, String>>(){}.getType();
+        Type dataMapType = new TypeToken<Map<String, String>>() {
+        }.getType();
         return new Gson().fromJson(reader, dataMapType);
     }
 
