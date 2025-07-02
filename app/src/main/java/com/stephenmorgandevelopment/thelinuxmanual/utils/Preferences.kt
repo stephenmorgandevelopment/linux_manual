@@ -1,51 +1,106 @@
-package com.stephenmorgandevelopment.thelinuxmanual.utils;
+@file:Suppress("DEPRECATION")
+@file:SuppressLint("UseKtx")
 
-import android.annotation.SuppressLint;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+package com.stephenmorgandevelopment.thelinuxmanual.utils
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
+import android.annotation.SuppressLint
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
+import android.util.Log
+import com.stephenmorgandevelopment.thelinuxmanual.distros.AvailableReleases.NOBLE
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.getApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
-public class Preferences {
-    private static final String RELEASE = "RELEASE";
-//    private static final String COLOR_PRIMARY = "COLOR_PRIMARY";
-//    private static final String COLOR_SECONDARY = "COLOR_SECONDARY";
-//    private static final String COLOR_THIRD = "COLOR_THIRD";
-//    private static final String COLOR_ACCENT = "COLOR_ACCENT";
+data class CurrentPreferences(
+    val release: String,
+    val tabsOnBottom: Boolean,
+    val searchOnBottm: Boolean,
+)
 
-    private static final String LIST_FONT_SIZE = "LIST_FONT_SIZE";
-    private static final String DETAILS_FONT_SIZE = "DETAILS_FONT_SIZE";
+@Singleton
+class Preferences @Inject constructor() {
+    private val currentPrefs get() = CurrentPreferences(release, tabsOnBottom, searchOnBottom)
+    private val _preferenceListener = MutableStateFlow(currentPrefs)
+    val preferenceListener = _preferenceListener.asStateFlow()
 
-    @SuppressLint("ApplySharedPref")
-    public static void setRelease(String release) {
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext()).edit();
-        editor.putString(RELEASE, release).commit();
+    /**
+     * Added due to issues that arise in the http/database creation and usage,
+     * when having to wait for the shared prefs to come from the disk.
+     */
+    val currentRelease
+        get() = preferenceListener.value.release
+            .also { staticReleaseString = it }
+
+    private val preferences: SharedPreferences?
+        get() = try {
+            PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+        } catch (e: Throwable) {
+            null
+        }
+
+    var release: String
+        private set(value) {
+            preferences?.edit()?.putString(RELEASE, value)?.commit().also {
+                if (it == true) _preferenceListener.tryEmit(currentPrefs)
+            } ?: Log.w(LOG_TAG, "Failed to store release value in shared prefs.")
+        }
+        get() {
+            return (preferences?.getString(RELEASE, NOBLE.pathString)
+                ?: NOBLE.pathString)
+        }
+
+    var tabsOnBottom: Boolean
+        private set(value) {
+            preferences?.edit()?.putBoolean(TABS_ON_BOTTOM, value)?.commit().also {
+                if (it == true) _preferenceListener.tryEmit(currentPrefs)
+            } ?: Log.w(LOG_TAG, "Failed to store release value in shared prefs.")
+        }
+        get() {
+            return preferences?.getBoolean(TABS_ON_BOTTOM, false) == true
+        }
+
+    var searchOnBottom: Boolean
+        private set(value) {
+            preferences?.edit()?.putBoolean(SEARCH_ON_BOTTOM, value)?.commit().also {
+                if (it == true) _preferenceListener.tryEmit(currentPrefs)
+            } ?: Log.w(LOG_TAG, "Failed to store release value in shared prefs.")
+        }
+        get() {
+            return preferences?.getBoolean(SEARCH_ON_BOTTOM, false) == true
+        }
+
+    inner class PreferencesWriteAccess() {
+        fun setRelease(versionRelease: String): Unit {
+            release = versionRelease
+        }
+
+        fun setTabsOnBottom(enabled: Boolean): Unit {
+            tabsOnBottom = enabled
+        }
+
+        fun setSearchOnBottom(enabled: Boolean): Unit {
+            searchOnBottom = enabled
+        }
     }
 
-    public static String getRelease() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext());
-        return prefs.getString(RELEASE, UbuntuHtmlApiConverter.Release.FOCAL.getName());
-    }
+    companion object {
+        /**
+         * It appears as if Hilt is creating multiple instances for classes, despite being
+         * annotated with Singleton or being InstalledIn SingletonComponent.  Opting not to
+         * refactor into object.
+         *
+         * Implementing singleton via instance, returned in provides module..
+         */
+//        internal val instance: Preferences = Preferences()
+        var staticReleaseString: String = NOBLE.pathString
+            private set
 
-    public static int getListFontSize() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext());
-        return prefs.getInt(LIST_FONT_SIZE, 16);
-    }
-
-    public static int getDetailsFontSize() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext());
-        return prefs.getInt(DETAILS_FONT_SIZE, 16);
-    }
-
-    @SuppressLint("ApplySharedPref")
-    public static void setListFontSize(int size) {
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext()).edit();
-        editor.putInt(LIST_FONT_SIZE, size).commit();
-    }
-
-    @SuppressLint("ApplySharedPref")
-    public static void setDetailsFontSize(int size) {
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(Helpers.getApplicationContext()).edit();
-        editor.putInt(LIST_FONT_SIZE, size).commit();
+        private const val LOG_TAG = "UbuntuManPages"
+        private const val RELEASE: String = "RELEASE"
+        private const val TABS_ON_BOTTOM: String = "TABS_ON_BOTTOM"
+        private const val SEARCH_ON_BOTTOM: String = "SEARCH_ON_BOTTOM"
     }
 }

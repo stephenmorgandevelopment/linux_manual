@@ -6,7 +6,9 @@
     <string name="ubuntu_name">Ubuntu</string>
 
     <!-- Menu Button Names -->
-    <string name="refresh_button">Re-Sync Data</string>
+    <string name="resync_button">Re-Sync Data</string>
+    <string name="tabs_on_bottom">Tabs on Bottom</string>
+    <string name="search_on_bottom">Search on Bottom</string>
     <string name="change_release_button">Change Release</string>
     <string name="store_pages_offline">Store Offline</string>
     <string name="sort_button">Sort Order</string>
@@ -31,7 +33,13 @@
     <string name="unexpected_error">An unexpected error occurred.</string>
     <string name="manpage_parse_error">The html response was either null or empty.</string>
 
-
+    <!-- Content Descriptions -->
+    <string name="app_settings">App Settings</string>
+    <string name="jump_to_section">Jump to section</string>
+    <string name="search_text_in_page">Search text in %s manpage</string>
+    <string name="close_tab">Close %s tab</string>
+    <string name="show_release_options">Show release options</string>
+    <string name="hide_release_options">Hide release options</string>
 
 
     <!-- Man Page Fields -->
@@ -109,5 +117,4 @@
     <string name="list">List:</string>
     <string name="details_text">Details:</string>
     <string name="no_matches">No matches.</string>
-
 </resources>

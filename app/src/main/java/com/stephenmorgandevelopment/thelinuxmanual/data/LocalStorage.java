@@ -14,6 +14,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Singleton
 public class LocalStorage {
     private static final String TAG = LocalStorage.class.getSimpleName();
     private static LocalStorage instance;
@@ -26,7 +30,8 @@ public class LocalStorage {
         return instance;
     }
 
-    private LocalStorage() {
+    @Inject
+    public LocalStorage() {
         commandsDir = Helpers.getApplicationContext().getDir("commands", Context.MODE_PRIVATE);
     }
 
@@ -53,11 +58,11 @@ public class LocalStorage {
             reader.close();
         }
 
-        return Command.fromJson(id, json.toString().trim());
+        return Command.Companion.fromJson(id, json.toString().trim());
     }
 
     public void saveCommand(Command command) {
-        File commandFile = new File(commandsDir, String.valueOf(command.id()));
+        File commandFile = new File(commandsDir, String.valueOf(command.getId()));
 
         if (!commandFile.exists()) {
             try {

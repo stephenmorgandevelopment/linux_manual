@@ -1,25 +1,23 @@
-package com.stephenmorgandevelopment.thelinuxmanual.models;
+package com.stephenmorgandevelopment.thelinuxmanual.models
 
-import java.util.List;
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
-public class TextSearchResult {
-	private final String query;
-	private final List<SingleTextMatch> matchIndexes;
+@Parcelize
+data class TextSearchResult(
+    val query: String,
+    val matchIndexes: List<SingleTextMatch>,
+) : Parcelable {
+    val count get(): Int = matchIndexes.size
 
-	public TextSearchResult(String query, List<SingleTextMatch> matchIndexes, int count) {
-		this.query = query;
-		this.matchIndexes = matchIndexes;
-	}
-
-	public String getQuery() {
-		return query;
-	}
-
-	public int getCount() {
-		return matchIndexes.size();
-	}
-
-	public SingleTextMatch getMatch(int index) {
-		return matchIndexes.get(index);
-	}
+    /**
+     * @return SingleTextMatch
+     * @throws IndexOutOfBoundsException - if index is out of bounds...duh.
+     */
+    fun getMatch(index: Int): SingleTextMatch = try {
+        matchIndexes[index]
+    } catch (e: IndexOutOfBoundsException) {
+        if (matchIndexes.isNotEmpty()) matchIndexes[0]
+        else throw e
+    }
 }

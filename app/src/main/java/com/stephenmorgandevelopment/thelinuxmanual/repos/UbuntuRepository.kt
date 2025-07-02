@@ -1,124 +1,89 @@
-package com.stephenmorgandevelopment.thelinuxmanual.repos;
+package com.stephenmorgandevelopment.thelinuxmanual.repos
 
-import android.content.Intent;
-import android.util.Log;
+import android.content.Intent
+import androidx.lifecycle.asFlow
+import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService
+import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage
+import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase
+import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter
+import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem
+import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand
+import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
+import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
+import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.rx2.await
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import javax.inject.Inject
+import javax.inject.Singleton
 
-import androidx.lifecycle.LiveData;
+@Singleton
+class UbuntuRepository @Inject constructor(
+    private val httpClient: HttpClient,
+    private val roomDb: SimpleCommandsDatabase,
+    private val localStorage: LocalStorage,
+) {
 
-import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService;
-import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
-import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
-import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
-import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
-import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
+    suspend fun getCommandData(simpleCommand: SimpleCommand): Map<String, String> =
+        withContext(Dispatchers.IO) {
+            if (localStorage.hasCommand(simpleCommand.id)) {
+                return@withContext getCommandFromStorage(simpleCommand)
+            }
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+            if (Helpers.hasInternet()) {
+                return@withContext fetchCommandData(simpleCommand.url)
+            }
 
-import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
-import okhttp3.Response;
+            return@withContext emptyMap()
+        }
 
-public class UbuntuRepository implements ManPageRepository {
-	private static UbuntuRepository instance;
-	public static final String TAG = "UbuntuRepository";
+    suspend fun addDescription(matchedItem: MatchingItem): MatchingItem? {
+        return withContext(Dispatchers.IO) {
+            httpClient.fetchDescription(matchedItem.toSimpleCommand()).await()
+                ?.let {
+                    UbuntuHtmlApiConverter.crawlForDescription(it.body?.string())
+                }?.let {
+                    matchedItem.copy(description = it)
+                }?.also {
+                    roomDb.dao().update(it)
+//                    roomDb.dao().delete(it)
+//                    roomDb.dao().insert(it)
+                }
+        }
+    }
 
-	public static UbuntuRepository getInstance() {
-		if (instance == null) {
-			instance = new UbuntuRepository();
-		}
-		return instance;
-	}
+    fun launchSyncService(): Flow<String> {
+        if (!CommandSyncService.isWorking()) {
+            val intent = Intent().apply {
+                putExtra(CommandSyncService.DISTRO, UbuntuHtmlApiConverter.NAME)
+            }
 
-	private UbuntuRepository() {}
+            return CommandSyncService.enqueueWork(
+                Helpers.getApplicationContext(),
+                intent
+            ).asFlow()
+        }
 
-	public Single<Map<String, String>> getCommandData(SimpleCommand simpleCommand) {
-		final LocalStorage storage = LocalStorage.getInstance();
+        return CommandSyncService.getProgress().asFlow()
+    }
 
-		if (storage.hasCommand(simpleCommand.getId())) {
-			try {
-				return Single.just(storage.loadCommand(simpleCommand.getId()).data());
-			} catch (IOException ioe) {
-				Log.i(TAG, "Unexpected file error loading - " + simpleCommand.getName() + ": " + ioe.getMessage());
-			}
-		}
+    private suspend fun getCommandFromStorage(simpleCommand: SimpleCommand): Map<String, String> {
+        return try {
+            localStorage.loadCommand(simpleCommand.id).data
+        } catch (e: IOException) {
+            javaClass.ilog("Unexpected file error loading - ${simpleCommand.name}: $e")
+            emptyMap<String, String>()
+        }
+    }
 
-		if (Helpers.hasInternet()) {
-			return fetchCommandData(simpleCommand.getUrl())
-					.observeOn(Schedulers.io())
-					.doAfterSuccess((dataMap) -> {
-						storage.saveCommand(new Command(simpleCommand.getId(), dataMap));
-					});
-		}
-
-		return Single.error(new Throwable("Must have internet."));
-	}
-
-	public Command getCommandFromStorage(SimpleCommand simpleCommand) {
-		final LocalStorage storage = LocalStorage.getInstance();
-
-		try {
-			return storage.loadCommand(simpleCommand.getId());
-		} catch (IOException ioe) {
-			Log.i(TAG, "Unexpected file error loading - " + simpleCommand.getName() + ": " + ioe.getMessage());
-		}
-
-		return null;
-	}
-
-	public Single<Map<String, String>> fetchCommandData(String pageUrl) {
-		return HttpClient.fetchCommandManPage(pageUrl)
-				.subscribeOn(Schedulers.io())
-				.observeOn(Schedulers.computation())
-				.flatMap(UbuntuHtmlApiConverter::crawlForCommandInfo);
-	}
-
-	public synchronized Single<List<SimpleCommand>> getPartialMatches(String searchQuery) {
-		return Single.just(
-				DatabaseHelper.getInstance().partialMatches(searchQuery))
-				.subscribeOn(Schedulers.io());
-	}
-
-	public Single<SimpleCommand> addDescription(SimpleCommand match) {
-		return HttpClient.fetchDescription(match)
-				.subscribeOn(Schedulers.io())
-				.observeOn(Schedulers.computation())
-				.flatMap(response -> mapResponseToSimpleCommand(response, match))
-				.observeOn(Schedulers.io())
-				.doAfterSuccess(simpleCommand ->
-						DatabaseHelper.getInstance().updateCommand(simpleCommand));
-	}
-
-	private Single<SimpleCommand> mapResponseToSimpleCommand(
-				Response response, SimpleCommand match)
-			throws IOException {
-
-		//TODO or not
-		//TODO Blob n the question???
-
-		//TODO Blob = more effecient:
-		return Single.just(
-				match.setDescriptionReturnSimpleCommand(
-						UbuntuHtmlApiConverter.crawlForDescription(response.body().string())));
-
-		//TODO NonBlob = better readable:
-//		String description = UbuntuHtmlAdapter.crawlForDescription(response.body().string());
-//		match.setDescriptionReturnSimpleCommand(description);
-//
-//		return Single.just(match);
-	}
-
-	public LiveData<String> launchSyncService() {
-		if (!CommandSyncService.isWorking()) {
-			Intent intent = new Intent();
-			intent.putExtra(CommandSyncService.DISTRO, UbuntuHtmlApiConverter.NAME);
-
-			return CommandSyncService.enqueueWork(Helpers.getApplicationContext(), intent);
-		}
-
-		return CommandSyncService.getProgress();
-	}
+    private suspend fun fetchCommandData(pageUrl: String): Map<String, String> {
+        return httpClient.fetchCommandManPage(pageUrl)
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.computation())
+            .flatMap(UbuntuHtmlApiConverter::crawlForCommandInfo)
+            .await()
+    }
 }

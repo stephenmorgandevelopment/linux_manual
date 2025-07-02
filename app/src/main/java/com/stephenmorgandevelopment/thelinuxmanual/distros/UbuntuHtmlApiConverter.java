@@ -24,40 +24,7 @@ public class UbuntuHtmlApiConverter {
     public static final String BASE_URL = "https://manpages.ubuntu.com/manpages/";
     private static final String CRAWLER_SELECTOR = "#tableWrapper pre a";
 
-    private static Release release;
-
-    public enum Release {
-        ARTFUL("artful"), BIONIC("bionic"), COSMIC("cosmic"), DISCO("disco"), EOAN("eoan"), FOCAL("focal"), GROOVY("groovy"), HIRSUTE("hirsute"), PRECISE("precise"), TRUSY("trusty"), XENIAL("xenial");
-
-        private String name;
-
-        Release(String path) {
-            this.name = path;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public static Release fromString(String releaseString) {
-            for (Release release : Release.values()) {
-                if (releaseString.equalsIgnoreCase(release.getName())) {
-                    return release;
-                }
-            }
-
-            Log.d(TAG, "Error matching release string: " + releaseString);
-            return FOCAL;
-        }
-    }
-
-    public static void setRelease(Release release) {
-        UbuntuHtmlApiConverter.release = release;
-    }
-
-    public static String getReleaseString() {
-        return release.getName();
-    }
+    private static String release;
 
     public static Single<Map<String, String>> crawlForCommandInfo(Response response)  throws IOException {
         return Single.just(crawlForCommandInfo(response.body().string()));

@@ -1,85 +1,106 @@
-package com.stephenmorgandevelopment.thelinuxmanual.models;
+package com.stephenmorgandevelopment.thelinuxmanual.models
 
-import android.text.Html;
-import android.text.SpannableStringBuilder;
+import android.os.Parcelable
+import android.text.Html
+import android.text.SpannableStringBuilder
+import androidx.room.Ignore
+import com.google.gson.Gson
+import com.google.gson.Strictness
+import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
+import java.io.StringReader
+import java.util.Locale
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
+@Parcelize
+data class Command(
+    val id: Long,
+    val data: Map<String, String>,
+) : Parcelable {
 
-import java.io.StringReader;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+    @IgnoredOnParcel
+    @Ignore
+    private var _shortName: String? = null
 
-public record Command(long id, Map<String, String> data) {
+    fun getShortName(): String = _shortName ?: genShortName().also { _shortName = it }
 
-    public String getShortName() {
-        String name = String.valueOf(Html.fromHtml(data.get("NAME"), Html.FROM_HTML_MODE_LEGACY));
-        name = name.substring(0, name.indexOf(" "));
+    fun genShortName(): String {
+        var name = Html.fromHtml(data["NAME"], Html.FROM_HTML_MODE_LEGACY)
+            .toString().let {
+                it.substring(0, it.indexOf(" "))
+            }
 
         if (name.contains(",")) {
-            name = name.substring(0, name.indexOf(","));
+            name = name.substring(0, name.indexOf(","))
         }
 
-        return name;
+        return name
     }
 
-    public static Command fromJson(long id, String dataJson) {
-        return new Command(id, parseMapFromJson(dataJson));
+    fun dataMapToJsonString(): String {
+        val gson = Gson()
+        return gson.toJson(this.data)
     }
 
-    public static Map<String, String> parseMapFromJson(String json) {
-        JsonReader reader = new JsonReader(new StringReader(json));
-        reader.setLenient(true);
+    fun searchDataForTextMatch(query: String): TextSearchResult {
+        val matchIndexes: MutableList<SingleTextMatch> = mutableListOf<SingleTextMatch>()
 
-        Type dataMapType = new TypeToken<Map<String, String>>() {
-        }.getType();
-        return new Gson().fromJson(reader, dataMapType);
-    }
+        for (entry in data.entries) {
+            val tmpText = entry.value.lowercase(Locale.getDefault())
+            val lowerCaseQuery = query.lowercase(Locale.getDefault())
 
-    public String dataMapToJsonString() {
-        Gson gson = new Gson();
-        return gson.toJson(this.data);
-    }
+            if (tmpText.contains(lowerCaseQuery)) {
+                val textString = SpannableStringBuilder(
+                    Html.fromHtml(tmpText, Html.FROM_HTML_MODE_LEGACY)
+                ).toString()
 
-    public TextSearchResult searchDataForTextMatch(String query) {
-        int count = 0;
-        List<SingleTextMatch> matchIndexes = new ArrayList<>();
+                val indexes: List<SingleTextMatch> = getMatchIndexes(
+                    query = lowerCaseQuery,
+                    text = textString,
+                    header = entry.key
+                )
 
-        for (Map.Entry<String, String> entry : data.entrySet()) {
-            String tmpText = entry.getValue().toLowerCase();
-
-            if (tmpText.contains(query.toLowerCase())) {
-                SpannableStringBuilder spannableStringBuilder =
-                        new SpannableStringBuilder(Html.fromHtml(tmpText, Html.FROM_HTML_MODE_LEGACY));
-
-                List<SingleTextMatch> indexes = getMatchIndexes(
-                        query.toLowerCase(),
-                        String.valueOf(spannableStringBuilder),
-                        entry.getKey());
-
-                count += indexes.size();
-                matchIndexes.addAll(indexes);
+                matchIndexes.addAll(indexes)
             }
         }
 
-        return new TextSearchResult(query, matchIndexes, count);
+        return TextSearchResult(query, matchIndexes.toList())
     }
 
-    private List<SingleTextMatch> getMatchIndexes(String query, String text, String header) {
-        List<SingleTextMatch> indexes = new ArrayList<>();
+    fun getMatchIndexes(query: String, text: String, header: String): List<SingleTextMatch> {
+        val indexes: MutableList<SingleTextMatch> = mutableListOf<SingleTextMatch>()
 
-        int runningIndex = 0;
-        while (text.contains(query)) {
-            int idx = text.indexOf(query);
-            indexes.add(new SingleTextMatch(header, idx + runningIndex));
-            text = text.substring(idx + query.length());
+        var mutableText = text
+        var runningIndex = 0
+        while (mutableText.contains(query)) {
+            val idx = text.indexOf(query)
+            indexes.add(SingleTextMatch(header, idx + runningIndex))
+            mutableText = text.substring(idx + query.length)
 
-            runningIndex += (idx + query.length());
+            runningIndex += (idx + query.length)
         }
 
-        return indexes;
+        return indexes.toList()
+    }
+
+    companion object {
+        fun fromJson(id: Long, dataJson: String) = Command(id, parseMapFromJson(dataJson))
+
+        fun parseMapFromJson(json: String): Map<String, String> {
+            val reader = JsonReader(StringReader(json))
+
+            //  TODO: Point of interest for issues.
+            //  reader.setLenient(true);
+            reader.setStrictness(Strictness.LEGACY_STRICT)
+            //  reader.setStrictness(Strictness.LENIENT);
+
+            val dataMapType = object : TypeToken<MutableMap<String?, String?>?>() {}.type
+            return Gson().fromJson(reader, dataMapType)
+        }
     }
 }
+
+
+
+

@@ -1,12 +1,20 @@
 package com.stephenmorgandevelopment.thelinuxmanual.network;
 
+import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.hasInternet;
+
+import androidx.annotation.NonNull;
+
 import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
 import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.Single;
 import okhttp3.Cache;
@@ -14,11 +22,12 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.hasInternet;
-
+@Singleton
 public class HttpClient {
     private static final String TAG = HttpClient.class.getSimpleName();
 
+    @NonNull
+    private final Preferences mPreferences;
     private static Cache cache;
     private static final OkHttpClient okClient;
 
@@ -34,17 +43,25 @@ public class HttpClient {
                 .readTimeout(10, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true)
                 .build();
+
     }
 
-    private HttpClient() {}
+    @Inject
+    public HttpClient(
+            @NonNull Preferences preferences
+    ) {
+        mPreferences = preferences;
+    }
 
-    public static OkHttpClient getClient() {
+    public OkHttpClient getClient() {
         return okClient;
     }
 
-    public static Single<Response> fetchDirsHtml() throws IOException {
+    public Single<Response> fetchDirsHtml() throws IOException {
          if(hasInternet()) {
-            String url = UbuntuHtmlApiConverter.BASE_URL + UbuntuHtmlApiConverter.getReleaseString() + "/" + Helpers.getLocale();
+             String url = UbuntuHtmlApiConverter.BASE_URL + mPreferences.getCurrentRelease() /*UbuntuHtmlApiConverter.getReleaseString()*/
+                     + "/" + Helpers.getLocale();
+
             Request req = new Request.Builder().url(url).build();
 
             return Single.just(okClient.newCall(req).execute());
@@ -53,7 +70,7 @@ public class HttpClient {
         }
     }
 
-    public static Single<Response> fetchCommandManPage(String pageUrl) {
+    public Single<Response> fetchCommandManPage(String pageUrl) {
         if(hasInternet()) {
             Request req = new Request.Builder().url(pageUrl).build();
             return Single.defer(() -> Single.just(okClient.newCall(req).execute()));
@@ -62,7 +79,7 @@ public class HttpClient {
         }
     }
 
-    public static Single<Response> fetchDescription(SimpleCommand command) {
+    public Single<Response> fetchDescription(SimpleCommand command) {
         Request request = new Request.Builder().url(command.getUrl()).build();
         return Single.defer(() -> Single.just(okClient.newCall(request).execute()));
     }

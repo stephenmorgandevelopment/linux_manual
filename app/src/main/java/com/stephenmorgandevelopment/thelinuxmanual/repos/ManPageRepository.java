@@ -11,7 +11,7 @@ public interface ManPageRepository {
 //        if(command.getDescription() == null) {
 //            String message = command.getName() + " --- "
 //                    + "was not updated.  Please overide addDescription.";
-//            Log.i("ManPageRepository", message);
+//            Log.i("phenm-ManPageRepository", message);
 //        }
 //    }
 

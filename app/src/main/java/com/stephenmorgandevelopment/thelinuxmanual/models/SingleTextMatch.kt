@@ -1,31 +1,24 @@
-package com.stephenmorgandevelopment.thelinuxmanual.models;
+package com.stephenmorgandevelopment.thelinuxmanual.models
 
-import android.text.style.BackgroundColorSpan;
-import android.text.style.ForegroundColorSpan;
+import android.os.Parcelable
+import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
+import com.stephenmorgandevelopment.thelinuxmanual.R
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
+import kotlinx.parcelize.Parcelize
 
-import com.stephenmorgandevelopment.thelinuxmanual.R;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
+@Parcelize
+data class SingleTextMatch(
+    val section: String,
+    val index: Int,
+) : Parcelable {
+    companion object {
+        val foregroundColorSpan = ForegroundColorSpan(
+            Helpers.color(R.color.colorPrimaryDark)
+        )
 
-public class SingleTextMatch {
-    private final String section;
-    private final int index;
-
-    public SingleTextMatch(String section, int index) {
-        this.section = section;
-        this.index = index;
+        val backgroundSpan = BackgroundColorSpan(
+            Helpers.color(R.color.textBubblesFont)
+        )
     }
-
-    public String getSection() {
-        return section;
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    public static final ForegroundColorSpan foregroundColorSpan
-            = new ForegroundColorSpan(Helpers.color(R.color.colorPrimaryDark));
-
-    public static final BackgroundColorSpan backgroundSpan
-            = new BackgroundColorSpan(Helpers.color(R.color.textBubblesFont));
 }

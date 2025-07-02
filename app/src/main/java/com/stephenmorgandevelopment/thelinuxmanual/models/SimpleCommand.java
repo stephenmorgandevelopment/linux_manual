@@ -29,7 +29,9 @@ public class SimpleCommand {
     }
 
 
-    public long getId() {return id;}
+    public long getId() {
+        return id;
+    }
     public String getName() {return name;}
     public String getDescription() {return description;}
     public String getUrl() {return url;}
