@@ -66,17 +66,18 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.6.0'
     implementation 'com.squareup.retrofit2:retrofit:2.8.1'
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.8.1'
-    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'com.google.code.gson:gson:2.13.1'
     implementation 'com.squareup.retrofit2:converter-scalars:2.8.1'
 
     //implementation 'org.jsoup:jsoup:1.13.1'
-    implementation "org.jsoup:jsoup:1.20.1"
+    implementation "org.jsoup:jsoup:1.21.1"
     implementation 'androidx.core:core-ktx:1.16.0'
 
     // Material Design 3
     implementation "androidx.compose.material3:material3"
 
     implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.foundation:foundation-layout'
     implementation 'androidx.compose.ui:ui'
 
     // Android Studio Preview support
@@ -87,21 +88,23 @@ dependencies {
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
 
-    implementation "androidx.compose.material3:material3-window-size-class"
     implementation "androidx.compose.material3:material3-adaptive-navigation-suite"
 
     // Add full set of material icons
     implementation 'androidx.compose.material:material-icons-extended'
-    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.9.1"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:$nav_version"
 
     // Add window size utils
     implementation 'androidx.compose.material3.adaptive:adaptive'
     implementation "androidx.constraintlayout:constraintlayout-compose:1.1.1"
+    implementation "androidx.window:window:1.4.0"
+    implementation "androidx.compose.material3:material3-window-size-class"
+
 
     // Integration with activities
     implementation 'androidx.activity:activity-compose:1.10.1'
     // Integration with ViewModels
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1'
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$nav_version"
 
     implementation "androidx.room:room-runtime:$room_version"
     ksp "androidx.room:room-compiler:$room_version"
@@ -120,7 +123,8 @@ dependencies {
     implementation "androidx.navigation:navigation-ui:$nav_version"
 
     // Feature module support for Fragments
-    implementation "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
+//    implementation "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
+    implementation "androidx.hilt:hilt-navigation-compose:1.2.0"
 
     // Testing Navigation
     androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
@@ -132,8 +136,10 @@ dependencies {
 
     // Hilt
     implementation "com.google.dagger:hilt-android:2.56.2"
-    ksp "com.google.dagger:hilt-compiler:2.56.2"
-    implementation 'androidx.hilt:hilt-navigation-fragment:1.0.0'
+//    ksp "androidx.hilt:hilt-compiler:2.56.2"
+    ksp "com.google.dagger:hilt-android-compiler:2.56.2"
+    implementation 'androidx.hilt:hilt-navigation-fragment:1.2.0'
+//    implementation "androidx.hilt:hilt-work:1.2.0"
 
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'

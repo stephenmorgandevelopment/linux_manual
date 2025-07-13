@@ -15,16 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.PagerTab
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.TabInfo
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
 
 @Composable
 fun AppTabBar(
     modifier: Modifier = Modifier,
     selectedIndex: Int,
-    tabs: List<PagerTab>,
+    tabs: List<TabInfo>,
     scrollState: ScrollState,
-    onTabSelected: (MainScreenAction.TabSelected) -> Unit
+    onTabSelected: (MainScreenAction.TabSelected) -> Unit,
 ) {
     PrimaryScrollableTabRow(
         selectedTabIndex = selectedIndex,

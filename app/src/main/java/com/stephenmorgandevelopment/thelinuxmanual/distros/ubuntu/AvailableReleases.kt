@@ -1,4 +1,4 @@
-package com.stephenmorgandevelopment.thelinuxmanual.distros
+package com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu
 
 /**
  * To add new releases to the app or remove broken ones.
@@ -22,6 +22,6 @@ enum class AvailableReleases(
     XENIAL("xenial");
 
     companion object {
-        val releaseStrings get() = AvailableReleases.entries.map { it.pathString }
+        val releaseStrings get() = entries.map { it.pathString }
     }
 }

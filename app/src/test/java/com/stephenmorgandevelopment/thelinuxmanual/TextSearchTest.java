@@ -17,8 +17,6 @@ public class TextSearchTest {
 //    }
 
 
-
-
 //    private Command getTestCommand() {
 //        StringBuilder manPageHtml = new StringBuilder();
 

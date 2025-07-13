@@ -61,10 +61,6 @@ public class Helpers {
         return applicationContext;
     }
 
-    public static void cleanup() {
-        applicationContext = null;
-    }
-
     public static String string(int id) {
         return applicationContext.getString(id);
     }

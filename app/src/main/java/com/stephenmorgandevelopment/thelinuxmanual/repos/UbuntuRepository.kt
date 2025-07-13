@@ -1,24 +1,35 @@
 package com.stephenmorgandevelopment.thelinuxmanual.repos
 
 import android.content.Intent
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
 import androidx.lifecycle.asFlow
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService
+import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage
 import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter
+import com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu.UbuntuHtmlApiConverter
+import com.stephenmorgandevelopment.thelinuxmanual.models.Command
 import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem
-import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
 import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
+import com.stephenmorgandevelopment.thelinuxmanual.utils.isNull
+import com.stephenmorgandevelopment.thelinuxmanual.utils.stringFromRes
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.rx2.await
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.min
 
 @Singleton
 class UbuntuRepository @Inject constructor(
@@ -27,31 +38,40 @@ class UbuntuRepository @Inject constructor(
     private val localStorage: LocalStorage,
 ) {
 
-    suspend fun getCommandData(simpleCommand: SimpleCommand): Map<String, String> =
+    suspend fun getMatchingItemById(id: Long): MatchingItem? = withContext(Dispatchers.IO) {
+        roomDb.dao().getCommandBy(id)
+    }
+
+    suspend fun getCommandData(simpleCommand: MatchingItem): Map<String, String> =
         withContext(Dispatchers.IO) {
             if (localStorage.hasCommand(simpleCommand.id)) {
-                return@withContext getCommandFromStorage(simpleCommand)
+                return@withContext getCommandFromStorage(simpleCommand.id)
             }
 
             if (Helpers.hasInternet()) {
                 return@withContext fetchCommandData(simpleCommand.url)
+                    .also { saveCommandInBackground(simpleCommand.id, it) }
             }
 
             return@withContext emptyMap()
         }
 
-    suspend fun addDescription(matchedItem: MatchingItem): MatchingItem? {
-        return withContext(Dispatchers.IO) {
-            httpClient.fetchDescription(matchedItem.toSimpleCommand()).await()
+    suspend fun addDescription(matchedItem: MatchingItem): MatchingItem {
+        return withContext(Dispatchers.Default) {
+            httpClient.fetchDescription(matchedItem).await()
                 ?.let {
-                    UbuntuHtmlApiConverter.crawlForDescription(it.body?.string())
-                }?.let {
-                    matchedItem.copy(description = it)
+                    UbuntuHtmlApiConverter.crawlForDescriptionAndSections(it.body?.string())
+                }?.let { pair ->
+                    val description = AnnotatedString.fromHtml(
+                        pair.first ?: stringFromRes(R.string.no_description)
+                    ).text.run { substring(0, min(length, 120)) }
+
+                    val sections = pair.second.filterNotNull().toList()
+
+                    matchedItem.copy(descriptionPreview = description, sections = sections)
                 }?.also {
-                    roomDb.dao().update(it)
-//                    roomDb.dao().delete(it)
-//                    roomDb.dao().insert(it)
-                }
+                    this.async(Dispatchers.IO) { roomDb.dao().update(it) }.start()
+                } ?: matchedItem
         }
     }
 
@@ -64,17 +84,35 @@ class UbuntuRepository @Inject constructor(
             return CommandSyncService.enqueueWork(
                 Helpers.getApplicationContext(),
                 intent
-            ).asFlow()
+            ).asFlow().flowOn(Dispatchers.Main)
         }
 
         return CommandSyncService.getProgress().asFlow()
     }
 
-    private suspend fun getCommandFromStorage(simpleCommand: SimpleCommand): Map<String, String> {
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun saveCommandInBackground(id: Long, data: Map<String, String>) {
+        GlobalScope.launch {
+            withContext(Dispatchers.IO) {
+                localStorage.saveCommand(
+                    Command(id, data)
+                )
+            }
+        }.invokeOnCompletion { e ->
+            javaClass.ilog(
+                if (e.isNull()) "Successfully saved $id to disk."
+                else "Encountered error saving $id - ${e?.message}"
+            )
+        }
+    }
+
+    private suspend fun getCommandFromStorage(id: Long): Map<String, String> {
         return try {
-            localStorage.loadCommand(simpleCommand.id).data
+            withContext(Dispatchers.IO) {
+                localStorage.loadCommand(id).data
+            }
         } catch (e: IOException) {
-            javaClass.ilog("Unexpected file error loading - ${simpleCommand.name}: $e")
+            javaClass.ilog("Unexpected file error loading - $id: $e")
             emptyMap<String, String>()
         }
     }

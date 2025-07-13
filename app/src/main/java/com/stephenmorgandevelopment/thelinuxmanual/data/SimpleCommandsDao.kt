@@ -30,9 +30,24 @@ interface SimpleCommandsDao {
     @Query("SELECT * FROM $TABLE_NAME WHERE id=:id")
     suspend fun getCommandBy(id: Long): MatchingItem?
 
+    @Query("SELECT * FROM $TABLE_NAME LIMIT 1")
+    suspend fun getSingleCommand(): MatchingItem?
+
     @Query(
         "SELECT * FROM $TABLE_NAME WHERE name LIKE :searchText " +
                 "ORDER BY (name = :searchText) DESC, LENGTH(name)"
     )
-    fun partialMatches(searchText: String): Flow<List<MatchingItem>>
+    fun partialMatchesAsFlow(searchText: String): Flow<List<MatchingItem>>
+
+    @Query(
+        "SELECT * FROM $TABLE_NAME WHERE name LIKE :searchText " +
+                "ORDER BY (name = :searchText) DESC, LENGTH(name)"
+    )
+    suspend fun partialMatches(searchText: String): List<MatchingItem>
+
+//    @Query(
+//        "SELECT id, name, description, url FROM $TABLE_NAME WHERE name LIKE :searchText " +
+//                "ORDER BY (name = :searchText) DESC, LENGTH(name)"
+//    )
+//    fun partialShortMatches(searchText: String): Flow<List<ShortMatchItem>>
 }

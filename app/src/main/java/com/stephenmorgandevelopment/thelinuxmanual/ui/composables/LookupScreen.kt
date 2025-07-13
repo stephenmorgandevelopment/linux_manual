@@ -1,30 +1,27 @@
 package com.stephenmorgandevelopment.thelinuxmanual.ui.composables
 
 import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupState
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupViewModel
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.MatchingListItem
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.SearchBar
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
@@ -32,35 +29,43 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
 @Composable
 fun LookupScreen(
     searchOnBottom: Boolean,
-    viewModel: LookupViewModel = viewModel(
-        viewModelStoreOwner = LocalViewModelStoreOwner.current
-            ?: (LocalActivity.current as ComponentActivity),
-    ),
-    onItemClick: (Long, String) -> Unit,
+    state: LookupState,
+    onAction: (LookupAction) -> Unit,
+    lazyListState: LazyListState,
+    onMatchingItemClick: (String, Long) -> Unit,
 ) {
-    val activity = LocalActivity.current as ComponentActivity?
-        ?: throw IllegalStateException("We explicitly set this in our activity, so this shouldn't happen.")
 
-    val state by viewModel.state.collectAsStateWithLifecycle(lifecycleOwner = activity)
-
-    LookupScreenContent(searchOnBottom, state, viewModel::onAction, onItemClick)
+    LookupScreenContent(
+        searchOnBottom,
+        state,
+        lazyListState,
+        onAction,
+        onMatchingItemClick
+    )
 }
 
 @Composable
 private fun LookupScreenContent(
     searchOnBottom: Boolean,
     state: LookupState,
+    lazyListState: LazyListState,
     onAction: (LookupAction) -> Unit,
-    onItemClick: (Long, String) -> Unit,
+    onItemClick: (String, Long) -> Unit,
 ) {
-    Log.i("LookupScreenCompose", "recomposing lookup screen with ${state.matches.size} items.")
+    BackHandler(enabled = state.searchText.isNotEmpty()) {
+        Log.i("phenm", "LookupScreen backhandler clearing updateSearchText.")
+        onAction(LookupAction.UpdateSearchText(""))
+    }
 
     ConstraintLayout(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 8.dp),
     ) {
         val (searchBar, matchList) = createRefs()
 
         SearchBar(
+            text = state.searchText,
             modifier = Modifier.constrainAs(searchBar) {
                 top.linkTo(if (searchOnBottom) matchList.bottom else parent.top)
                 bottom.linkTo(if (searchOnBottom) parent.bottom else matchList.top)
@@ -76,19 +81,19 @@ private fun LookupScreenContent(
                 height = Dimension.fillToConstraints
                 width = Dimension.matchParent
             },
+            state = lazyListState,
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(vertical = 6.dp),
+            contentPadding = PaddingValues(vertical = 6.dp, horizontal = 5.dp),
         ) {
             items(
-                items = state.matches.toList(),
+                items = state.matches,
                 contentType = { null },
                 key = { it.id },
             ) {
-                onAction(LookupAction.AddDescription(it.id))
 
-                MatchingListItem(it.name, it.description) {
-                    onItemClick(it.id, it.url)
+                MatchingListItem(it.name, it.descriptionPreview) {
+                    onItemClick(it.name, it.id)
                 }
 
                 Spacer(
@@ -110,7 +115,7 @@ private fun PreviewLookupScreen() {
         MockObjects.matchItems,
     )
 
-    LookupScreenContent(true, lookupState, {}) { _, _ -> }
+    LookupScreenContent(true, lookupState, rememberLazyListState(), {}) { _, _ -> }
 }
 
 @Preview
@@ -121,5 +126,5 @@ private fun PreviewLookupScreenSearchBottom() {
         MockObjects.lookupItemsLongList,
     )
 
-    LookupScreenContent(true, lookupState, {}) { _, _ -> }
+    LookupScreenContent(true, lookupState, rememberLazyListState(), {}) { _, _ -> }
 }

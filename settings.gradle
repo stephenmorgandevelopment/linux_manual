@@ -1,2 +1,2 @@
-rootProject.name='The Linux Manual'
+rootProject.name = 'The Linux Manual'
 include ':app'

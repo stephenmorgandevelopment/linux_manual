@@ -21,5 +21,14 @@ class AppBindingModule {
         SimpleCommandsDatabase::class.java,
         "simple_commands",
     ).build()
-
 }
+
+//@InstallIn(ViewModelComponent::class)
+//@Module
+//class ManPageBindingModule {
+//
+//    @Provides
+//    fun manPageViewModel(
+//
+//    )
+//}

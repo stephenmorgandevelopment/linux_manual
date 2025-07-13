@@ -6,18 +6,20 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class TextSearchResult(
     val query: String,
-    val matchIndexes: List<SingleTextMatch>,
+    val textMatches: List<SingleTextMatch>,
 ) : Parcelable {
-    val count get(): Int = matchIndexes.size
+    val count get(): Int = textMatches.size
 
     /**
-     * @return SingleTextMatch
-     * @throws IndexOutOfBoundsException - if index is out of bounds...duh.
+     * @return SingleTextMatch - text match at index, index 0
+     * if out of bounds, or null if list is empty.
      */
-    fun getMatch(index: Int): SingleTextMatch = try {
-        matchIndexes[index]
+    fun getMatch(index: Int): SingleTextMatch? = try {
+        textMatches[index]
     } catch (e: IndexOutOfBoundsException) {
-        if (matchIndexes.isNotEmpty()) matchIndexes[0]
-        else throw e
+        if (textMatches.isNotEmpty()) textMatches[0]
+        else null
     }
+
+    fun getSectionAt(index: Int): String? = getMatch(index)?.section
 }

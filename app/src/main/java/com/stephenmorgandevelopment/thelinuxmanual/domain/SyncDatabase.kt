@@ -7,10 +7,14 @@ import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences
+import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchCompletable
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -23,7 +27,6 @@ import javax.inject.Inject
 class SyncDatabase @Inject constructor(
     private val preferences: Preferences,
     private val ubuntuRepository: UbuntuRepository,
-//    private val databaseHelper: DatabaseHelper,
     private val roomDatabase: SimpleCommandsDatabase,
     private val localStorage: LocalStorage,
 ) {
@@ -39,11 +42,11 @@ class SyncDatabase @Inject constructor(
         syncJob = syncScope.launchCompletable {
             withContext(Dispatchers.IO) {
                 if (Helpers.hasInternet()) {
-//            databaseHelper.wipeTable()
-                    roomDatabase.dao().wipeTable()
+                    releaseName?.let { preferences.PreferencesWriteAccess().setRelease(it).await() }
+                    if (roomDatabase.hasData()) roomDatabase.dao().wipeTable()
                     localStorage.wipeAll()
-
-                    releaseName?.let { preferences.PreferencesWriteAccess().setRelease(it) }
+                    if (roomDatabase.hasData()) roomDatabase.dao().wipeTable()
+                    else javaClass.ilog("Cleared room db successfully the first time.")
                     sync()
                 } else {
                     _progress.emit(CommandSyncService.COMPLETE_TAG)
@@ -52,6 +55,15 @@ class SyncDatabase @Inject constructor(
         }
         return progress
     }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun closeDatabase() = GlobalScope.async {
+        withContext(Dispatchers.IO) {
+            roomDatabase.close()
+        }
+    }
+
+    suspend fun hasData(): Boolean = roomDatabase.hasData()
 
     private suspend fun sync() {
         withContext(Dispatchers.Main) {

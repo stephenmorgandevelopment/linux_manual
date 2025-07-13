@@ -2,27 +2,24 @@
 
 package com.stephenmorgandevelopment.thelinuxmanual.ui.composables
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,66 +27,80 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.stephenmorgandevelopment.thelinuxmanual.distros.AvailableReleases
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ActivityViewModel
+import com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu.AvailableReleases.Companion.releaseStrings
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.PagerTab
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.OptionsMenuAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ScreenState
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.TabInfo
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.AppTabBar
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.AppToolbar
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.menus.LookupOptionsMenu
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.menus.ManPageOptionsMenu
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import com.stephenmorgandevelopment.thelinuxmanual.utils.showSyncText
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun BaseScreen(viewModel: ActivityViewModel = viewModel()) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val pagerState = rememberPagerState { state.tabs.size }
-    val tabScrollState = rememberScrollState()
-
-    LaunchedEffect(1) {
-        viewModel.state
-            .distinctUntilChanged { one, two -> one.selectedTabIndex == two.selectedTabIndex }
-            .onEach { screenState -> pagerState.scrollToPage(screenState.selectedTabIndex) }
-            .launchIn(this)
-    }
+fun BaseScreen(
+    content: @Composable () -> Unit,
+    screenState: ScreenState,
+    tabScrollState: ScrollState,
+    onActivityAction: (MainScreenAction) -> Unit,
+    onOptionsMenuAction: (OptionsMenuAction) -> Unit,
+) {
+    BackHandler(
+        enabled = false
+    ) {}
 
     BaseScreenContent(
-        state = state,
-        pagerState = pagerState,
+        state = screenState,
         tabScrollState = tabScrollState,
-        onAction = viewModel::onAction
+        onActivityAction = onActivityAction,
+        onOptionsMenuAction = onOptionsMenuAction,
+        content = content,
     )
 }
 
 @Composable
 private fun BaseScreenContent(
     state: ScreenState,
-    pagerState: PagerState,
     tabScrollState: ScrollState,
-    onAction: (MainScreenAction) -> Unit,
+    onActivityAction: (MainScreenAction) -> Unit,
+    onOptionsMenuAction: (OptionsMenuAction) -> Unit,
+    content: @Composable () -> Unit,
 ) {
+    BackHandler(enabled = false) {}
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets.systemBarsIgnoringVisibility,
+        contentWindowInsets = WindowInsets.systemBars,
         topBar = {
-            AppToolbar(
-                AvailableReleases.releaseStrings,
-                state.tabsOnBottom,
-                state.searchOnBottom,
-                onAction,
-            )
+            with(state) {
+                AppToolbar(state.toolbarTitle) {
+                    if (selectedTabIndex == 0) {
+                        LookupOptionsMenu(
+                            releaseStrings,
+                            tabsOnBottom,
+                            searchOnBottom,
+                        ) {
+                            onOptionsMenuAction(it)
+                        }
+                    } else {
+                        ManPageOptionsMenu(
+                            tabs[selectedTabIndex].title,
+                            tabs[selectedTabIndex].manPageSections,
+                        ) { onOptionsMenuAction(it) }
+                    }
+                }
+            }
         },
     ) { paddingValues ->
         val syncProgressScrollState = rememberScrollState()
+        BackHandler(enabled = false) {}
 
         if (state.syncProgress != null) {
             Text(
-                text = state.syncProgress,
+                text = showSyncText(state.toolbarTitle, state.syncProgress),
                 modifier = Modifier
                     .padding(paddingValues)
                     .verticalScroll(syncProgressScrollState),
@@ -99,9 +110,9 @@ private fun BaseScreenContent(
             CompletePager(
                 state = state,
                 paddingValues = paddingValues,
-                pagerState = pagerState,
                 tabScrollState = tabScrollState,
-                onAction = onAction,
+                onAction = onActivityAction,
+                content = content,
             )
         }
     }
@@ -111,37 +122,36 @@ private fun BaseScreenContent(
 private fun CompletePager(
     state: ScreenState,
     paddingValues: PaddingValues,
-    pagerState: PagerState,
     tabScrollState: ScrollState,
     onAction: (MainScreenAction) -> Unit,
+    content: @Composable () -> Unit,
 ) {
+    BackHandler(enabled = false) {}
+
     ConstraintLayout(
         modifier = Modifier
-            .padding(
-                top = paddingValues.calculateTopPadding(),
-                bottom = paddingValues.calculateBottomPadding(),
-            )
+            .padding(paddingValues)
+            .consumeWindowInsets(paddingValues)
             .fillMaxSize()
     ) {
         val (tabBar, pager) = createRefs()
 
-        if (!state.tabsOnBottom) {
-            AppTabBar(
-                modifier = Modifier
-                    .constrainAs(tabBar) {
-                        top.linkTo(parent.top)
-                        start.linkTo(parent.start)
-                    }
-                    .wrapContentSize(),
-                selectedIndex = state.selectedTabIndex,
-                tabs = state.tabs,
-                scrollState = tabScrollState,
-                onTabSelected = onAction,
-            )
-        }
+        AppTabBar(
+            modifier = Modifier
+                .constrainAs(tabBar) {
+                    start.linkTo(parent.start)
+                    if (state.tabsOnBottom) bottom.linkTo(parent.bottom)
+                    else top.linkTo(parent.top)
+                }
+                .padding(bottom = 3.dp)
+                .wrapContentSize(),
+            selectedIndex = state.selectedTabIndex,
+            tabs = state.tabs,
+            scrollState = tabScrollState,
+            onTabSelected = onAction,
+        )
 
-        HorizontalPager(
-            state = pagerState,
+        Box(
             modifier = Modifier
                 .constrainAs(pager) {
                     top.linkTo(if (!state.tabsOnBottom) tabBar.bottom else parent.top)
@@ -150,45 +160,22 @@ private fun CompletePager(
                     width = Dimension.matchParent
                 }
                 .background(color = Colors.transparent),
-            verticalAlignment = Alignment.Top,
         ) {
-            if (state.selectedTabIndex == 0) {
-                LookupScreen(
-                    searchOnBottom = state.searchOnBottom,
-                    onItemClick = { id, url -> onAction(MainScreenAction.ItemClick(id, url)) },
-                )
-            } else {
-                Text(
-                    text = "Placeholder ${state.selectedTabIndex}",
-                    style = TextStyle(fontSize = 40.sp),
-                    color = Colors.offWhite,
-                )
-            }
-        }
-
-        if (state.tabsOnBottom) {
-            AppTabBar(
-                Modifier
-                    .constrainAs(tabBar) {
-                        bottom.linkTo(parent.bottom)
-                        start.linkTo(parent.start)
-                    }
-                    .padding(vertical = 3.dp)
-                    .wrapContentSize(),
-                state.selectedTabIndex,
-                state.tabs,
-                tabScrollState,
-                onAction,
-            )
+            content()
         }
     }
 }
 
 
+/**
+ * Preview code
+ */
+
+
 private val previewState = ScreenState(
     toolbarTitle = "Test Preview Pages",
     selectedTabIndex = 0,
-    tabs = listOf(PagerTab("Search"), *MockObjects.pagerTabs.toTypedArray()),
+    tabs = listOf(TabInfo("Search"), *MockObjects.tabInfos.toTypedArray()),
     tabsOnBottom = true,
     searchOnBottom = true,
     syncProgress = null,
@@ -196,12 +183,35 @@ private val previewState = ScreenState(
 
 @Preview
 @Composable
+private fun PreviewBaseScreenTopSearchAndPager() {
+    val state = ScreenState(
+        toolbarTitle = "Test Preview Pages",
+        selectedTabIndex = 0,
+        tabs = MockObjects.tabInfos,
+        tabsOnBottom = false,
+        searchOnBottom = false,
+        syncProgress = null,
+    )
+
+    BaseScreenContent(
+        state,
+        rememberScrollState(),
+        {},
+        {},
+        {}
+    )
+}
+
+@Preview
+@Composable
 private fun PreviewBaseScreenBottomSearchAndPager() {
     BaseScreenContent(
         previewState,
-        rememberPagerState { MockObjects.pagerTabs.size },
         rememberScrollState(),
-    ) { }
+        {},
+        {},
+        {},
+    )
 }
 
 @Preview
@@ -209,8 +219,10 @@ private fun PreviewBaseScreenBottomSearchAndPager() {
 private fun PreviewBaseScreenBottomSearchAndPagerShort() {
     BaseScreenContent(
         previewState,
-        rememberPagerState { MockObjects.pagerTabs.size },
         rememberScrollState(),
-    ) { }
+        {},
+        {},
+        {},
+    )
 }
 

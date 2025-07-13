@@ -1,6 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
-import static com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter.crawlForManPages;
+import static com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu.UbuntuHtmlApiConverter.crawlForManPages;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,9 +12,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase;
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
-import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItemKt;
-import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu.UbuntuHtmlApiConverter;
+import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem;
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
@@ -60,12 +59,12 @@ public class CommandSyncService extends JobIntentService {
     private static volatile boolean working = false;
 
     public static LiveData<String> enqueueWork(Context context, Intent work) {
-        if (progress == null) {
-            progress = new MutableLiveData<>();
-        }
-        progress.setValue("Running initial sync to build local command database.");
+        if (progress == null) progress = new MutableLiveData<>();
+        if (working) return progress;
 
+        progress.setValue("Running initial sync to build local command database.");
         working = true;
+
         enqueueWork(context, CommandSyncService.class, JOB_ID, work);
 
         return progress;
@@ -113,11 +112,11 @@ public class CommandSyncService extends JobIntentService {
                     + "\nProcessing data...");
         }
 
-        List<SimpleCommand> pageCommands = crawlForManPages(response.body().string(), reqUrl);
+        List<MatchingItem> pageCommands = crawlForManPages(response.body().string(), reqUrl);
         updateProgress("\nSaving data locally...");
 
         if (pageCommands.size() > 0) {
-            mRoomDatabase.dao().insertAll(MatchingItemKt.toMatchingItems(pageCommands));
+            mRoomDatabase.dao().insertAll(pageCommands);
         }
     }
 

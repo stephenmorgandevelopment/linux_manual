@@ -8,6 +8,9 @@ import javax.inject.Inject
 class GetPartialMatchesUseCase @Inject constructor(
     private val roomDatabase: SimpleCommandsDatabase,
 ) {
-    operator fun invoke(searchText: String): Flow<List<MatchingItem>> =
+    suspend operator fun invoke(searchText: String): List<MatchingItem> =
         roomDatabase.dao().partialMatches(searchText)
+
+    fun asFlow(searchText: String): Flow<List<MatchingItem>> =
+        roomDatabase.dao().partialMatchesAsFlow(searchText)
 }

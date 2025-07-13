@@ -4,72 +4,124 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService
 import com.stephenmorgandevelopment.thelinuxmanual.R
-import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase
+import com.stephenmorgandevelopment.thelinuxmanual.domain.GetSectionsById
 import com.stephenmorgandevelopment.thelinuxmanual.domain.SyncDatabase
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.ChangeVersion
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.AddTab
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.CloseDatabase
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.ReSync
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.TabSelected
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.ToggleSearchOnBottom
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.ToggleTabsOnBottom
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchInCompletable
 import com.stephenmorgandevelopment.thelinuxmanual.utils.stringFromRes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CompletableJob
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
     private val preferences: Preferences,
     private val syncDatabase: SyncDatabase,
-    private val roomDatabase: SimpleCommandsDatabase,
+    private val getSectionsById: GetSectionsById,
     savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<ScreenState, MainScreenAction>(savedStateHandle = savedStateHandle) {
     private var syncJob: CompletableJob? = null
-    private val initialState: ScreenState = savedStateHandle[FULL_STATE_KEY] ?: ScreenState(
-        "Ubuntu Test Pages",
-        savedStateHandle[SELECTED_TAB_INDEX_KEY] ?: 0,
-        listOf(PagerTab(stringFromRes(R.string.search))),
-        preferences.tabsOnBottom,
-        preferences.searchOnBottom,
-        null,
+
+    private val _preferencesFlow = preferences.preferenceListener
+    private val _selectedTab = MutableStateFlow(0)
+    private val _tabs = MutableStateFlow(listOf(lookupTab))
+    private val _syncProgress = MutableStateFlow<String?>(null)
+
+    private val initialState = savedStateHandle[FULL_STATE_KEY] ?: ScreenState(
+        toolbarTitle = "${stringFromRes(R.string.app_name)}:"
+                + preferences.currentRelease.replaceFirstChar { it.uppercase() },
+        selectedTabIndex = 0,
+        tabs = _tabs.value,
+        tabsOnBottom = preferences.tabsOnBottom,
+        searchOnBottom = preferences.searchOnBottom,
+        syncProgress = null,
     )
 
-    override val _state: MutableStateFlow<ScreenState> = MutableStateFlow(initialState)
-    val state: StateFlow<ScreenState> = _state.asStateFlow()
+    private val _showPrivacyPolicyEvent =
+        MutableSharedFlow<Unit>(0, 1, BufferOverflow.DROP_OLDEST)
+
+    val showPrivacyPolicyEvent = _showPrivacyPolicyEvent.asSharedFlow()
+
+    override val state: StateFlow<ScreenState> = combine(
+        _preferencesFlow, _selectedTab, _tabs, _syncProgress
+    ) { prefs, selectedTab, tabs, syncProgress ->
+        val title =
+            if (selectedTab == 0) {
+                "${stringFromRes(R.string.app_name)} - " +
+                        prefs.release.replaceFirstChar { it.uppercase() }
+            } else {
+                tabs[selectedTab].title
+            }
+
+        ScreenState(
+            title,
+            selectedTab,
+            tabs,
+            prefs.tabsOnBottom,
+            prefs.searchOnBottm,
+            syncProgress,
+        ).also { persistState(it) }
+    }.stateIn(viewModelScope, started = SharingStarted.WhileSubscribed(15_000), initialState)
 
     init {
-        preferences.preferenceListener.onEach { prefs ->
-            _state.update {
-                it.copy(tabsOnBottom = prefs.tabsOnBottom, searchOnBottom = prefs.searchOnBottm)
-            }
-        }.launchIn(viewModelScope)
-
         viewModelScope.launch { syncIfNoData() }
     }
 
     override fun onAction(action: MainScreenAction) {
         when (action) {
-            is TabSelected -> changeTabsTo(action.tabIndex)
-            is ChangeVersion -> switchToVersion(action.version)
-            ToggleTabsOnBottom -> toggleTabsOnBottom()
-            ToggleSearchOnBottom -> toggleSearchOnBottom()
-            ReSync -> resyncCurrentRelease()
-            CloseDatabase -> roomDatabase.close()
-            is MainScreenAction.ItemClick -> itemClicked(action.itemId, action.url)
+            is TabSelected -> changeSelectedTabTo(action.tabIndex)
+            CloseDatabase -> syncDatabase.closeDatabase().start()
+            is AddTab -> addTab(action.title, action.itemId).start()
+            MainScreenAction.CloseTab -> closeTab().start()
         }
     }
 
-    private fun itemClicked(itemId: Long, url: String) {
+    override fun onOptionMenuAction(action: OptionsMenuAction) {
+        when (action) {
+            MainScreenOptionsMenuAction.ReSync -> resyncCurrentRelease()
+            is MainScreenOptionsMenuAction.ChangeVersion -> switchToVersion(action.version)
+            MainScreenOptionsMenuAction.ToggleTabsOnBottom -> toggleTabsOnBottom().start()
+            MainScreenOptionsMenuAction.ToggleSearchOnBottom -> toggleSearchOnBottom().start()
+            MainScreenOptionsMenuAction.TogglePrivacyPolicyVisible ->
+                _showPrivacyPolicyEvent.tryEmit(Unit)
+        }
+    }
 
+    private fun closeTab() = viewModelScope.async(Dispatchers.IO) {
+        with(state.value) {
+            val currentTabManPageId = tabs[selectedTabIndex].manPageId
+            if (_selectedTab.value == _tabs.value.lastIndex) _selectedTab.value =
+                selectedTabIndex.minus(1)
+            _tabs.value = state.value.tabs.filterNot { tab -> tab.manPageId == currentTabManPageId }
+        }
+    }
+
+    private fun addTab(title: String, itemId: Long) = viewModelScope.async {
+        withContext(Dispatchers.IO) {
+            if (_tabs.value.none { it.manPageId == itemId }) {
+                _tabs.value =
+                    listOf(
+                        *_tabs.value.toTypedArray(),
+                        TabInfo(title, itemId, getSectionsById(itemId)),
+                    )
+            }
+        }
     }
 
     private fun switchToVersion(version: String) {
@@ -79,43 +131,58 @@ class ActivityViewModel @Inject constructor(
     }
 
     private fun resyncCurrentRelease() {
+        _tabs.value = listOf(lookupTab)
         syncJob?.cancel()
         syncJob = sync().apply { invokeOnCompletion { syncJob = null } }
     }
 
-    private fun changeTabsTo(tabIndex: Int) {
-        _state.update { it.copy(selectedTabIndex = tabIndex) }
-        savedStateHandle[SELECTED_TAB_INDEX_KEY] = tabIndex
+    private fun changeSelectedTabTo(tabIndex: Int) {
+        _selectedTab.value = tabIndex
     }
 
-    private fun toggleTabsOnBottom() {
-        with(preferences) { PreferencesWriteAccess().setTabsOnBottom(!tabsOnBottom) }
+    private fun toggleTabsOnBottom() = viewModelScope.async {
+        withContext(Dispatchers.IO) {
+            with(preferences) { PreferencesWriteAccess().setTabsOnBottom(!tabsOnBottom) }
+        }
     }
 
-    private fun toggleSearchOnBottom() {
-        with(preferences) { PreferencesWriteAccess().setSearchOnBottom(!searchOnBottom) }
+    private fun toggleSearchOnBottom() = viewModelScope.async {
+        withContext(Dispatchers.IO) {
+            with(preferences) { PreferencesWriteAccess().setSearchOnBottom(!searchOnBottom) }
+        }
     }
 
-    private suspend fun syncIfNoData() {
-        if (!roomDatabase.hasData() && !CommandSyncService.isWorking() && syncJob?.isActive != true) {
+    private suspend fun syncIfNoData() = withContext(Dispatchers.IO) {
+        if (!syncDatabase.hasData() && !CommandSyncService.isWorking()) {
             syncJob = sync().apply { invokeOnCompletion { syncJob = null } }
         }
     }
 
     private fun trackSyncProgress(): CompletableJob =
         syncDatabase.progress.onEach { text ->
-            if (text == CommandSyncService.COMPLETE_TAG) {
-                _state.update { it.copy(syncProgress = null) }
-                syncJob?.complete()
-            } else {
-                _state.update { it.copy(syncProgress = it.syncProgress + "\n$text") }
+            withContext(Dispatchers.IO) {
+                if (text == CommandSyncService.COMPLETE_TAG) {
+                    _syncProgress.emit(null)
+                    syncJob?.complete()
+                } else {
+                    _syncProgress.emit(_syncProgress.value + text)
+                }
             }
         }.launchInCompletable(viewModelScope)
 
     private fun sync(): CompletableJob {
+        _tabs.value = listOf(lookupTab)
         syncDatabase()
         return trackSyncProgress()
     }
+
+//    fun persistState(latestState: ScreenState) {
+//        viewModelScope.launch {
+//            withContext(Dispatchers.IO) { savedStateHandle[FULL_STATE_KEY] = latestState }
+//        }
+//    }
+
+    private val lookupTab get() = TabInfo(stringFromRes(R.string.search))
 
     companion object {
         private const val SELECTED_TAB_INDEX_KEY = "SELECTED_TAB_INDEX_KEY"

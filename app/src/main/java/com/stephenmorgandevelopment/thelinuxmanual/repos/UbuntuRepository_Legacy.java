@@ -10,7 +10,7 @@ package com.stephenmorgandevelopment.thelinuxmanual.repos;
 /// /import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper;
 //import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage;
 //import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase;
-//import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
+//import com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu.UbuntuHtmlApiConverter;
 //import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
 //import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItemKt;
 //import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
@@ -33,7 +33,7 @@ package com.stephenmorgandevelopment.thelinuxmanual.repos;
 //
 //	@NonNull
 //	private final HttpClient mHttpClient;
-////	private final DatabaseHelper mDatabaseHelper;
+/// /	private final DatabaseHelper mDatabaseHelper;
 //	private final SimpleCommandsDatabase mRoomdb;
 //	private final LocalStorage mLocalStorage;
 //

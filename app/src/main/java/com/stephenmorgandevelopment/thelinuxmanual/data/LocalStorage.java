@@ -24,7 +24,7 @@ public class LocalStorage {
     private final File commandsDir;
 
     public static LocalStorage getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new LocalStorage();
         }
         return instance;
@@ -44,7 +44,7 @@ public class LocalStorage {
         File commandFile = new File(commandsDir, String.valueOf(id));
         StringBuilder json = new StringBuilder();
 
-        if(commandFile.exists()) {
+        if (commandFile.exists()) {
             FileInputStream inputStream = new FileInputStream(commandFile);
             InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 
@@ -53,7 +53,7 @@ public class LocalStorage {
             do {
                 bytesRead = reader.read(buffer);
                 json.append(String.valueOf(buffer));
-            } while(bytesRead != -1);
+            } while (bytesRead != -1);
 
             reader.close();
         }
@@ -71,9 +71,9 @@ public class LocalStorage {
                 outputWriter.write(command.dataMapToJsonString());
                 outputWriter.close();
 
-                Log.i(TAG ,"Successfully save to disk: " + command.getShortName());
+                Log.i(TAG, "Successfully save to disk: " + command.getId());
             } catch (IOException ioe) {
-                Log.i(TAG, "Error saving: " + command.getShortName() + ioe.getMessage());
+                Log.i(TAG, "Error saving: " + command.getId() + ioe.getMessage());
             }
         }
     }
@@ -81,13 +81,13 @@ public class LocalStorage {
     public void wipeAll() {
         File[] commands = commandsDir.listFiles();
 
-        if(commands == null) {
+        if (commands == null) {
             Log.i(TAG, "This shouldn't happen. Result of commandsDir not being a dir.");
             return;
         }
 
-        for(File command : commands) {
-            if(!command.delete()) {
+        for (File command : commands) {
+            if (!command.delete()) {
                 Log.i(TAG, "Error removing command with id: " + command.getName());
             }
         }

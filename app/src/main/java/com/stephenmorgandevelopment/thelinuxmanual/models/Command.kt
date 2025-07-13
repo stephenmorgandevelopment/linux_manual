@@ -1,14 +1,12 @@
 package com.stephenmorgandevelopment.thelinuxmanual.models
 
 import android.os.Parcelable
-import android.text.Html
-import android.text.SpannableStringBuilder
-import androidx.room.Ignore
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
 import com.google.gson.Gson
 import com.google.gson.Strictness
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.io.StringReader
 import java.util.Locale
@@ -18,26 +16,6 @@ data class Command(
     val id: Long,
     val data: Map<String, String>,
 ) : Parcelable {
-
-    @IgnoredOnParcel
-    @Ignore
-    private var _shortName: String? = null
-
-    fun getShortName(): String = _shortName ?: genShortName().also { _shortName = it }
-
-    fun genShortName(): String {
-        var name = Html.fromHtml(data["NAME"], Html.FROM_HTML_MODE_LEGACY)
-            .toString().let {
-                it.substring(0, it.indexOf(" "))
-            }
-
-        if (name.contains(",")) {
-            name = name.substring(0, name.indexOf(","))
-        }
-
-        return name
-    }
-
     fun dataMapToJsonString(): String {
         val gson = Gson()
         return gson.toJson(this.data)
@@ -51,9 +29,7 @@ data class Command(
             val lowerCaseQuery = query.lowercase(Locale.getDefault())
 
             if (tmpText.contains(lowerCaseQuery)) {
-                val textString = SpannableStringBuilder(
-                    Html.fromHtml(tmpText, Html.FROM_HTML_MODE_LEGACY)
-                ).toString()
+                val textString = AnnotatedString.fromHtml(tmpText)
 
                 val indexes: List<SingleTextMatch> = getMatchIndexes(
                     query = lowerCaseQuery,
@@ -68,17 +44,26 @@ data class Command(
         return TextSearchResult(query, matchIndexes.toList())
     }
 
-    fun getMatchIndexes(query: String, text: String, header: String): List<SingleTextMatch> {
+    private fun getMatchIndexes(
+        query: String,
+        text: AnnotatedString,
+        header: String,
+    ): List<SingleTextMatch> {
         val indexes: MutableList<SingleTextMatch> = mutableListOf<SingleTextMatch>()
 
         var mutableText = text
         var runningIndex = 0
         while (mutableText.contains(query)) {
-            val idx = text.indexOf(query)
-            indexes.add(SingleTextMatch(header, idx + runningIndex))
-            mutableText = text.substring(idx + query.length)
+            val idx = mutableText.indexOf(query)
+
+            (idx + runningIndex).let {
+                indexes.add(
+                    SingleTextMatch(header, it, it.plus(query.length))
+                )
+            }
 
             runningIndex += (idx + query.length)
+            mutableText = text.subSequence(runningIndex, text.lastIndex)
         }
 
         return indexes.toList()

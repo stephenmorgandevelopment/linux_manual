@@ -4,8 +4,8 @@ import static com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.hasInter
 
 import androidx.annotation.NonNull;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
-import com.stephenmorgandevelopment.thelinuxmanual.models.SimpleCommand;
+import com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu.UbuntuHtmlApiConverter;
+import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences;
 
@@ -32,7 +32,7 @@ public class HttpClient {
     private static final OkHttpClient okClient;
 
     static {
-        if(cache == null) {
+        if (cache == null) {
             cache = new okhttp3.Cache(
                     new File(Helpers.getCacheDir(), "http_cache"),
                     10_485_760);
@@ -58,9 +58,9 @@ public class HttpClient {
     }
 
     public Single<Response> fetchDirsHtml() throws IOException {
-         if(hasInternet()) {
-             String url = UbuntuHtmlApiConverter.BASE_URL + mPreferences.getCurrentRelease() /*UbuntuHtmlApiConverter.getReleaseString()*/
-                     + "/" + Helpers.getLocale();
+        if (hasInternet()) {
+            String url = UbuntuHtmlApiConverter.BASE_URL + mPreferences.getCurrentRelease() /*UbuntuHtmlApiConverter.getReleaseString()*/
+                    + "/" + Helpers.getLocale();
 
             Request req = new Request.Builder().url(url).build();
 
@@ -71,7 +71,7 @@ public class HttpClient {
     }
 
     public Single<Response> fetchCommandManPage(String pageUrl) {
-        if(hasInternet()) {
+        if (hasInternet()) {
             Request req = new Request.Builder().url(pageUrl).build();
             return Single.defer(() -> Single.just(okClient.newCall(req).execute()));
         } else {
@@ -79,7 +79,7 @@ public class HttpClient {
         }
     }
 
-    public Single<Response> fetchDescription(SimpleCommand command) {
+    public Single<Response> fetchDescription(MatchingItem command) {
         Request request = new Request.Builder().url(command.getUrl()).build();
         return Single.defer(() -> Single.just(okClient.newCall(request).execute()));
     }

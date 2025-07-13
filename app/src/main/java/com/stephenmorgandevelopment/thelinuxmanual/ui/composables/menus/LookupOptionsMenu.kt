@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -33,8 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.stephenmorgandevelopment.thelinuxmanual.R
-import com.stephenmorgandevelopment.thelinuxmanual.distros.AvailableReleases
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction
+import com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu.AvailableReleases
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenOptionsMenuAction
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.OptionsMenuAction
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.appbarTitleStyle
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.optionsMenuItemPadding
@@ -51,22 +53,26 @@ fun LookupOptionsMenu(
     releasesAvailable: List<String>,
     tabsOnBottom: Boolean = false,
     searchOnBottom: Boolean = false,
-    onItemClicked: (MainScreenAction) -> Unit,
+    onItemClicked: (OptionsMenuAction) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var releaseOptionsExpanded by remember { mutableStateOf(false) }
-    var scrollState = rememberScrollState()
+    val scrollState = rememberScrollState()
+
+    fun closeMenu() {
+        expanded = false
+    }
 
     Box(
         modifier = Modifier
             .background(Colors.transparent)
-            .fillMaxWidth()
+            .wrapContentWidth()
             .height(toolbarHeight)
-//            .wrapContentHeight()
             .padding(0.dp),
         contentAlignment = Alignment.CenterEnd,
     ) {
         SettingsButton { expanded = !expanded }
+
         DropdownMenu(
             shape = RoundedCornerShape(4.dp),
             modifier = Modifier
@@ -77,19 +83,18 @@ fun LookupOptionsMenu(
                 ),
             expanded = expanded,
             onDismissRequest = { expanded = false },
-
-//            border = BorderStroke(1.dp, Colors.black),
+            shadowElevation = 4.dp,
         ) {
             DropdownMenuItem(
                 modifier = Modifier.padding(optionsMenuItemPadding),
                 text = makeComposableText(R.string.resync_button, optionsMenuTextStyle),
-                onClick = { onItemClicked(MainScreenAction.ReSync) },
+                onClick = { onItemClicked(MainScreenOptionsMenuAction.ReSync); closeMenu() },
             )
 
             DropdownMenuItem(
                 modifier = Modifier.padding(optionsMenuItemPadding),
                 text = makeComposableText(R.string.tabs_on_bottom, optionsMenuTextStyle),
-                onClick = { onItemClicked(MainScreenAction.ToggleTabsOnBottom) },
+                onClick = { onItemClicked(MainScreenOptionsMenuAction.ToggleTabsOnBottom); closeMenu() },
                 trailingIcon = {
                     if (tabsOnBottom) Icon(Icons.Filled.Check, "Enabled")
                     else null
@@ -99,7 +104,7 @@ fun LookupOptionsMenu(
             DropdownMenuItem(
                 modifier = Modifier.padding(optionsMenuItemPadding),
                 text = makeComposableText(R.string.search_on_bottom, optionsMenuTextStyle),
-                onClick = { onItemClicked(MainScreenAction.ToggleSearchOnBottom) },
+                onClick = { onItemClicked(MainScreenOptionsMenuAction.ToggleSearchOnBottom); closeMenu() },
                 trailingIcon = {
                     if (searchOnBottom) Icon(Icons.Filled.Check, "Enabled")
                     else null
@@ -135,7 +140,12 @@ fun LookupOptionsMenu(
                                 .padding(releaseOptionsItemPadding)
                                 .clickable(
                                     onClick = {
-                                        onItemClicked(MainScreenAction.ChangeVersion(release))
+                                        onItemClicked(
+                                            MainScreenOptionsMenuAction.ChangeVersion(
+                                                release
+                                            )
+                                        )
+                                        closeMenu()
                                     }
                                 ),
                             text = release,
@@ -144,6 +154,15 @@ fun LookupOptionsMenu(
                     }
                 }
             }
+
+            DropdownMenuItem(
+                modifier = Modifier.padding(optionsMenuItemPadding),
+                text = makeComposableText(R.string.privacy_policy_button, optionsMenuTextStyle),
+                onClick = {
+                    onItemClicked(MainScreenOptionsMenuAction.TogglePrivacyPolicyVisible)
+                    closeMenu()
+                },
+            )
         }
     }
 }
