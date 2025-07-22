@@ -3,21 +3,29 @@ package com.stephenmorgandevelopment.thelinuxmanual.utils
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.defaultTextStyle
 
-val loadingAnnotatedString = stringFromRes(R.string.fetching_data)
+val loadingString = stringFromRes(R.string.fetching_data)
+val noInternedString = stringFromRes(R.string.offline_description_preview)
 
-private val charactersToSanitize = listOf<Char>(
+private val charactersToSanitize = listOf(
     '!', ';', '&', '"', '#', '\'', '\\',
 )
 
+@Composable
+fun Dp.asPx(): Int {
+    with(LocalDensity.current) {
+        return this@asPx.roundToPx()
+    }
+}
+
 fun sanitizeInput(text: String): String {
-    var mutableText: String = text
-    charactersToSanitize.forEach { char -> mutableText.filter { it == char } }
-    return mutableText
+    return text.filterNot { charactersToSanitize.contains(it) }
 }
 
 val String.queryAdjusted get() = if (length >= 4) "%$this%" else "$this%"
@@ -25,6 +33,8 @@ val String.queryAdjusted get() = if (length >= 4) "%$this%" else "$this%"
 fun stringFromRes(id: Int) =
     Helpers.getApplicationContext().resources.getString(id)
 
+fun stringFromRes(id: Int, vararg params: Any) =
+    Helpers.getApplicationContext().resources.getString(id, *params)
 
 @Composable
 fun getString(id: Int): String {
@@ -47,9 +57,9 @@ fun TextLayoutResult.calculateScrollOffsetFor(charIndex: Int): Int {
     ).toInt()
 }
 
-private var syncTextCalls: Int = 0
+private var syncTextDots: Int = 0
 fun showSyncText(title: String, syncProgress: String): String {
-    val textDots = (++syncTextCalls % 3).let {
+    val textDots = (++syncTextDots % 3).let {
         return@let when (it) {
             0 -> "."
             1 -> ".."

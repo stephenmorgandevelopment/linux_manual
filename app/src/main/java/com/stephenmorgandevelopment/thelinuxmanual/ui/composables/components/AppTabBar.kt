@@ -4,7 +4,7 @@ package com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
@@ -30,13 +30,13 @@ fun AppTabBar(
         selectedTabIndex = selectedIndex,
         modifier = modifier
             .fillMaxWidth()
-            .wrapContentSize(),
-        edgePadding = 5.dp,
+            .wrapContentHeight(),
+        edgePadding = 0.dp,
         indicator = {
             TabRowDefaults.PrimaryIndicator(
                 Modifier.tabIndicatorOffset(
-                    selectedIndex,
-                    matchContentSize = true
+                    selectedTabIndex = selectedIndex,
+                    matchContentSize = false
                 ),
                 width = Dp.Unspecified,
                 color = Colors.indicatorColor,

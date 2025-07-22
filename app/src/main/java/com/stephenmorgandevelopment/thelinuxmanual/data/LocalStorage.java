@@ -70,10 +70,8 @@ public class LocalStorage {
                 OutputStreamWriter outputWriter = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
                 outputWriter.write(command.dataMapToJsonString());
                 outputWriter.close();
-
-                Log.i(TAG, "Successfully save to disk: " + command.getId());
             } catch (IOException ioe) {
-                Log.i(TAG, "Error saving: " + command.getId() + ioe.getMessage());
+                Log.w(TAG, "Error saving: " + command.getId() + ioe.getMessage());
             }
         }
     }
@@ -82,7 +80,7 @@ public class LocalStorage {
         File[] commands = commandsDir.listFiles();
 
         if (commands == null) {
-            Log.i(TAG, "This shouldn't happen. Result of commandsDir not being a dir.");
+            Log.w(TAG, "Error reading contents of commandsDir.  path: " + commandsDir.getPath());
             return;
         }
 

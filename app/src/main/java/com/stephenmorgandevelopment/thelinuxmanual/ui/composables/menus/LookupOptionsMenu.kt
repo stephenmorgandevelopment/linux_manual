@@ -159,7 +159,7 @@ fun LookupOptionsMenu(
                 modifier = Modifier.padding(optionsMenuItemPadding),
                 text = makeComposableText(R.string.privacy_policy_button, optionsMenuTextStyle),
                 onClick = {
-                    onItemClicked(MainScreenOptionsMenuAction.TogglePrivacyPolicyVisible)
+                    onItemClicked(MainScreenOptionsMenuAction.ShowPrivacyPolicyDialog)
                     closeMenu()
                 },
             )

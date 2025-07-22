@@ -1,4 +1,4 @@
-package com.stephenmorgandevelopment.thelinuxmanual.presentation
+package com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -6,9 +6,19 @@ import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService
 import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.domain.GetSectionsById
 import com.stephenmorgandevelopment.thelinuxmanual.domain.SyncDatabase
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.AddTab
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.CloseDatabase
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.ShowOfflineDialog
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.TabSelected
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenOptionsMenuAction
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenOptionsMenuAction.ShowPrivacyPolicyDialog
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.OptionsMenuAction
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.ScreenState
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.ShowDialogEvents
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.ShowDialogEvents.NoInternet
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.TabInfo
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchInCompletable
 import com.stephenmorgandevelopment.thelinuxmanual.utils.stringFromRes
@@ -44,8 +54,8 @@ class ActivityViewModel @Inject constructor(
     private val _syncProgress = MutableStateFlow<String?>(null)
 
     private val initialState = savedStateHandle[FULL_STATE_KEY] ?: ScreenState(
-        toolbarTitle = "${stringFromRes(R.string.app_name)}:"
-                + preferences.currentRelease.replaceFirstChar { it.uppercase() },
+        title = stringFromRes(R.string.app_name),
+        subtitle = preferences.currentRelease.replaceFirstChar { it.uppercase() },
         selectedTabIndex = 0,
         tabs = _tabs.value,
         tabsOnBottom = preferences.tabsOnBottom,
@@ -53,31 +63,31 @@ class ActivityViewModel @Inject constructor(
         syncProgress = null,
     )
 
-    private val _showPrivacyPolicyEvent =
-        MutableSharedFlow<Unit>(0, 1, BufferOverflow.DROP_OLDEST)
+    private val _showDialogEvent =
+        MutableSharedFlow<ShowDialogEvents>(0, 1, BufferOverflow.DROP_OLDEST)
 
-    val showPrivacyPolicyEvent = _showPrivacyPolicyEvent.asSharedFlow()
+    val showDialogEvent = _showDialogEvent.asSharedFlow()
 
     override val state: StateFlow<ScreenState> = combine(
         _preferencesFlow, _selectedTab, _tabs, _syncProgress
     ) { prefs, selectedTab, tabs, syncProgress ->
         val title =
             if (selectedTab == 0) {
-                "${stringFromRes(R.string.app_name)} - " +
-                        prefs.release.replaceFirstChar { it.uppercase() }
+                stringFromRes(R.string.app_name)
             } else {
                 tabs[selectedTab].title
             }
 
         ScreenState(
-            title,
-            selectedTab,
-            tabs,
-            prefs.tabsOnBottom,
-            prefs.searchOnBottm,
-            syncProgress,
+            title = title,
+            subtitle = prefs.release.replaceFirstChar { it.uppercase() },
+            selectedTabIndex = selectedTab,
+            tabs = tabs,
+            tabsOnBottom = prefs.tabsOnBottom,
+            searchOnBottom = prefs.searchOnBottm,
+            syncProgress = syncProgress,
         ).also { persistState(it) }
-    }.stateIn(viewModelScope, started = SharingStarted.WhileSubscribed(15_000), initialState)
+    }.stateIn(viewModelScope, started = SharingStarted.Lazily, initialState)
 
     init {
         viewModelScope.launch { syncIfNoData() }
@@ -89,6 +99,9 @@ class ActivityViewModel @Inject constructor(
             CloseDatabase -> syncDatabase.closeDatabase().start()
             is AddTab -> addTab(action.title, action.itemId).start()
             MainScreenAction.CloseTab -> closeTab().start()
+            is ShowOfflineDialog -> {
+                if (currentTab.manPageId == action.manPageId) _showDialogEvent.tryEmit(NoInternet)
+            }
         }
     }
 
@@ -98,8 +111,7 @@ class ActivityViewModel @Inject constructor(
             is MainScreenOptionsMenuAction.ChangeVersion -> switchToVersion(action.version)
             MainScreenOptionsMenuAction.ToggleTabsOnBottom -> toggleTabsOnBottom().start()
             MainScreenOptionsMenuAction.ToggleSearchOnBottom -> toggleSearchOnBottom().start()
-            MainScreenOptionsMenuAction.TogglePrivacyPolicyVisible ->
-                _showPrivacyPolicyEvent.tryEmit(Unit)
+            ShowPrivacyPolicyDialog -> _showDialogEvent.tryEmit(ShowDialogEvents.PrivacyPolicy)
         }
     }
 
@@ -125,6 +137,7 @@ class ActivityViewModel @Inject constructor(
     }
 
     private fun switchToVersion(version: String) {
+        _tabs.value = listOf(lookupTab)
         syncJob?.cancel()
         syncDatabase(version)
         syncJob = trackSyncProgress().apply { invokeOnCompletion { syncJob = null } }
@@ -154,7 +167,11 @@ class ActivityViewModel @Inject constructor(
 
     private suspend fun syncIfNoData() = withContext(Dispatchers.IO) {
         if (!syncDatabase.hasData() && !CommandSyncService.isWorking()) {
-            syncJob = sync().apply { invokeOnCompletion { syncJob = null } }
+            if (Helpers.hasInternet()) {
+                syncJob = sync().apply { invokeOnCompletion { syncJob = null } }
+            } else {
+                _syncProgress.value = stringFromRes(R.string.offline_without_database)
+            }
         }
     }
 
@@ -176,15 +193,6 @@ class ActivityViewModel @Inject constructor(
         return trackSyncProgress()
     }
 
-//    fun persistState(latestState: ScreenState) {
-//        viewModelScope.launch {
-//            withContext(Dispatchers.IO) { savedStateHandle[FULL_STATE_KEY] = latestState }
-//        }
-//    }
-
     private val lookupTab get() = TabInfo(stringFromRes(R.string.search))
-
-    companion object {
-        private const val SELECTED_TAB_INDEX_KEY = "SELECTED_TAB_INDEX_KEY"
-    }
+    private val currentTab get() = _tabs.value[_selectedTab.value]
 }

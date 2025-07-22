@@ -2,7 +2,6 @@ package com.stephenmorgandevelopment.thelinuxmanual
 
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,10 +17,11 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.compose.rememberNavController
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ActivityViewModel
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupViewModel
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageSearchState
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.ActivityViewModel
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.LookupViewModel
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.UbuntuManPageTheme
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.PagerNavHost
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -49,7 +49,6 @@ class MainActivity : AppCompatActivity() {
                 statusBarStyle = SystemBarStyle.dark(0xededed)
             )
 
-            BackHandler(enabled = false) {}
             val navController = rememberNavController()
 
             var searchStates: Map<Long, ManPageSearchState> by rememberSaveable(
@@ -63,19 +62,21 @@ class MainActivity : AppCompatActivity() {
                 LocalActivity provides this,
                 LocalViewModelStoreOwner provides this as ViewModelStoreOwner,
             ) {
-                PagerNavHost(
-                    activityViewModel,
-                    lookupViewModel,
-                    navController,
-                    searchStates.toMap(),
-                    onFinish = { finish() },
-                    updateSearchState = {
-                        searchStates.toMutableMap().let { mutableMap ->
-                            mutableMap[it.id] = it
-                            searchStates = mutableMap
+                UbuntuManPageTheme {
+                    PagerNavHost(
+                        activityViewModel,
+                        lookupViewModel,
+                        navController,
+                        searchStates.toMap(),
+                        onFinish = { finish() },
+                        updateSearchState = {
+                            searchStates.toMutableMap().let { mutableMap ->
+                                mutableMap[it.id] = it
+                                searchStates = mutableMap
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

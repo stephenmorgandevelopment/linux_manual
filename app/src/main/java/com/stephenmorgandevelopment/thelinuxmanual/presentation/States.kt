@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command
 import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem
 import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 interface State : Parcelable
@@ -12,13 +13,17 @@ interface State : Parcelable
 @Parcelize
 @Immutable
 data class ScreenState(
-    val toolbarTitle: String,
+    val title: String,
+    val subtitle: String,
     val selectedTabIndex: Int,
     val tabs: List<TabInfo>,
     val tabsOnBottom: Boolean = false,
     val searchOnBottom: Boolean = false,
     val syncProgress: String? = null,
-) : State
+) : State {
+    @IgnoredOnParcel
+    val currentTab: TabInfo get() = tabs[selectedTabIndex]
+}
 
 @Parcelize
 @Immutable
@@ -31,13 +36,19 @@ data class LookupState(
 @Immutable
 data class ManPageTabState(
     val command: Command? = null,
-//    val searchResults: TextSearchResult? = null,
-//    val searchVisible: Boolean = false,
-//    val searchText: String = "",
-    val jumpTo: JumpToData? = null,
+    val loading: Boolean = false,
+    val currentSection: String = "",
 ) : State {
     fun getSectionIndexByName(sectionName: String?): Int? {
-        return sectionName?.let { command?.data?.keys?.indexOf(it) }
+        if (sectionName.isNullOrBlank()) return null
+
+        command?.data?.toList()?.let { list ->
+            for (idx in list.indices) {
+                if (list[idx].first == sectionName) return idx
+            }
+        }
+
+        return null
     }
 }
 
@@ -74,5 +85,4 @@ data class TabInfoExp(
 data class JumpToData(
     val section: String,
     val offset: Int = 0,
-    val quickJump: Boolean = false,
 ) : Parcelable

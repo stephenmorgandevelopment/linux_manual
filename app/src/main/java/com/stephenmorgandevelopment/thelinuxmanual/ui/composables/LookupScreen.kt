@@ -1,6 +1,5 @@
 package com.stephenmorgandevelopment.thelinuxmanual.ui.composables
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,6 +33,7 @@ fun LookupScreen(
     lazyListState: LazyListState,
     onMatchingItemClick: (String, Long) -> Unit,
 ) {
+    BackHandler(enabled = false) {}
 
     LookupScreenContent(
         searchOnBottom,
@@ -52,11 +52,6 @@ private fun LookupScreenContent(
     onAction: (LookupAction) -> Unit,
     onItemClick: (String, Long) -> Unit,
 ) {
-    BackHandler(enabled = state.searchText.isNotEmpty()) {
-        Log.i("phenm", "LookupScreen backhandler clearing updateSearchText.")
-        onAction(LookupAction.UpdateSearchText(""))
-    }
-
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()

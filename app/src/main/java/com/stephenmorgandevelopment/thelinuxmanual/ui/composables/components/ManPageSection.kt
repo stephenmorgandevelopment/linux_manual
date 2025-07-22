@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
@@ -34,16 +35,24 @@ fun ManPageSection(
     singleTextMatch: SingleTextMatch? = null,
     onTextMatchedOffset: ((Int) -> Unit)? = null,
 ) {
-    val annotatedString = singleTextMatch?.let {
-        buildAnnotatedString {
-            with(AnnotatedString.fromHtml(data)) {
-                append(subSequence(0, it.startIndex))
-                withStyle(matchingTextSpanStyle) { append(subSequence(it.startIndex, it.endIndex)) }
-                append(subSequence(it.endIndex, length))
+    val annotatedString = remember(singleTextMatch?.startIndex, singleTextMatch?.endIndex) {
+        singleTextMatch?.let {
+            buildAnnotatedString {
+                with(AnnotatedString.fromHtml(data)) {
+                    append(subSequence(0, it.startIndex))
+                    withStyle(matchingTextSpanStyle) {
+                        append(
+                            subSequence(
+                                it.startIndex,
+                                it.endIndex
+                            )
+                        )
+                    }
+                    append(subSequence(it.endIndex, length))
+                }
             }
-        }
-    } ?: AnnotatedString.fromHtml(data)
-
+        } ?: AnnotatedString.fromHtml(data)
+    }
 
     Column(
         modifier = Modifier
@@ -68,15 +77,14 @@ fun ManPageSection(
             text = annotatedString,
             style = matchDescriptionTextStyle,
             onTextLayout = { layout ->
-                val scrollOffset = singleTextMatch?.let {
-                    layout.calculateScrollOffsetFor(it.startIndex)
-                } ?: SingleTextMatch.NO_TEXT_MATCH
-
-                onTextMatchedOffset?.invoke(scrollOffset)
+                singleTextMatch?.let {
+                    onTextMatchedOffset?.invoke(
+                        layout.calculateScrollOffsetFor(it.startIndex)
+                    )
+                }
             }
         )
     }
-
 }
 
 @Preview

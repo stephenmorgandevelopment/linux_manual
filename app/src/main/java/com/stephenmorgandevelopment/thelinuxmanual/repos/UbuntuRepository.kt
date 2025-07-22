@@ -14,8 +14,9 @@ import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
 import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
-import com.stephenmorgandevelopment.thelinuxmanual.utils.isNull
+import com.stephenmorgandevelopment.thelinuxmanual.utils.isNotNull
 import com.stephenmorgandevelopment.thelinuxmanual.utils.stringFromRes
+import com.stephenmorgandevelopment.thelinuxmanual.utils.wlog
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -51,9 +52,9 @@ class UbuntuRepository @Inject constructor(
             if (Helpers.hasInternet()) {
                 return@withContext fetchCommandData(simpleCommand.url)
                     .also { saveCommandInBackground(simpleCommand.id, it) }
+            } else {
+                return@withContext emptyMap<String, String>()
             }
-
-            return@withContext emptyMap()
         }
 
     suspend fun addDescription(matchedItem: MatchingItem): MatchingItem {
@@ -64,7 +65,7 @@ class UbuntuRepository @Inject constructor(
                 }?.let { pair ->
                     val description = AnnotatedString.fromHtml(
                         pair.first ?: stringFromRes(R.string.no_description)
-                    ).text.run { substring(0, min(length, 120)) }
+                    ).text.run { substring(0, min(length, 160)) }
 
                     val sections = pair.second.filterNotNull().toList()
 
@@ -99,10 +100,7 @@ class UbuntuRepository @Inject constructor(
                 )
             }
         }.invokeOnCompletion { e ->
-            javaClass.ilog(
-                if (e.isNull()) "Successfully saved $id to disk."
-                else "Encountered error saving $id - ${e?.message}"
-            )
+            if (e.isNotNull()) javaClass.ilog("Encountered error saving $id - ${e?.message}")
         }
     }
 
@@ -112,16 +110,22 @@ class UbuntuRepository @Inject constructor(
                 localStorage.loadCommand(id).data
             }
         } catch (e: IOException) {
-            javaClass.ilog("Unexpected file error loading - $id: $e")
+            javaClass.wlog("Unexpected file error loading - $id: $e")
             emptyMap<String, String>()
         }
     }
 
     private suspend fun fetchCommandData(pageUrl: String): Map<String, String> {
-        return httpClient.fetchCommandManPage(pageUrl)
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.computation())
-            .flatMap(UbuntuHtmlApiConverter::crawlForCommandInfo)
-            .await()
+        return try {
+            httpClient.fetchCommandManPage(pageUrl)
+                .doOnError {}
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .flatMap(UbuntuHtmlApiConverter::crawlForCommandInfo)
+                .await()
+        } catch (e: Throwable) {
+            javaClass.wlog("Error fetching command data: ${e.message}")
+            emptyMap()
+        }
     }
 }

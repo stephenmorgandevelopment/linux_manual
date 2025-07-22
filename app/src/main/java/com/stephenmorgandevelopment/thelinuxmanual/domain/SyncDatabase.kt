@@ -7,7 +7,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences
-import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchCompletable
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineScope
@@ -45,8 +44,6 @@ class SyncDatabase @Inject constructor(
                     releaseName?.let { preferences.PreferencesWriteAccess().setRelease(it).await() }
                     if (roomDatabase.hasData()) roomDatabase.dao().wipeTable()
                     localStorage.wipeAll()
-                    if (roomDatabase.hasData()) roomDatabase.dao().wipeTable()
-                    else javaClass.ilog("Cleared room db successfully the first time.")
                     sync()
                 } else {
                     _progress.emit(CommandSyncService.COMPLETE_TAG)

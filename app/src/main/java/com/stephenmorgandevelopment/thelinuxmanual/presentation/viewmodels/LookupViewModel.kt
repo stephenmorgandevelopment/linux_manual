@@ -1,12 +1,15 @@
-package com.stephenmorgandevelopment.thelinuxmanual.presentation
+package com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.stephenmorgandevelopment.thelinuxmanual.domain.GetPartialMatchesUseCase
 import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupAction.UpdateSearchText
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupState
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository
-import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
+import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
+import com.stephenmorgandevelopment.thelinuxmanual.utils.noInternedString
 import com.stephenmorgandevelopment.thelinuxmanual.utils.queryAdjusted
 import com.stephenmorgandevelopment.thelinuxmanual.utils.sanitizeInput
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,7 +50,7 @@ class LookupViewModel @Inject constructor(
             LookupState(searchText, matches).also { persistState(it) }
         }.stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(15_000L),
+            SharingStarted.Lazily,
             restored,
         )
 
@@ -69,7 +72,7 @@ class LookupViewModel @Inject constructor(
         }
     }
 
-    // TODO:  Potential race condition issue where a job started in global scope
+    //  Potential race condition issue where a job started in global scope
     //  before user finishes typing, gets launched a second time, via addDescription,
     //  when the user finishes typing.
 
@@ -78,16 +81,7 @@ class LookupViewModel @Inject constructor(
     private fun addDescription(matchingItem: MatchingItem) = GlobalScope.async(
         Dispatchers.IO,
         start = CoroutineStart.LAZY,
-    ) {
-        ubuntuRepository.addDescription(matchingItem)
-    }.apply {
-        invokeOnCompletion { e ->
-            javaClass.ilog(
-                "addDescription job completed for ${matchingItem.name} with " +
-                        "error: ${e?.message}"
-            )
-        }
-    }
+    ) { ubuntuRepository.addDescription(matchingItem) }
 
     private var scopedJob: Job? = null
 
@@ -102,20 +96,23 @@ class LookupViewModel @Inject constructor(
                 _matches.value = partialMatches
 
                 scopedJob = viewModelScope.async(Dispatchers.Default) {
-                    delay(120) // to reduce possibilities of above mentioned race condition.
+                    delay(160) // to reduce possibilities of above mentioned race condition.
 
                     val jobs = partialMatches.mapNotNull { match ->
-                        if (match.needsDescription) addDescription(match)
-                        else null
+                        if (match.needsDescription) {
+                            if (Helpers.hasInternet()) addDescription(match)
+                            else viewModelScope.async {
+                                match.copy(descriptionPreview = noInternedString)
+                            }
+                        } else null
                     }.toMutableList()
 
                     while (jobs.isNotEmpty()) {
                         val takeCount = min(12, jobs.size)
-
                         val updatedMatches = mutableListOf<MatchingItem>()
                         jobs.take(takeCount)
                             .onEach { jobInst ->
-                                if (!jobs.remove(jobInst)) javaClass.ilog("failed removing $jobInst from jobs list.")
+                                jobs.remove(jobInst)
                                 jobInst.apply {
                                     invokeOnCompletion {
                                         updatedMatches.add(getCompleted())

@@ -24,26 +24,22 @@ import okhttp3.Response;
 
 @Singleton
 public class HttpClient {
-    private static final String TAG = HttpClient.class.getSimpleName();
-
     @NonNull
     private final Preferences mPreferences;
-    private static Cache cache;
     private static final OkHttpClient okClient;
 
     static {
-        if (cache == null) {
-            cache = new okhttp3.Cache(
-                    new File(Helpers.getCacheDir(), "http_cache"),
-                    10_485_760);
-        }
+        Cache cache = new okhttp3.Cache(
+                new File(Helpers.getCacheDir(), "http_cache"),
+                10_485_760);
+
 
         okClient = new OkHttpClient.Builder()
                 .cache(cache)
-                .readTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(18, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true)
+                .followSslRedirects(false)
                 .build();
-
     }
 
     @Inject
@@ -79,7 +75,7 @@ public class HttpClient {
         }
     }
 
-    public Single<Response> fetchDescription(MatchingItem command) {
+    public Single<Response> fetchDescription(@NonNull MatchingItem command) {
         Request request = new Request.Builder().url(command.getUrl()).build();
         return Single.defer(() -> Single.just(okClient.newCall(request).execute()));
     }

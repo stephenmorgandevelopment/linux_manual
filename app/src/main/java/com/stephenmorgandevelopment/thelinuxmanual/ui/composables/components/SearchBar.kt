@@ -35,10 +35,9 @@ fun SearchBar(
     label: String = getString(R.string.search_command),
     onTextUpdate: (String) -> Unit,
 ) {
-//    var text by remember { mutableStateOf("") }
-
     OutlinedTextField(
-        modifier = modifier.padding(3.dp),
+        modifier = modifier
+            .padding(3.dp),
         value = text,
         onValueChange = {
             onTextUpdate(it)
@@ -60,8 +59,6 @@ fun SearchBarWithButton(
     searchResults: TextSearchResult?,
     onAction: (ManPageAction) -> Unit,
 ) {
-//    var searchButtonFocused by remember { mutableStateOf(false) }
-
     ConstraintLayout(
         modifier = modifier
             .padding(
@@ -89,13 +86,10 @@ fun SearchBarWithButton(
                 }
                 .padding(horizontal = 3.dp, vertical = 5.dp),
             label = label,
-        ) { onAction(ManPageAction.UpdateSearchText(it)) }
+        ) { onAction(ManPageAction.OnSearchTextUpdated(it)) }
 
         IconButton(
             modifier = Modifier
-//                .semantics {
-//                    focused = searchButtonFocused
-//                }
                 .constrainAs(button) {
                     top.linkTo(field.top)
                     start.linkTo(field.end)
@@ -106,8 +100,7 @@ fun SearchBarWithButton(
                 }
                 .padding(top = 12.dp, bottom = 4.dp, start = 0.dp, end = 5.dp),
             onClick = {
-                onAction(ManPageAction.Search)
-//                searchButtonFocused = true
+                onAction(ManPageAction.OnSearchPressed)
             },
             colors = IconButtonColors(
                 containerColor = Colors.offWhite,

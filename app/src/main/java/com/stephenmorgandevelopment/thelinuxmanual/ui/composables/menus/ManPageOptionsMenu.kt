@@ -37,7 +37,6 @@ fun ManPageOptionsMenu(
     onItemClicked: (OptionsMenuAction) -> Unit,
 ) {
     var jumpToExpanded by remember { mutableStateOf(false) }
-
     Row(
         modifier = Modifier
             .background(Colors.transparent)
@@ -50,12 +49,12 @@ fun ManPageOptionsMenu(
 
         JumpToSectionButton { jumpToExpanded = !jumpToExpanded }
         JumpToDropdown(
-            jumpToExpanded,
-            sections,
-            { jumpToExpanded = false },
+            expanded = jumpToExpanded,
+            sections = sections,
+            onDismissed = { jumpToExpanded = false },
         ) {
-            onItemClicked(ManPageOptionsMenuAction.JumpTo(it))
             jumpToExpanded = false
+            onItemClicked(ManPageOptionsMenuAction.JumpTo(it))
         }
 
         SearchButton(manPageName) { onItemClicked(ManPageOptionsMenuAction.ToggleSearch) }
