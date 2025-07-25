@@ -4,17 +4,13 @@ import android.app.Application;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.util.Log;
 
 import androidx.core.os.LocaleListCompat;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
-
 import java.io.File;
+import java.util.Objects;
 
 public class Helpers {
-    private static final String TAG = Helpers.class.getSimpleName();
-
     private static Context applicationContext;
     private static File cacheDir;
     private static String local;
@@ -23,14 +19,15 @@ public class Helpers {
         setApplicationContext(app);
         setCacheDir(app.getCacheDir());
         setLocale();
-
-        UbuntuHtmlApiConverter.setRelease(UbuntuHtmlApiConverter.Release.fromString(Preferences.getRelease()));
     }
 
     private static void setLocale() {
-        String languageTag = LocaleListCompat.getAdjustedDefault().get(0).toLanguageTag().substring(0, 2);
-        Log.i(TAG, "Language tag: " + languageTag);
-        local = languageTag;
+        try {
+            local = Objects.requireNonNull(LocaleListCompat.getAdjustedDefault().get(0))
+                    .toLanguageTag().substring(0, 2);
+        } catch (NullPointerException npe) {
+            local = "en";
+        }
     }
 
     public static boolean hasInternet() {
@@ -63,21 +60,5 @@ public class Helpers {
 
     public static Context getApplicationContext() {
         return applicationContext;
-    }
-
-    public static void cleanup() {
-        applicationContext = null;
-    }
-
-    public static String string(int id) {
-        return applicationContext.getString(id);
-    }
-
-    public static CharSequence text(int id) {
-        return applicationContext.getText(id);
-    }
-
-    public static int color(int id) {
-        return applicationContext.getColor(id);
     }
 }

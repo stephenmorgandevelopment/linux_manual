@@ -1,8 +1,5 @@
 package com.stephenmorgandevelopment.thelinuxmanual;
 
-import com.stephenmorgandevelopment.thelinuxmanual.distros.UbuntuHtmlApiConverter;
-import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
-
 //@RunWith(AndroidJUnit4.class)
 public class TextSearchTest {
 
@@ -15,11 +12,9 @@ public class TextSearchTest {
 //        TextSearchResult results =
 //                getTestCommand().searchDataForTextMatch(searchQuery);
 //
-//        Log.i("TextSearchText", "results.getCount() : " + results.getCount());
+//        Log.i("phenm-TextSearchText", "results.getCount() : " + results.getCount());
 //        Assert.assertEquals(expectedCount, results.getCount());
 //    }
-
-
 
 
 //    private Command getTestCommand() {

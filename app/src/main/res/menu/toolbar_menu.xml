@@ -1,31 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
 
     >
 
     <item
         android:id="@+id/refreshMenuBtn"
-        android:title="@string/refresh_button"
-        />
+        android:title="@string/resync_button" />
 
     <item
         android:id="@+id/changeReleaseBtn"
-        android:title="@string/change_release_button"
-        >
+        android:title="@string/change_release_button">
         <menu>
             <group android:id="@+id/releaseSubMenu">
-                <item android:id="@+id/artful" android:title="@string/artful"/>
-                <item android:id="@+id/bionic" android:title="@string/bionic"/>
-                <item android:id="@+id/cosmic" android:title="@string/cosmic"/>
-                <item android:id="@+id/disco" android:title="@string/disco"/>
-                <item android:id="@+id/eoan" android:title="@string/eoan"/>
-                <item android:id="@+id/focal" android:title="@string/focal"/>
-                <item android:id="@+id/groovy" android:title="@string/groovy"/>
-                <item android:id="@+id/hirsute" android:title="@string/hirsute"/>
-                <item android:id="@+id/precise" android:title="@string/precise"/>
-                <item android:id="@+id/trusty" android:title="@string/trusty"/>
-                <item android:id="@+id/xenial" android:title="@string/xenial"/>
+                <item
+                    android:id="@+id/artful"
+                    android:title="@string/artful" />
+                <item
+                    android:id="@+id/bionic"
+                    android:title="@string/bionic" />
+                <item
+                    android:id="@+id/cosmic"
+                    android:title="@string/cosmic" />
+                <item
+                    android:id="@+id/disco"
+                    android:title="@string/disco" />
+                <item
+                    android:id="@+id/eoan"
+                    android:title="@string/eoan" />
+                <item
+                    android:id="@+id/focal"
+                    android:title="@string/focal" />
+                <item
+                    android:id="@+id/groovy"
+                    android:title="@string/groovy" />
+                <item
+                    android:id="@+id/hirsute"
+                    android:title="@string/hirsute" />
+                <item
+                    android:id="@+id/precise"
+                    android:title="@string/precise" />
+                <item
+                    android:id="@+id/trusty"
+                    android:title="@string/trusty" />
+                <item
+                    android:id="@+id/xenial"
+                    android:title="@string/xenial" />
             </group>
         </menu>
 

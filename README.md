@@ -1,11 +1,12 @@
 # linux_manual
-Use your phone or table to search through linux man pages.  Search by command name or description.  Syncs directly from the Ubuntu man pages repository.
 
-In working release condition.  Please advise of any issues.  Can obtain from google play store as soon as it clears review.
+Use your phone or table to search through linux man pages. Search by command name or description.
+Syncs directly from the Ubuntu man pages repository.
 
-Version 2.0, now includes: 
-  * <b>Tabs</b> for quickly switching between Man pages
-  * <b>Full Text Search</b> inside of any Man page
-  * <b>Local Persistence</b> allows you to view previously viewed Man pages without internet
+In working release condition. Please advise of any issues. 
 
-Go get yo' Linux on
+Greatly modernized to use Kotlin and Coroutines, very little legacy Java code remaining.
+
+Will be submitting to google play store shortly.  
+I may need to change the package name (namespace) as I am not sure if I
+still have the signing key used to publish the original app.

@@ -1,43 +1,54 @@
 <resources>
-    <string name="app_name">Ubuntu Manual Pages</string>
+    <string name="app_name">Ubuntu Man Pages</string>
 
     <!-- Distribution Names -->
 
     <string name="ubuntu_name">Ubuntu</string>
 
     <!-- Menu Button Names -->
-    <string name="refresh_button">Re-Sync Data</string>
+    <string name="resync_button">Re-Sync Data</string>
+    <string name="tabs_on_bottom">Tabs on Bottom</string>
+    <string name="search_on_bottom">Search on Bottom</string>
     <string name="change_release_button">Change Release</string>
-    <string name="store_pages_offline">Store Offline</string>
+    <string name="privacy_policy_button">Privacy Policy</string>
     <string name="sort_button">Sort Order</string>
-
 
     <!-- Placeholders -->
     <string name="header">Header</string>
     <string name="text">text</string>
-    <string name="placeholder_description" formatted="true">\u003cpre\u003e       Git is a fast, scalable, distributed revision control system with an unusually rich\n       command set that provides both high-level operations and full access to internals.\n\n       See \u003cb\u003e\u003ca href\u003d\"../man7/gittutorial.7.html\"\u003egittutorial\u003c/a\u003e\u003c/b\u003e(7) to get started, then see \u003cb\u003e\u003ca href\u003d\"../man7/giteveryday.7.html\"\u003egiteveryday\u003c/a\u003e\u003c/b\u003e(7) for a useful minimum set of\n       commands. The \u003cb\u003eGit\u003c/b\u003e \u003cb\u003eUser’s\u003c/b\u003e \u003cb\u003eManual\u003c/b\u003e[1] has a more in-depth introduction.\n\n       After you mastered the basic concepts, you can come back to this page to learn what\n       commands Git offers. You can learn more about individual Git commands with \"git help\n       command\". \u003cb\u003e\u003ca href\u003d\"../man7/gitcli.7.html\"\u003egitcli\u003c/a\u003e\u003c/b\u003e(7) manual page gives you an overview of the command-line command syntax.\n\n       A formatted and hyperlinked copy of the latest Git documentation can be viewed at\n       \u003cb\u003ehttps://git.github.io/htmldocs/git.html\u003c/b\u003e or \u003cb\u003ehttps://git-scm.com/docs\u003c/b\u003e.\n\n\u003c/pre\u003e</string>
-
 
     <!-- Find Command strings -->
     <string name="search_command">Search Command</string>
     <string name="search_description">Search Description</string>
 
+    <string name="search_man_page">search in man page.</string>
+
     <!-- Preference Values -->
     <string name="default_url">https://manpages.ubuntu.com/manpages/</string>
-
 
 
     <!-- Error Messages -->
     <string name="unexpected_error">An unexpected error occurred.</string>
     <string name="manpage_parse_error">The html response was either null or empty.</string>
+    <string name="offline_header">Offline</string>
+    <string name="you_are_offline">Can\'t find the internet, and this man page has not been visited yet.</string>
+    <string name="offline_description_preview">Can\'t find the internet, and this description has not been fetched yet.</string>
+    <string name="offline_without_database">App needs internet to perform initial database sync.  Please relaunch app when connected to the internet.</string>
 
-
+    <!-- Content Descriptions -->
+    <string name="app_settings">App Settings</string>
+    <string name="jump_to_section">Jump to section</string>
+    <string name="search_text_in_page">Search text in %s manpage</string>
+    <string name="search_for_text_in_page">Search for %s in %s manpage</string>
+    <string name="close_tab">Close %s tab</string>
+    <string name="show_release_options">Show release options</string>
+    <string name="hide_release_options">Hide release options</string>
 
 
     <!-- Man Page Fields -->
     <string name="name">name</string>
-     <string name="synopsis">synopsis</string>
-   <string name="configuration">configuration</string>
+    <string name="synopsis">synopsis</string>
+    <string name="configuration">configuration</string>
     <string name="description">description</string>
     <string name="option">option</string>
     <string name="exit_status">exit status</string>
@@ -109,5 +120,13 @@
     <string name="list">List:</string>
     <string name="details_text">Details:</string>
     <string name="no_matches">No matches.</string>
+    <string name="no_description">No description available.</string>
 
+    <string name="privacy_policy_one">No user data is collected by the developer of this app whatsoever, locally or via internet.</string>
+    <string name="privacy_policy_two">This app connects to \"https://manpages.ubuntu.com/manpages/\" to acquire the data used by this app. It is possible for ubunutu.com to collect data.  <b>The information gathered by ubuntu will be no more than the data they collect, when visiting the same site, in a web browser on this device.</b></string>
+    <string name="privacy_policy_three">All permissions requested are used to connect to \"https://manpages.ubuntu.com/manpages/\" and acquire man(ual) page data.  The first thing the app does, is pull the name and url of all man pages available for the latest LTS release, and saves the data in app private storage.  As you type in the search bar, any pages with a partially matching name will be displayed and partial descriptions will be pulled and saved from ubuntu.com.  After clicking on a tab, the app will pull the entire man page and save it in the app\'s private data, for later viewing, allowing you to view the man page without internet.  They are rather small and it would take a while for them to total more than 5\-10MB.</string>
+    <string name="privacy_policy_four">This is the extent of the apps functionality as far as internet and storage is concerned.  Everything else is purely related to the UI.</string>
+    <string name="privacy_policy_five">ReSyncing or changing versions, will wipe everything that has been saved thus far.  The app will need to run the initial sync again, and app data will repopulate as described earlier.</string>
+
+    <string name="query_change_content_description">Currently searching for %s, tap to show search bar.</string>
 </resources>

@@ -14,19 +14,24 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Singleton
 public class LocalStorage {
     private static final String TAG = LocalStorage.class.getSimpleName();
     private static LocalStorage instance;
     private final File commandsDir;
 
     public static LocalStorage getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new LocalStorage();
         }
         return instance;
     }
 
-    private LocalStorage() {
+    @Inject
+    public LocalStorage() {
         commandsDir = Helpers.getApplicationContext().getDir("commands", Context.MODE_PRIVATE);
     }
 
@@ -39,7 +44,7 @@ public class LocalStorage {
         File commandFile = new File(commandsDir, String.valueOf(id));
         StringBuilder json = new StringBuilder();
 
-        if(commandFile.exists()) {
+        if (commandFile.exists()) {
             FileInputStream inputStream = new FileInputStream(commandFile);
             InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 
@@ -48,12 +53,12 @@ public class LocalStorage {
             do {
                 bytesRead = reader.read(buffer);
                 json.append(String.valueOf(buffer));
-            } while(bytesRead != -1);
+            } while (bytesRead != -1);
 
             reader.close();
         }
 
-        return Command.fromJson(id, json.toString().trim());
+        return Command.Companion.fromJson(id, json.toString().trim());
     }
 
     public void saveCommand(Command command) {
@@ -65,10 +70,8 @@ public class LocalStorage {
                 OutputStreamWriter outputWriter = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
                 outputWriter.write(command.dataMapToJsonString());
                 outputWriter.close();
-
-                Log.i(TAG ,"Successfully save to disk: " + command.getShortName());
             } catch (IOException ioe) {
-                Log.i(TAG, "Error saving: " + command.getShortName() + ioe.getMessage());
+                Log.w(TAG, "Error saving: " + command.getId() + ioe.getMessage());
             }
         }
     }
@@ -76,13 +79,13 @@ public class LocalStorage {
     public void wipeAll() {
         File[] commands = commandsDir.listFiles();
 
-        if(commands == null) {
-            Log.i(TAG, "This shouldn't happen. Result of commandsDir not being a dir.");
+        if (commands == null) {
+            Log.w(TAG, "Error reading contents of commandsDir.  path: " + commandsDir.getPath());
             return;
         }
 
-        for(File command : commands) {
-            if(!command.delete()) {
+        for (File command : commands) {
+            if (!command.delete()) {
                 Log.i(TAG, "Error removing command with id: " + command.getName());
             }
         }
