@@ -83,7 +83,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-
         if (isFinishing) {
             if (!CommandSyncService.isWorking()) {
                 activityViewModel.onAction(MainScreenAction.CloseDatabase)

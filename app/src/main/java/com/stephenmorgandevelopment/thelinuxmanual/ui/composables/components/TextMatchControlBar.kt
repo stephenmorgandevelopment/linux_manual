@@ -41,7 +41,10 @@ fun TextMatchControlBar(
     onPrev: () -> Unit,
 ) {
     val matchCountText by remember(index, count) {
-        mutableStateOf(if (count > 0) "${index.plus(1)}/$count" else "0/0")
+        mutableStateOf(
+            if (count > 0) "${index.plus(1)}/$count"
+            else "0/0"
+        )
     }
 
     val queryContentDescription by remember(query) {

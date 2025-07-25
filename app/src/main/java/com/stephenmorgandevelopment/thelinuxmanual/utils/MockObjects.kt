@@ -6,7 +6,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageSearchSta
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.TabInfo
 
 object MockObjects {
-    val testUrl = "https://ubuntu.com/"
+    const val testUrl = "https://ubuntu.com/"
     val longDescription = buildString {
         for (i in 0 until 12) {
             append("Just a test item with a long description. ")

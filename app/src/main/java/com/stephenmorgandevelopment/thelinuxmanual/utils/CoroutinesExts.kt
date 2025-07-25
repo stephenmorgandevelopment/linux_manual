@@ -13,7 +13,6 @@ import androidx.lifecycle.Lifecycle.State.INITIALIZED
 import androidx.lifecycle.Lifecycle.State.RESUMED
 import androidx.lifecycle.Lifecycle.State.STARTED
 import androidx.lifecycle.coroutineScope
-import com.stephenmorgandevelopment.thelinuxmanual.ui.lifecycle.ManPageTabLifecycle
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,7 +42,7 @@ fun <T> Flow<T>.launchInCompletable(scope: CoroutineScope): CompletableJob =
  * Runs in Dispatchers.Default and contains a supervisor job to prevent
  * children exceptions from cancelling scope.
  */
-fun coroutineScopeFor(lifecycle: ManPageTabLifecycle): CoroutineScope {
+fun coroutineScopeFor(lifecycle: Lifecycle): CoroutineScope {
     return lifecycle.coroutineScope + Dispatchers.Default + SupervisorJob()
 }
 

@@ -32,7 +32,7 @@ sealed interface ManPageAction : Action {
 }
 
 sealed interface ManPageOptionsMenuAction : OptionsMenuAction {
-    data class JumpTo(val section: String, val offset: Int = 40) : ManPageOptionsMenuAction
+    data class JumpTo(val section: String, val offset: Int) : ManPageOptionsMenuAction
     data object ToggleSearch : ManPageOptionsMenuAction
     data object Close : ManPageOptionsMenuAction
 }

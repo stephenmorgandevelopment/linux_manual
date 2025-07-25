@@ -19,6 +19,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.stephenmorgandevelopment.thelinuxmanual.models.SingleTextMatch
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageOptionsMenuAction.JumpTo
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchDescriptionPadding
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchDescriptionTextStyle
@@ -33,7 +34,7 @@ fun ManPageSection(
     name: String,
     data: String,
     singleTextMatch: SingleTextMatch? = null,
-    onTextMatchedOffset: ((Int) -> Unit)? = null,
+    onTextMatchedOffset: ((JumpTo) -> Unit)? = null,
 ) {
     val annotatedString = remember(singleTextMatch?.startIndex, singleTextMatch?.endIndex) {
         singleTextMatch?.let {
@@ -79,7 +80,10 @@ fun ManPageSection(
             onTextLayout = { layout ->
                 singleTextMatch?.let {
                     onTextMatchedOffset?.invoke(
-                        layout.calculateScrollOffsetFor(it.startIndex)
+                        JumpTo(
+                            name,
+                            layout.calculateScrollOffsetFor(it.startIndex)
+                        )
                     )
                 }
             }

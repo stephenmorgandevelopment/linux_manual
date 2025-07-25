@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command
 import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.JUMP_TO_RENDERING_OFFSET
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.JumpToData
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction.OnNextPressed
@@ -84,7 +85,7 @@ class ManPageViewModel @Inject constructor(
     )
 
 
-    private val _jumpToEvents = MutableSharedFlow<JumpToData>(1, 0, BufferOverflow.DROP_OLDEST)
+    private val _jumpToEvents = MutableSharedFlow<JumpToData>(2, 1, BufferOverflow.DROP_OLDEST)
     val jumpToEvents: SharedFlow<JumpToData> = _jumpToEvents.asSharedFlow()
 
     init {
@@ -99,20 +100,30 @@ class ManPageViewModel @Inject constructor(
             }
 
             OnPrevPressed -> {
-                _searchIndex.value =
-                    if (_searchResults.value?.textMatches?.count() == 0) 0
-                    else if (_searchIndex.value <= 0) _searchResults.value?.textMatches?.lastIndex
-                        ?: 0
-                    else _searchIndex.value.minus(1)
+                val index = if (_searchResults.value?.textMatches?.count() == 0) 0
+                else if (_searchIndex.value <= 0) _searchResults.value?.textMatches?.lastIndex
+                    ?: 0
+                else _searchIndex.value.minus(1)
+
+                searchResultAt(index)?.section?.let {
+                    jumpTo(it, JUMP_TO_RENDERING_OFFSET)
+                }
+
+                _searchIndex.value = index
             }
 
             OnNextPressed -> {
-                _searchIndex.value =
-                    if (_searchResults.value?.textMatches?.count() == 0) 0
-                    else if (_searchIndex.value >= (_searchResults.value?.textMatches?.lastIndex
-                            ?: 0)
-                    ) 0
-                    else _searchIndex.value.plus(1)
+                val index = if (_searchResults.value?.textMatches?.count() == 0) 0
+                else if (_searchIndex.value >= (_searchResults.value?.textMatches?.lastIndex
+                        ?: 0)
+                ) 0
+                else _searchIndex.value.plus(1)
+
+                searchResultAt(index)?.section?.let {
+                    jumpTo(it, JUMP_TO_RENDERING_OFFSET)
+                }
+
+                _searchIndex.value = index
             }
 
             is OnSearchTextUpdated -> _searchText.value = sanitizeInput(action.text)
@@ -153,6 +164,12 @@ class ManPageViewModel @Inject constructor(
                 _searchResults.value =
                     state.value.command?.searchDataForTextMatch(_searchText.value).also {
                         if (it.isNull() || it?.count == 0) clearLoading()
+                    }?.also { allResults ->
+                        allResults.getMatch(_searchIndex.value)?.section?.let {
+                            _jumpToEvents.tryEmit(
+                                JumpToData(section = it, JUMP_TO_RENDERING_OFFSET)
+                            )
+                        }
                     }
             } else clearLoading()
         }
@@ -177,6 +194,9 @@ class ManPageViewModel @Inject constructor(
                 }
         }
     }
+
+    private val searchResults get() = _searchResults.value
+    private fun searchResultAt(index: Int) = searchResults?.getMatch(index)
 
     companion object {
         private const val SEARCH_STATE_KEY = "SEARCH_STATE_KEY"

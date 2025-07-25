@@ -2,8 +2,7 @@ package com.stephenmorgandevelopment.thelinuxmanual.ui.composables.menus
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ExpandCircleDown
@@ -13,16 +12,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
-import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.optionButtonHeight
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.optionButtonPadding
 import com.stephenmorgandevelopment.thelinuxmanual.utils.getString
 
@@ -36,8 +34,7 @@ fun OptionsMenuButton(
     IconButton(
         modifier = modifier
             .padding(optionButtonPadding)
-            .requiredHeight(optionButtonHeight)
-            .wrapContentWidth(Alignment.CenterHorizontally)
+            .requiredSize(48.dp)
             .semantics {
                 role = Role.Button
             },

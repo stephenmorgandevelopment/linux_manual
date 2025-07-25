@@ -5,7 +5,6 @@ import androidx.compose.runtime.Immutable
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command
 import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem
 import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 interface State : Parcelable
@@ -20,10 +19,7 @@ data class ScreenState(
     val tabsOnBottom: Boolean = false,
     val searchOnBottom: Boolean = false,
     val syncProgress: String? = null,
-) : State {
-    @IgnoredOnParcel
-    val currentTab: TabInfo get() = tabs[selectedTabIndex]
-}
+) : State
 
 @Parcelize
 @Immutable
@@ -80,9 +76,12 @@ data class TabInfoExp(
 
     ) : Parcelable
 
+const val JUMP_TO_OPTIONS_MENU_OFFSET = 40
+const val JUMP_TO_RENDERING_OFFSET = 60
+
 @Parcelize
 @Immutable
 data class JumpToData(
     val section: String,
-    val offset: Int = 0,
+    val offset: Int,
 ) : Parcelable

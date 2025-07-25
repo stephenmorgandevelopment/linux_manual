@@ -2,8 +2,9 @@
 
 buildscript {
     ext {
-        agp_version = "8.10.1"
+        agp_version = '8.11.1'
         kotlin_version = '2.1.21'
+        hilt_version = "2.57"
     }
     repositories {
         google()
@@ -12,22 +13,13 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:$agp_version"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-//        classpath "com.google.devtools:ksp:2.1.21-2.0.1"
-//        classpath "org.jetbrains.kotlin:plugin-serialization:$kotlin_version"
-//        classpath "com.google.dagger:hilt-android:2.56.2"
-//        classpath "org.jetbrains.kotlin:plugin-compose:$kotlin_version"
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
     }
 }
 
 plugins {
-//    id "com.android.tools.build.gradle" version "$agp_version"
-//    id "org.jetbrains.kotlin.kotlin.gradle.plugin" version "$kotlin_version" apply false
     id 'com.google.devtools.ksp' version '2.1.21-2.0.1' apply false
     id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlin_version" apply false
-    id 'com.google.dagger.hilt.android' version '2.56.2' apply false
+    id 'com.google.dagger.hilt.android' version "$hilt_version" apply false
     id "org.jetbrains.kotlin.plugin.compose" version "$kotlin_version" apply false
 }
 

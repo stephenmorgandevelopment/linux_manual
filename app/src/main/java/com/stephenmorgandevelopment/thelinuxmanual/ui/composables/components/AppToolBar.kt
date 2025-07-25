@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,6 +33,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.appbarTitleSty
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.menus.LookupOptionsMenu
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.menus.ManPageOptionsMenu
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.toolbarHeight
+import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
 
 @Composable
 fun AppToolbar(
@@ -67,8 +69,8 @@ fun AppToolbar(
 
         Column(
             modifier = Modifier.constrainAs(text) {
-                top.linkTo(parent.top)
-                bottom.linkTo(parent.bottom)
+                top.linkTo(menu.top)
+                bottom.linkTo(menu.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(menu.start)
 
@@ -79,10 +81,13 @@ fun AppToolbar(
             horizontalAlignment = Alignment.Start,
         ) {
             Text(
+                modifier = Modifier.padding(bottom = 1.dp),
                 text = "$title:",
                 style = appbarTitleStyle,
                 color = Colors.offWhite,
-                fontSize = if (subTitle.isNullOrEmpty()) 21.sp else 18.sp
+                fontSize = if (subTitle.isNullOrEmpty()) 29.sp else 19.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
 
             subTitle?.let {
@@ -90,6 +95,8 @@ fun AppToolbar(
                     text = it,
                     style = appbarSubtitleStyle,
                     color = Colors.offWhite,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -117,9 +124,9 @@ private fun PreviewAppToolbarLookupMenu() {
     Box(contentAlignment = Alignment.TopCenter) {
         AppToolbar("Blah") {
             LookupOptionsMenu(
-                AvailableReleases.releaseStrings,
-                false,
-                false,
+                releasesAvailable = AvailableReleases.releaseStrings,
+                tabsOnBottom = false,
+                searchOnBottom = false,
             ) { }
         }
     }
@@ -129,7 +136,7 @@ private fun PreviewAppToolbarLookupMenu() {
 @Composable
 private fun PreviewAppToolbarManPageMenu() {
     Box(contentAlignment = Alignment.TopCenter) {
-        AppToolbar("Blah") {
+        AppToolbar("Blah", MockObjects.longDescription) {
             ManPageOptionsMenu(
                 "for accessibility",
                 AvailableReleases.releaseStrings,

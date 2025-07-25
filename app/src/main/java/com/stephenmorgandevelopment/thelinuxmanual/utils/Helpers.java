@@ -10,8 +10,6 @@ import androidx.core.os.LocaleListCompat;
 import java.io.File;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-
 public class Helpers {
     private static Context applicationContext;
     private static File cacheDir;
@@ -60,7 +58,7 @@ public class Helpers {
         applicationContext = application.getApplicationContext();
     }
 
-    public static @Nonnull Context getApplicationContext() {
+    public static Context getApplicationContext() {
         return applicationContext;
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.JUMP_TO_OPTIONS_MENU_OFFSET
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageOptionsMenuAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.OptionsMenuAction
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
@@ -54,7 +55,7 @@ fun ManPageOptionsMenu(
             onDismissed = { jumpToExpanded = false },
         ) {
             jumpToExpanded = false
-            onItemClicked(ManPageOptionsMenuAction.JumpTo(it))
+            onItemClicked(ManPageOptionsMenuAction.JumpTo(it, JUMP_TO_OPTIONS_MENU_OFFSET))
         }
 
         SearchButton(manPageName) { onItemClicked(ManPageOptionsMenuAction.ToggleSearch) }

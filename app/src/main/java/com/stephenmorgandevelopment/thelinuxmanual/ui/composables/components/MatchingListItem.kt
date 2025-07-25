@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchDescriptionPadding
@@ -50,6 +51,7 @@ fun MatchingListItem(
                     else description,
                 maxLines = 3,
                 minLines = 3,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

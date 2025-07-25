@@ -2,8 +2,8 @@
 
 package com.stephenmorgandevelopment.thelinuxmanual.ui.composables
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -17,12 +17,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LocalPinnableContainer
+import androidx.compose.ui.layout.PinnableContainer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command
 import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult
@@ -45,9 +47,11 @@ import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.Sea
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.TextMatchControlBar
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
 import com.stephenmorgandevelopment.thelinuxmanual.utils.getString
+import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNotNull
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.serialization.ExperimentalSerializationApi
 
 @Composable
@@ -72,16 +76,12 @@ fun ManPageScreen(
     onJumpTo: (JumpTo) -> Unit,
     onAction: (ManPageAction) -> Unit,
     showOfflineDialog: () -> Unit,
-    onBackPressed: () -> Unit,
-    backCallbackEnabled: () -> Boolean,
 ) {
-    BackHandler(backCallbackEnabled()) {
-        onBackPressed()
-    }
 
     when {
         command?.id == -1L -> {
             LaunchedEffect(1) {
+                delay(125)
                 showOfflineDialog()
             }
         }
@@ -168,7 +168,7 @@ private fun ManPageScreenContent(
                         height = Dimension.wrapContent
                     }
                     .padding(start = 12.dp, end = 12.dp, bottom = 4.dp),
-                query = searchText,
+                query = searchResults?.query ?: "",
                 index = searchIndex,
                 count = searchResults?.count ?: 0,
                 showSearchBar = { forceShowSearch = true },
@@ -179,6 +179,20 @@ private fun ManPageScreenContent(
                     onAction(ManPageAction.OnNextPressed)
                 }
             )
+        }
+
+        val pinHandles = remember(command.id) {
+            mutableStateListOf<PinnableContainer.PinnedHandle>()
+        }
+
+        LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+            pinHandles.clear()
+        }
+
+        LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+            pinHandles.onEach {
+                it.release()
+            }.clear()
         }
 
         LazyColumn(
@@ -203,14 +217,15 @@ private fun ManPageScreenContent(
                 vertical = 8.dp,
             ),
         ) {
-
             items(
                 count = commandDataList.size,
                 key = { commandDataList[it].first },
+                contentType = { it },
             ) { index ->
                 commandDataList[index].let { (header, data) ->
-                    // Rendering large Text composables in a lazy list is not scalable.
-                    // Encounters major freezing when scrolled to an item with ~20,000+ characters.
+                    // Rendering large char counts (~40,000+) in Text composables,
+                    // in a lazy list is not scalable.
+                    // Encounters major freezing when scrolling to an item with ~40,000+ characters.
                     // Using a custom Prefetch strategy on the list state, as well as pinning all
                     // ManPageSection items, has significantly reduced "hang time".
                     // On substantially large pages, there may be some slight jank or hang time
@@ -219,16 +234,23 @@ private fun ManPageScreenContent(
                     // freezing, literally Every time you scroll a large item off the screen
                     // and then back on.
                     val pinContainer = LocalPinnableContainer.current
-                    LifecycleResumeEffect(
-                        key1 = true,
-                        lifecycleOwner = LocalLifecycleOwner.current,
-                    ) {
-                        val handle = pinContainer?.pin()
-                        onPauseOrDispose { handle?.release() }
+                    if (pinHandles.getOrNull(index) == null) {
+                        pinContainer?.pin()?.also {
+                            pinHandles.add(it)
+                            javaClass.ilog("Pinning container handle: $it for $header")
+                        }
                     }
 
-                    val singleTextMatch = searchResults?.getMatch(searchIndex)?.takeIf {
-                        it.section == header
+                    val singleTextMatch = remember(
+                        searchVisible,
+                        searchIndex,
+                        command.id,
+                        searchResults,
+                    ) {
+                        if (searchVisible) {
+                            searchResults?.getMatch(searchIndex)
+                                ?.takeIf { it.section == header }
+                        } else null
                     }
 
                     Spacer(
@@ -242,10 +264,14 @@ private fun ManPageScreenContent(
                         name = header,
                         data = data,
                         singleTextMatch = singleTextMatch,
-                        onTextMatchedOffset = { it: Int ->
-                            onJumpTo(JumpTo(header, it))
-                        }.takeIf { singleTextMatch.isNotNull() }
+                        onTextMatchedOffset = onJumpTo.takeIf { singleTextMatch.isNotNull() }
                     )
+                }
+
+                // Used to trigger onScroll in ManPageSectionPrefetchStrategy, so that all
+                //  sections can be queued for prefetching.
+                LaunchedEffect(command.id) {
+                    if (index == 0 && listState.canScrollForward) listState.scrollBy(1f)
                 }
             }
 
@@ -256,15 +282,6 @@ private fun ManPageScreenContent(
                         .height(8.dp)
                         .background(color = Colors.transparent)
                 )
-            }
-
-            // Needed to trigger rendering of ManPageSection containing current search result.
-            searchResults?.let { results ->
-                if (searchVisible) {
-                    results.getSectionAt(searchIndex)?.let { section ->
-                        onJumpTo(JumpTo(section))
-                    }
-                }
             }
         }
     }
@@ -282,25 +299,24 @@ private fun PreviewManPageScreen() {
         onAction = {},
         showOfflineDialog = {},
         onJumpTo = {},
-        onBackPressed = {},
-        backCallbackEnabled = { false },
     )
 }
 
 @Preview
 @Composable
-private fun PreviewManPageSearchLoadingScreen() {
+private fun PreviewManPageNoSearch() {
     ManPageScreen(
         title = "Something",
-        searchState = MockObjects.mockSearchState,
+        searchState = MockObjects.mockSearchState.copy(
+            visible = false,
+            results = null,
+        ),
         command = Command(27L, MockObjects.commandData),
         listState = rememberLazyListState(),
         loading = true,
         onAction = {},
         showOfflineDialog = {},
         onJumpTo = {},
-        onBackPressed = {},
-        backCallbackEnabled = { false },
     )
 }
 
@@ -309,14 +325,15 @@ private fun PreviewManPageSearchLoadingScreen() {
 private fun PreviewManPageLoadingScreen() {
     ManPageScreen(
         title = "Nothing",
-        searchState = ManPageSearchState(1L),
-        command = null,
+        searchState = MockObjects.mockSearchState.copy(
+            visible = true,
+            results = null,
+        ),
+        command = Command(27L, MockObjects.commandData),
         listState = rememberLazyListState(),
         loading = false,
         onAction = {},
         showOfflineDialog = {},
         onJumpTo = {},
-        onBackPressed = {},
-        backCallbackEnabled = { false },
     )
 }

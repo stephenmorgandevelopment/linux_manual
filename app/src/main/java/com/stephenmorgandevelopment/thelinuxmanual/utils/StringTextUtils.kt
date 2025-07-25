@@ -31,10 +31,12 @@ fun sanitizeInput(text: String): String {
 val String.queryAdjusted get() = if (length >= 4) "%$this%" else "$this%"
 
 fun stringFromRes(id: Int) =
-    Helpers.getApplicationContext().resources.getString(id)
+    Helpers.getApplicationContext()?.resources?.getString(id)
+        ?: "Preview string" // Needed for previews to work correctly
 
 fun stringFromRes(id: Int, vararg params: Any) =
-    Helpers.getApplicationContext().resources.getString(id, *params)
+    Helpers.getApplicationContext()?.resources?.getString(id, *params)
+        ?: "Preview string" // Needed for previews to work correctly
 
 @Composable
 fun getString(id: Int): String {

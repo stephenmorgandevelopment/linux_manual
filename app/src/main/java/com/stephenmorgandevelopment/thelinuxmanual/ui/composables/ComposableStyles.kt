@@ -67,7 +67,7 @@ val releaseOptionsItemPadding = PaddingValues(
 
 val optionsMenuItemPadding = PaddingValues(vertical = 5.dp, horizontal = 3.dp)
 
-val toolbarHeight = 64.dp
+val toolbarHeight = 68.dp
 val appbarTitleStyle = TextStyle(
     fontWeight = FontWeight(625),
     fontSize = 29.sp,
