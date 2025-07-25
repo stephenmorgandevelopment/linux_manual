@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,41 +44,53 @@ fun PrivacyPolicy() {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start,
         ) {
-            Text(
-                modifier = Modifier.padding(matchTitleTextPadding),
-                text = getString(R.string.privacy_policy_button),
-                style = matchTitleTextStyle,
-            )
+            SelectionContainer {
+                Text(
+                    modifier = Modifier.padding(matchTitleTextPadding),
+                    text = getString(R.string.privacy_policy_button),
+                    style = matchTitleTextStyle,
+                )
+            }
 
-            Text(
-                modifier = Modifier.padding(privacyPolicyTextPadding),
-                text = getString(R.string.privacy_policy_one),
-                style = privacyPolicyTextStyleBold,
-            )
+            SelectionContainer {
+                Text(
+                    modifier = Modifier.padding(privacyPolicyTextPadding),
+                    text = getString(R.string.privacy_policy_one),
+                    style = privacyPolicyTextStyleBold,
+                )
+            }
 
-            Text(
-                modifier = Modifier.padding(privacyPolicyTextPadding),
-                text = getString(R.string.privacy_policy_two),
-                style = privacyPolicyTextStyle,
-            )
+            SelectionContainer {
+                Text(
+                    modifier = Modifier.padding(privacyPolicyTextPadding),
+                    text = getString(R.string.privacy_policy_two),
+                    style = privacyPolicyTextStyle,
+                )
+            }
 
-            Text(
-                modifier = Modifier.padding(privacyPolicyTextPadding),
-                text = getString(R.string.privacy_policy_three),
-                style = matchDescriptionTextStyle,
-            )
+            SelectionContainer {
+                Text(
+                    modifier = Modifier.padding(privacyPolicyTextPadding),
+                    text = getString(R.string.privacy_policy_three),
+                    style = matchDescriptionTextStyle,
+                )
+            }
 
-            Text(
-                modifier = Modifier.padding(privacyPolicyTextPadding),
-                text = getString(R.string.privacy_policy_four),
-                style = matchDescriptionTextStyle,
-            )
+            SelectionContainer {
+                Text(
+                    modifier = Modifier.padding(privacyPolicyTextPadding),
+                    text = getString(R.string.privacy_policy_four),
+                    style = matchDescriptionTextStyle,
+                )
+            }
 
-            Text(
-                modifier = Modifier.padding(privacyPolicyTextPadding),
-                text = getString(R.string.privacy_policy_five),
-                style = matchDescriptionTextStyle,
-            )
+            SelectionContainer {
+                Text(
+                    modifier = Modifier.padding(privacyPolicyTextPadding),
+                    text = getString(R.string.privacy_policy_five),
+                    style = matchDescriptionTextStyle,
+                )
+            }
         }
     }
 }

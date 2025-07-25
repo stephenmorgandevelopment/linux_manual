@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.LinkInteractionListener
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.withStyle
@@ -29,6 +32,19 @@ import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchingTextSp
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
 import com.stephenmorgandevelopment.thelinuxmanual.utils.calculateScrollOffsetFor
 
+private val linkListener = object : LinkInteractionListener {
+    override fun onClick(link: LinkAnnotation) {
+        /**
+         *  Do nothing when tapping links
+         */
+        when (link) {
+            is LinkAnnotation.Url -> {}
+            is LinkAnnotation.Clickable -> {}
+            else -> {}
+        }
+    }
+}
+
 @Composable
 fun ManPageSection(
     name: String,
@@ -39,7 +55,12 @@ fun ManPageSection(
     val annotatedString = remember(singleTextMatch?.startIndex, singleTextMatch?.endIndex) {
         singleTextMatch?.let {
             buildAnnotatedString {
-                with(AnnotatedString.fromHtml(data)) {
+                with(
+                    AnnotatedString.fromHtml(
+                        htmlString = data,
+                        linkInteractionListener = linkListener,
+                    )
+                ) {
                     append(subSequence(0, it.startIndex))
                     withStyle(matchingTextSpanStyle) {
                         append(
@@ -52,7 +73,10 @@ fun ManPageSection(
                     append(subSequence(it.endIndex, length))
                 }
             }
-        } ?: AnnotatedString.fromHtml(data)
+        } ?: AnnotatedString.fromHtml(
+            htmlString = data,
+            linkInteractionListener = linkListener,
+        )
     }
 
     Column(
@@ -67,27 +91,31 @@ fun ManPageSection(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start,
     ) {
-        Text(
-            modifier = Modifier.padding(matchTitleTextPadding),
-            text = name,
-            style = matchTitleTextStyle,
-        )
+        SelectionContainer {
+            Text(
+                modifier = Modifier.padding(matchTitleTextPadding),
+                text = name,
+                style = matchTitleTextStyle,
+            )
+        }
 
-        Text(
-            modifier = Modifier.padding(matchDescriptionPadding),
-            text = annotatedString,
-            style = matchDescriptionTextStyle,
-            onTextLayout = { layout ->
-                singleTextMatch?.let {
-                    onTextMatchedOffset?.invoke(
-                        JumpTo(
-                            name,
-                            layout.calculateScrollOffsetFor(it.startIndex)
+        SelectionContainer {
+            Text(
+                modifier = Modifier.padding(matchDescriptionPadding),
+                text = annotatedString,
+                style = matchDescriptionTextStyle,
+                onTextLayout = { layout ->
+                    singleTextMatch?.let {
+                        onTextMatchedOffset?.invoke(
+                            JumpTo(
+                                name,
+                                layout.calculateScrollOffsetFor(it.startIndex)
+                            )
                         )
-                    )
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
