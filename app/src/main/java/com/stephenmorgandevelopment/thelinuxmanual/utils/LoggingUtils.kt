@@ -3,7 +3,7 @@ package com.stephenmorgandevelopment.thelinuxmanual.utils
 import android.util.Log
 import kotlin.reflect.KClass
 
-private val TAG_PREFIX = "phenm"
+private val TAG_PREFIX = ""
 fun Class<*>.ilog(message: String) {
     Log.i("$TAG_PREFIX-${this.simpleName}", message)
 }

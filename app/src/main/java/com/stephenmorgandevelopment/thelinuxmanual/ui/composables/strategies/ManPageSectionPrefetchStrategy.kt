@@ -37,8 +37,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction
 import com.stephenmorgandevelopment.thelinuxmanual.utils.coroutineScopeFor
-import com.stephenmorgandevelopment.thelinuxmanual.utils.dlog
-import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNotNull
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -86,14 +84,12 @@ class ManPageSectionPrefetchStrategy(
                     source: LifecycleOwner,
                     event: Lifecycle.Event,
                 ) {
-                    javaClass.ilog("tab id: - emitted lifecycle event: $event")
                     if (event == Lifecycle.Event.ON_STOP) {
                         coroutineScope.coroutineContext.cancelChildren()
                         hasRanOnce = false
                     }
 
                     if (event == Lifecycle.Event.ON_DESTROY) {
-                        javaClass.dlog("Destroyed tab with tab id: $id")
                         tabLifecycle.removeObserver(this)
                     }
                 }

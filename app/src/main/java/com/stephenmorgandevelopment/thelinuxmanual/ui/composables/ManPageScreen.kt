@@ -47,7 +47,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.Sea
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.TextMatchControlBar
 import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
 import com.stephenmorgandevelopment.thelinuxmanual.utils.getString
-import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNotNull
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -237,7 +236,6 @@ private fun ManPageScreenContent(
                     if (pinHandles.getOrNull(index) == null) {
                         pinContainer?.pin()?.also {
                             pinHandles.add(it)
-                            javaClass.ilog("Pinning container handle: $it for $header")
                         }
                     }
 

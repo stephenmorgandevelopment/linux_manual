@@ -56,8 +56,6 @@ val releaseMenuItemStyle = TextStyle(
     fontWeight = FontWeight(400),
 )
 
-val optionButtonHeight = 48.dp
-
 val optionButtonPadding = PaddingValues(vertical = 8.dp, horizontal = 1.dp)
 
 val releaseOptionsItemPadding = PaddingValues(
@@ -104,7 +102,6 @@ val matchTitleTextStyle = TextStyle(
 val matchDescriptionPadding = PaddingValues(vertical = 3.dp, horizontal = 8.dp)
 val matchDescriptionTextStyle = TextStyle(fontSize = 16.sp)
 
-//val matchDescriptionTotalPadding = 56.dp
 /**
  * Privacy Policy styles
  */
