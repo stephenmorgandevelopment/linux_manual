@@ -5,7 +5,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageSearchState
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.TabInfo
 
-object MockObjects {
+object PreviewObjects {
     const val testUrl = "https://ubuntu.com/"
     val longDescription = buildString {
         for (i in 0 until 12) {

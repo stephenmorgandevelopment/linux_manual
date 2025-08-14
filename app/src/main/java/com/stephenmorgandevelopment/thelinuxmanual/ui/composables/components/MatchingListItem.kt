@@ -12,11 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
-import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchDescriptionPadding
-import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchDescriptionTextStyle
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchListItemPadding
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchTitleTextPadding
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchTitleTextStyle
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.standardInfoPadding
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.standardInfoTextStyle
 import com.stephenmorgandevelopment.thelinuxmanual.utils.loadingString
 
 @Composable
@@ -44,8 +44,8 @@ fun MatchingListItem(
             )
 
             Text(
-                modifier = Modifier.padding(matchDescriptionPadding),
-                style = matchDescriptionTextStyle,
+                modifier = Modifier.padding(standardInfoPadding),
+                style = standardInfoTextStyle,
                 text =
                     if (description.isNullOrBlank()) loadingString
                     else description,

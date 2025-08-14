@@ -28,7 +28,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageOptionsMe
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.OptionsMenuAction
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.appbarTitleStyle
-import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.releaseMenuItemStyle
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.sectionMenuItemStyle
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.toolbarHeight
 
 @Composable
@@ -84,7 +84,7 @@ private fun JumpToDropdown(
 
         for (section in sections) {
             DropdownMenuItem(
-                text = { Text(text = section, fontSize = 16.sp, style = releaseMenuItemStyle) },
+                text = { Text(text = section, fontSize = 16.sp, style = sectionMenuItemStyle) },
                 onClick = { onItemClicked(section) }
             )
         }

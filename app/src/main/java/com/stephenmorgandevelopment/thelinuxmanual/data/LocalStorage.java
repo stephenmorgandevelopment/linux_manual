@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command;
-import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,22 +16,16 @@ import java.nio.charset.StandardCharsets;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import dagger.hilt.android.qualifiers.ApplicationContext;
+
 @Singleton
 public class LocalStorage {
     private static final String TAG = LocalStorage.class.getSimpleName();
-    private static LocalStorage instance;
     private final File commandsDir;
 
-    public static LocalStorage getInstance() {
-        if (instance == null) {
-            instance = new LocalStorage();
-        }
-        return instance;
-    }
-
     @Inject
-    public LocalStorage() {
-        commandsDir = Helpers.getApplicationContext().getDir("commands", Context.MODE_PRIVATE);
+    public LocalStorage(@ApplicationContext Context context) {
+        commandsDir = context.getApplicationContext().getDir("commands", Context.MODE_PRIVATE);
     }
 
     public boolean hasCommand(long id) {

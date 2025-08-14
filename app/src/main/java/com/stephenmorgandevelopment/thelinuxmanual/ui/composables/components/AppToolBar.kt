@@ -33,7 +33,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.appbarTitleSty
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.menus.LookupOptionsMenu
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.menus.ManPageOptionsMenu
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.toolbarHeight
-import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
+import com.stephenmorgandevelopment.thelinuxmanual.utils.PreviewObjects
 
 @Composable
 fun AppToolbar(
@@ -136,7 +136,7 @@ private fun PreviewAppToolbarLookupMenu() {
 @Composable
 private fun PreviewAppToolbarManPageMenu() {
     Box(contentAlignment = Alignment.TopCenter) {
-        AppToolbar("Blah", MockObjects.longDescription) {
+        AppToolbar("Blah", PreviewObjects.longDescription) {
             ManPageOptionsMenu(
                 "for accessibility",
                 AvailableReleases.releaseStrings,

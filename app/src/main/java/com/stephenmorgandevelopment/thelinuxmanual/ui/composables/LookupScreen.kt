@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -23,7 +25,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupState
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.MatchingListItem
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.SearchBar
-import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
+import com.stephenmorgandevelopment.thelinuxmanual.utils.PreviewObjects
 
 @Composable
 fun LookupScreen(
@@ -52,6 +54,9 @@ private fun LookupScreenContent(
     onAction: (LookupAction) -> Unit,
     onItemClick: (String, Long) -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
+    val imeManager = LocalSoftwareKeyboardController.current
+
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
@@ -87,7 +92,9 @@ private fun LookupScreenContent(
                 key = { it.id },
             ) {
 
-                MatchingListItem(it.name, it.descriptionPreview) {
+                MatchingListItem(name = it.name, description = it.descriptionPreview) {
+                    focusManager.clearFocus(true)
+                    imeManager?.hide()
                     onItemClick(it.name, it.id)
                 }
 
@@ -107,7 +114,7 @@ private fun LookupScreenContent(
 private fun PreviewLookupScreen() {
     val lookupState = LookupState(
         "Not Random",
-        MockObjects.matchItems,
+        PreviewObjects.matchItems,
     )
 
     LookupScreenContent(true, lookupState, rememberLazyListState(), {}) { _, _ -> }
@@ -118,7 +125,7 @@ private fun PreviewLookupScreen() {
 private fun PreviewLookupScreenSearchBottom() {
     val lookupState = LookupState(
         "Random",
-        MockObjects.lookupItemsLongList,
+        PreviewObjects.lookupItemsLongList,
     )
 
     LookupScreenContent(true, lookupState, rememberLazyListState(), {}) { _, _ -> }

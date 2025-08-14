@@ -35,9 +35,8 @@ import androidx.compose.foundation.lazy.layout.NestedPrefetchScope
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction
 import com.stephenmorgandevelopment.thelinuxmanual.utils.coroutineScopeFor
-import com.stephenmorgandevelopment.thelinuxmanual.utils.isNotNull
+import com.stephenmorgandevelopment.thelinuxmanual.utils.dlog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -56,24 +55,10 @@ import kotlinx.coroutines.withContext
 class ManPageSectionPrefetchStrategy(
     val id: Long,
     private val listSize: Int,
-    private val onAction: (ManPageAction) -> Unit,
+    private val updateSection: (String) -> Unit,
     private val tabLifecycle: Lifecycle,
 ) : LazyListPrefetchStrategy {
     private val coroutineScope = coroutineScopeFor(tabLifecycle)
-
-    /**
-     * The index scheduled to be prefetched (or the last prefetched index if the prefetch is done).
-     */
-    private var indexToPrefetch = -1
-
-    /** The handle associated with the current index from [indexToPrefetch]. */
-    private var currentPrefetchHandle: LazyLayoutPrefetchState.PrefetchHandle? = null
-
-    /**
-     * Keeps the scrolling direction during the previous calculation in order to be able to detect
-     * the scrolling direction change.
-     */
-    private var wasScrollingForward = false
 
     private var hasRanOnce = false
 
@@ -90,13 +75,12 @@ class ManPageSectionPrefetchStrategy(
                     }
 
                     if (event == Lifecycle.Event.ON_DESTROY) {
+                        javaClass.dlog("Cleaning up ManPageSectionPrefetchStrategy")
                         tabLifecycle.removeObserver(this)
                     }
                 }
             })
     }
-
-    private val prefetchHandles = mutableListOf<LazyLayoutPrefetchState.PrefetchHandle>()
 
     /**
      * Adds all items in lazy list to be scheduled for prefetching.  When they are
@@ -113,83 +97,30 @@ class ManPageSectionPrefetchStrategy(
 
         coroutineScope.launch {
             withContext(Dispatchers.Default) {
-                if (prefetchHandles.isEmpty()) {
-                    for (idx in 0 until listSize) {
-                        prefetchHandles.add(scheduleFun(idx).also { it.markAsUrgent() })
-                    }
+                for (idx in 0 until listSize) {
+                    scheduleFun(idx).also { it.markAsUrgent() }
                 }
             }
         }.invokeOnCompletion {
-            if (it.isNotNull() && it !is CancellationException) hasRanOnce = false
+            // If we have an error that isn't cancellation exception
+            // assume we didn't complete the scheduling for prefetch.
+            if (it != null && it !is CancellationException) hasRanOnce = false
         }
     }
 
     override fun LazyListPrefetchScope.onScroll(delta: Float, layoutInfo: LazyListLayoutInfo) {
         schedulePersisted(::schedulePrefetch)
-
-        if (layoutInfo.visibleItemsInfo.isNotEmpty()) {
-            val scrollingForward = delta < 0
-            val indexToPrefetch =
-                if (scrollingForward) {
-                    layoutInfo.visibleItemsInfo.last().index + 1
-                } else {
-                    layoutInfo.visibleItemsInfo.first().index - 1
-                }
-            if (indexToPrefetch in 0 until layoutInfo.totalItemsCount) {
-                if (indexToPrefetch != this@ManPageSectionPrefetchStrategy.indexToPrefetch) {
-                    if (wasScrollingForward != scrollingForward) {
-                        // the scrolling direction has been changed which means the last prefetched
-                        // is not going to be reached anytime soon so it is safer to dispose it.
-                        // if this item is already visible it is safe to call the method anyway
-                        // as it will be no-op
-                        currentPrefetchHandle?.cancel()
-                    }
-                    this@ManPageSectionPrefetchStrategy.wasScrollingForward = scrollingForward
-                    this@ManPageSectionPrefetchStrategy.indexToPrefetch = indexToPrefetch
-                    currentPrefetchHandle = schedulePrefetch(indexToPrefetch)
-                }
-                if (scrollingForward) {
-                    val lastItem = layoutInfo.visibleItemsInfo.last()
-                    val spacing = layoutInfo.mainAxisItemSpacing
-                    val distanceToPrefetchItem =
-                        lastItem.offset + lastItem.size + spacing - layoutInfo.viewportEndOffset
-                    // if in the next frame we will get the same delta will we reach the item?
-                    if (distanceToPrefetchItem < -delta) {
-                        currentPrefetchHandle?.markAsUrgent()
-                    }
-                } else {
-                    val firstItem = layoutInfo.visibleItemsInfo.first()
-                    val distanceToPrefetchItem = layoutInfo.viewportStartOffset - firstItem.offset
-                    // if in the next frame we will get the same delta will we reach the item?
-                    if (distanceToPrefetchItem < delta) {
-                        currentPrefetchHandle?.markAsUrgent()
-                    }
-                }
-            }
-        }
     }
 
     override fun LazyListPrefetchScope.onVisibleItemsUpdated(layoutInfo: LazyListLayoutInfo) {
+        // We only need this to update the section name.
+        // All prefetching will have taken place already.
         layoutInfo.visibleItemsInfo
             .firstNotNullOfOrNull { it.key as? String }
-            ?.let { onAction(ManPageAction.OnScroll(it)) }
-
-        if (indexToPrefetch != -1 && layoutInfo.visibleItemsInfo.isNotEmpty()) {
-            val expectedPrefetchIndex =
-                if (wasScrollingForward) {
-                    layoutInfo.visibleItemsInfo.last().index + 1
-                } else {
-                    layoutInfo.visibleItemsInfo.first().index - 1
-                }
-            if (indexToPrefetch != expectedPrefetchIndex) {
-                indexToPrefetch = -1
-                currentPrefetchHandle?.cancel()
-                currentPrefetchHandle = null
-            }
-        }
+            ?.let { updateSection(it) }
     }
 
     override fun NestedPrefetchScope.onNestedPrefetch(firstVisibleItemIndex: Int) {
-        repeat(2) { i -> schedulePrefetch(firstVisibleItemIndex + i) }
+        repeat(listSize) { i -> schedulePrecomposition(firstVisibleItemIndex + i) }
     }
 }

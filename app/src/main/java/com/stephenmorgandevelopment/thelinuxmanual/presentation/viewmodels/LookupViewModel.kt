@@ -2,6 +2,7 @@ package com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.domain.GetPartialMatchesUseCase
 import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupAction
@@ -12,6 +13,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
 import com.stephenmorgandevelopment.thelinuxmanual.utils.noInternedString
 import com.stephenmorgandevelopment.thelinuxmanual.utils.queryAdjusted
 import com.stephenmorgandevelopment.thelinuxmanual.utils.sanitizeInput
+import com.stephenmorgandevelopment.thelinuxmanual.utils.stringFromRes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.math.min
 
@@ -81,7 +84,11 @@ class LookupViewModel @Inject constructor(
     private fun addDescription(matchingItem: MatchingItem) = GlobalScope.async(
         Dispatchers.IO,
         start = CoroutineStart.LAZY,
-    ) { ubuntuRepository.addDescription(matchingItem) }
+    ) {
+        withTimeoutOrNull(6_500) {
+            ubuntuRepository.addDescription(matchingItem)
+        } ?: matchingItem.copy(descriptionPreview = stringFromRes(R.string.unexpected_error))
+    }
 
     private var scopedJob: Job? = null
 

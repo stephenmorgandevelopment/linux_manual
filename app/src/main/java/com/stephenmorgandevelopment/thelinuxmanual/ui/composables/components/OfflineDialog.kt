@@ -18,10 +18,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
-import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchDescriptionPadding
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchTitleTextPadding
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchTitleTextStyle
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.privacyPolicyTextStyle
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.standardInfoPadding
 import com.stephenmorgandevelopment.thelinuxmanual.utils.getString
 
 @Composable
@@ -48,7 +48,7 @@ fun OfflineDialog() {
             )
 
             Text(
-                modifier = Modifier.padding(matchDescriptionPadding),
+                modifier = Modifier.padding(standardInfoPadding),
                 text = getString(R.string.you_are_offline),
                 style = privacyPolicyTextStyle,
             )

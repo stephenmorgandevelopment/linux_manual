@@ -5,10 +5,11 @@
 package com.stephenmorgandevelopment.thelinuxmanual.utils
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu.AvailableReleases.NOBLE
-import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers.getApplicationContext
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -26,7 +27,9 @@ data class CurrentPreferences(
 )
 
 @Singleton
-class Preferences @Inject constructor() {
+class Preferences @Inject constructor(
+    @ApplicationContext private val applicationContext: Context,
+) {
     private val currentPrefs get() = CurrentPreferences(release, tabsOnBottom, searchOnBottom)
     private val _preferenceListener = MutableStateFlow(currentPrefs)
     val preferenceListener = _preferenceListener.asStateFlow()
@@ -40,7 +43,7 @@ class Preferences @Inject constructor() {
 
     private val preferences: SharedPreferences?
         get() = try {
-            PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+            PreferenceManager.getDefaultSharedPreferences(applicationContext)
         } catch (e: Throwable) {
             null
         }

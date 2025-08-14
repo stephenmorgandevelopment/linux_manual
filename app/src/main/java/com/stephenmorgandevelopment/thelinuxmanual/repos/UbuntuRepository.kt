@@ -1,5 +1,6 @@
 package com.stephenmorgandevelopment.thelinuxmanual.repos
 
+import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.fromHtml
@@ -13,10 +14,10 @@ import com.stephenmorgandevelopment.thelinuxmanual.models.Command
 import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
-import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNotNull
 import com.stephenmorgandevelopment.thelinuxmanual.utils.stringFromRes
 import com.stephenmorgandevelopment.thelinuxmanual.utils.wlog
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +38,7 @@ class UbuntuRepository @Inject constructor(
     private val httpClient: HttpClient,
     private val roomDb: SimpleCommandsDatabase,
     private val localStorage: LocalStorage,
+    @ApplicationContext private val appContext: Context,
 ) {
 
     suspend fun getMatchingItemById(id: Long): MatchingItem? = withContext(Dispatchers.IO) {
@@ -61,7 +63,7 @@ class UbuntuRepository @Inject constructor(
         return withContext(Dispatchers.Default) {
             httpClient.fetchDescription(matchedItem).await()
                 ?.let {
-                    UbuntuHtmlApiConverter.crawlForDescriptionAndSections(it.body?.string())
+                    UbuntuHtmlApiConverter.crawlForDescriptionAndSections(it.body.string())
                 }?.let { pair ->
                     val description = AnnotatedString.fromHtml(
                         pair.first ?: stringFromRes(R.string.no_description)
@@ -83,7 +85,7 @@ class UbuntuRepository @Inject constructor(
             }
 
             return CommandSyncService.enqueueWork(
-                Helpers.getApplicationContext(),
+                appContext,
                 intent
             ).asFlow().flowOn(Dispatchers.Main)
         }
@@ -100,7 +102,7 @@ class UbuntuRepository @Inject constructor(
                 )
             }
         }.invokeOnCompletion { e ->
-            if (e.isNotNull()) javaClass.ilog("Encountered error saving $id - ${e?.message}")
+            if (e.isNotNull()) javaClass.wlog("Encountered error saving $id - ${e?.message}")
         }
     }
 

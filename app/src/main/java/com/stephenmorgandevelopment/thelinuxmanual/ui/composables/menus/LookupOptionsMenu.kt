@@ -76,7 +76,7 @@ fun LookupOptionsMenu(
         DropdownMenu(
             shape = RoundedCornerShape(4.dp),
             modifier = Modifier
-                .heightIn(max = 450.dp)
+                .heightIn(max = 550.dp)
                 .padding(
                     horizontal = 5.dp,
                     vertical = 3.dp,
@@ -127,7 +127,7 @@ fun LookupOptionsMenu(
             if (releaseOptionsExpanded) {
                 Column(
                     modifier = Modifier
-                        .heightIn(max = 100.dp)
+                        .heightIn(max = 175.dp)
                         .fillMaxWidth()
                         .verticalScroll(scrollState)
                         .padding(vertical = 3.dp, horizontal = 12.dp),

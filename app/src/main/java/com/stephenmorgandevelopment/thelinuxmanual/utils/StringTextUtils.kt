@@ -2,11 +2,9 @@ package com.stephenmorgandevelopment.thelinuxmanual.utils
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.Dp
 import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.defaultTextStyle
 
@@ -16,13 +14,6 @@ val noInternedString = stringFromRes(R.string.offline_description_preview)
 private val charactersToSanitize = listOf(
     '!', ';', '&', '"', '#', '\'', '\\',
 )
-
-@Composable
-fun Dp.asPx(): Int {
-    with(LocalDensity.current) {
-        return this@asPx.roundToPx()
-    }
-}
 
 fun sanitizeInput(text: String): String {
     return text.filterNot { charactersToSanitize.contains(it) }
@@ -40,12 +31,12 @@ fun stringFromRes(id: Int, vararg params: Any) =
 
 @Composable
 fun getString(id: Int): String {
-    return LocalContext.current.resources.getString(id)
+    return LocalResources.current.getString(id)
 }
 
 @Composable
 fun getString(id: Int, vararg params: Any): String {
-    return LocalContext.current.resources.getString(id, *params)
+    return LocalResources.current.getString(id, *params)
 }
 
 @Composable

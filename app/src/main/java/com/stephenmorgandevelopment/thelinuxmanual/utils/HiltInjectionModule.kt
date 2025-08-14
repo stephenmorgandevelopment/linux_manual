@@ -12,7 +12,6 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 @Module
 class AppBindingModule {
-
     @Provides
     fun roomDatabase(
         @ApplicationContext applicationContext: Context,
@@ -22,13 +21,3 @@ class AppBindingModule {
         "simple_commands",
     ).build()
 }
-
-//@InstallIn(ViewModelComponent::class)
-//@Module
-//class ManPageBindingModule {
-//
-//    @Provides
-//    fun manPageViewModel(
-//
-//    )
-//}

@@ -50,6 +50,14 @@ data class ManPageTabState(
 
 @Parcelize
 @Immutable
+data class LazyListStateWithId(
+    val id: Long,
+    val firstVisibleItemIndex: Int,
+    val firstVisibleItemScrollOffset: Int,
+) : State
+
+@Parcelize
+@Immutable
 data class ManPageSearchState(
     val id: Long,
     val visible: Boolean = false,

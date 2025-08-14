@@ -5,16 +5,19 @@ import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.ManPa
 import kotlinx.serialization.Serializable
 
 @Serializable
-object Lookup
+sealed interface NavRoutes
 
 @Serializable
-object PrivacyPolicy
+object Lookup: NavRoutes
 
 @Serializable
-object Offline
+object PrivacyPolicy: NavRoutes
 
 @Serializable
-data class ManPage(val title: String, val manPageId: Long)
+object Offline: NavRoutes
+
+@Serializable
+data class ManPage(val title: String, val manPageId: Long): NavRoutes
 
 val ManPage.Companion.routeName: String get() = ManPage::class.java.name
 val ManPage.Companion.routeDef: String get() = "$routeName/{$TITLE_KEY}/{$ITEM_ID_KEY}"

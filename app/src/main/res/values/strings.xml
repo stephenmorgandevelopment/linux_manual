@@ -44,81 +44,8 @@
     <string name="show_release_options">Show release options</string>
     <string name="hide_release_options">Hide release options</string>
 
-
-    <!-- Man Page Fields -->
-    <string name="name">name</string>
-    <string name="synopsis">synopsis</string>
-    <string name="configuration">configuration</string>
-    <string name="description">description</string>
-    <string name="option">option</string>
-    <string name="exit_status">exit status</string>
-    <string name="return_value">return value</string>
-    <string name="error">error</string>
-    <string name="environment">environment</string>
-    <string name="version">version</string>
-    <string name="conform">conform</string>
-    <string name="notes">notes</string>
-    <string name="bugs">bugs</string>
-    <string name="example">example</string>
-    <string name="author">author</string>
-    <string name="seeAlso">see also</string>
-    <string name="overview">overview</string>
-    <string name="defaults">defaults</string>
-    <string name="history">history</string>
-    <string name="commands">commands</string>
-    <string name="mail">mail</string>
-    <string name="site">site</string>
-    <string name="syntax">syntax</string>
-    <string name="security">security</string>
-    <string name="reporting">reporting</string>
-    <string name="copyright">copyright</string>
-    <string name="finishing_up">Finishing up&#8230;</string>
-    <string name="artful">artful</string>
-    <string name="bionic">bionic</string>
-    <string name="cosmic">cosmic</string>
-    <string name="disco">disco</string>
-    <string name="eoan">eoan</string>
-    <string name="focal">focal</string>
-    <string name="groovy">groovy</string>
-    <string name="precise">precise</string>
-    <string name="trusty">trusty</string>
-    <string name="xenial">xenial</string>
     <string name="fetching_data">Loading&#8230;</string>
-    <string name="no_internet_descriptions">Must have internet to populate descriptions in database.  They will be saved in app data after the initial pull.</string>
-    <string name="info_key_name">NAME</string>
-    <string name="info_key_synopsis">SYNOPSIS</string>
-    <string name="info_key_example">EXAMPLE</string>
-    <string name="info_key_examples">EXAMPLES</string>
-    <string name="info_key_options">OPTIONS</string>
-    <string name="info_key_description">DESCRIPTION</string>
-    <string name="initial_sync_message">Running initial sync to build local command database.</string>
-    <string name="unable_to_fetch">Unable to fetch data at this time.</string>
-    <string name="close">Close</string>
-    <string name="jump_to">Jump To</string>
-    <string name="hirsute">hirsute</string>
-    <string name="no_data_no_internet">Must have internet to build the local database of commands.  Please restart the app when you are connected to the internet, or press the Re-Sync Data button once connected.</string>
-    <string name="release_sync_no_data_no_internet">No data found on device for this release.\nPlease try again when connected to internet.</string>
     <string name="search">Search</string>
-    <string name="styles">Font Size Settings</string>
-    <string name="colors">Colors</string>
-    <string name="primary">Primary</string>
-    <string name="secondary">Secondary</string>
-    <string name="third">Third</string>
-    <string name="accent">Accent</string>
-
-    <string name="reset">reset</string>
-    <string name="font_size">Font size:</string>
-    <string name="r_000">Red:</string>
-    <string name="b_000">Blue:</string>
-    <string name="g_000">Green:</string>
-    <string name="_000">000</string>
-    <string name="apply">apply</string>
-    <string name="the_amount_of_blue_in_your_color_selection">The amount of blue in your color selection</string>
-    <string name="the_amount_of_green_in_your_color_selection">The amount of green in your color selection</string>
-    <string name="the_amount_of_red_in_your_color_selection">The amount of red in your color selection</string>
-    <string name="font">Font:</string>
-    <string name="list">List:</string>
-    <string name="details_text">Details:</string>
     <string name="no_matches">No matches.</string>
     <string name="no_description">No description available.</string>
 
@@ -127,6 +54,8 @@
     <string name="privacy_policy_three">All permissions requested are used to connect to \"https://manpages.ubuntu.com/manpages/\" and acquire man(ual) page data.  The first thing the app does, is pull the name and url of all man pages available for the latest LTS release, and saves the data in app private storage.  As you type in the search bar, any pages with a partially matching name will be displayed and partial descriptions will be pulled and saved from ubuntu.com.  After clicking on a tab, the app will pull the entire man page and save it in the app\'s private data, for later viewing, allowing you to view the man page without internet.  They are rather small and it would take a while for them to total more than 5\-10MB.</string>
     <string name="privacy_policy_four">This is the extent of the apps functionality as far as internet and storage is concerned.  Everything else is purely related to the UI.</string>
     <string name="privacy_policy_five">ReSyncing or changing versions, will wipe everything that has been saved thus far.  The app will need to run the initial sync again, and app data will repopulate as described earlier.</string>
+    <string name="ubuntu_privacy_policy_more_info">For more information about Ubuntu\'s Privacy Policy, click here.</string>
+    <string name="no_web_browser_found">Must have a web browser to view Ubuntu\'s privacy policy.</string>
 
     <string name="query_change_content_description">Currently searching for %s, tap to show search bar.</string>
 </resources>

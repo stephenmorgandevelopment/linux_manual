@@ -45,7 +45,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.Loa
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.ManPageSection
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.SearchBarWithButton
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.TextMatchControlBar
-import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
+import com.stephenmorgandevelopment.thelinuxmanual.utils.PreviewObjects
 import com.stephenmorgandevelopment.thelinuxmanual.utils.getString
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNotNull
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNull
@@ -120,6 +120,7 @@ private fun ManPageScreenContent(
     var forceShowSearch by remember(searchResults) { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val imeManager = LocalSoftwareKeyboardController.current
+
     val commandDataList = remember(command.id) {
         command.data.toList()
     }
@@ -290,8 +291,8 @@ private fun ManPageScreenContent(
 private fun PreviewManPageScreen() {
     ManPageScreen(
         title = "Anything",
-        searchState = MockObjects.mockSearchState,
-        command = Command(27L, MockObjects.commandData),
+        searchState = PreviewObjects.mockSearchState,
+        command = Command(27L, PreviewObjects.commandData),
         listState = rememberLazyListState(),
         loading = false,
         onAction = {},
@@ -305,11 +306,11 @@ private fun PreviewManPageScreen() {
 private fun PreviewManPageNoSearch() {
     ManPageScreen(
         title = "Something",
-        searchState = MockObjects.mockSearchState.copy(
+        searchState = PreviewObjects.mockSearchState.copy(
             visible = false,
             results = null,
         ),
-        command = Command(27L, MockObjects.commandData),
+        command = Command(27L, PreviewObjects.commandData),
         listState = rememberLazyListState(),
         loading = true,
         onAction = {},
@@ -323,11 +324,11 @@ private fun PreviewManPageNoSearch() {
 private fun PreviewManPageLoadingScreen() {
     ManPageScreen(
         title = "Nothing",
-        searchState = MockObjects.mockSearchState.copy(
+        searchState = PreviewObjects.mockSearchState.copy(
             visible = true,
             results = null,
         ),
-        command = Command(27L, MockObjects.commandData),
+        command = Command(27L, PreviewObjects.commandData),
         listState = rememberLazyListState(),
         loading = false,
         onAction = {},

@@ -99,32 +99,8 @@ class ManPageViewModel @Inject constructor(
                 searchFor().start()
             }
 
-            OnPrevPressed -> {
-                val index = if (_searchResults.value?.textMatches?.count() == 0) 0
-                else if (_searchIndex.value <= 0) _searchResults.value?.textMatches?.lastIndex
-                    ?: 0
-                else _searchIndex.value.minus(1)
-
-                searchResultAt(index)?.section?.let {
-                    jumpTo(it, JUMP_TO_RENDERING_OFFSET)
-                }
-
-                _searchIndex.value = index
-            }
-
-            OnNextPressed -> {
-                val index = if (_searchResults.value?.textMatches?.count() == 0) 0
-                else if (_searchIndex.value >= (_searchResults.value?.textMatches?.lastIndex
-                        ?: 0)
-                ) 0
-                else _searchIndex.value.plus(1)
-
-                searchResultAt(index)?.section?.let {
-                    jumpTo(it, JUMP_TO_RENDERING_OFFSET)
-                }
-
-                _searchIndex.value = index
-            }
+            OnPrevPressed -> gotoSearchIndex(prevSearchIndex)
+            OnNextPressed -> gotoSearchIndex(nextSearchIndex)
 
             is OnSearchTextUpdated -> _searchText.value = sanitizeInput(action.text)
             is OnScroll -> _currentSection.value = action.sectionName
@@ -133,11 +109,7 @@ class ManPageViewModel @Inject constructor(
 
     override fun onOptionMenuAction(action: OptionsMenuAction) {
         when (action) {
-            is JumpTo -> {
-                _loading.value = true
-                jumpTo(action.section, action.offset)
-            }
-
+            is JumpTo -> jumpTo(action.section, action.offset)
             ToggleSearch -> _searchVisible.value = !_searchVisible.value
             else -> {}
         }
@@ -152,9 +124,23 @@ class ManPageViewModel @Inject constructor(
         }
     }
 
-    fun clearLoading() {
-        _loading.value = false
+    private fun gotoSearchIndex(index: Int) {
+        searchResultAt(index)?.section?.let {
+            jumpTo(it, JUMP_TO_RENDERING_OFFSET)
+        }
+
+        _searchIndex.value = index
     }
+
+    private val prevSearchIndex
+        get() = if (_searchResults.value?.textMatches?.count() == 0) 0
+        else if (_searchIndex.value <= 0) _searchResults.value?.textMatches?.lastIndex ?: 0
+        else _searchIndex.value.minus(1)
+
+    private val nextSearchIndex
+        get() = if (_searchResults.value?.textMatches?.count() == 0) 0
+        else if (_searchIndex.value >= (_searchResults.value?.textMatches?.lastIndex ?: 0)) 0
+        else _searchIndex.value.plus(1)
 
     private fun searchFor() = viewModelScope.async {
         withContext(Dispatchers.IO) {
@@ -162,16 +148,17 @@ class ManPageViewModel @Inject constructor(
                 _searchIndex.value = 0
 
                 _searchResults.value =
-                    state.value.command?.searchDataForTextMatch(_searchText.value).also {
-                        if (it.isNull() || it?.count == 0) clearLoading()
-                    }?.also { allResults ->
-                        allResults.getMatch(_searchIndex.value)?.section?.let {
-                            _jumpToEvents.tryEmit(
-                                JumpToData(section = it, JUMP_TO_RENDERING_OFFSET)
-                            )
+                    state.value.command
+                        ?.searchDataForTextMatch(_searchText.value)
+                        .also { if (it == null || it.count == 0) _loading.value = false }
+                        ?.also { allResults ->
+                            allResults.getMatch(_searchIndex.value)?.section
+                                ?.let {
+                                    jumpTo(it, JUMP_TO_RENDERING_OFFSET)
+                                    _loading.value = false
+                                }
                         }
-                    }
-            } else clearLoading()
+            } else _loading.value = false
         }
     }
 

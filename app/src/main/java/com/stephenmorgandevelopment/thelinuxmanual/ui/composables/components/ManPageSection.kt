@@ -24,12 +24,12 @@ import androidx.compose.ui.unit.dp
 import com.stephenmorgandevelopment.thelinuxmanual.models.SingleTextMatch
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageOptionsMenuAction.JumpTo
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
-import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchDescriptionPadding
-import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchDescriptionTextStyle
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchTitleTextPadding
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchTitleTextStyle
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.matchingTextSpanStyle
-import com.stephenmorgandevelopment.thelinuxmanual.utils.MockObjects
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.standardInfoPadding
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.standardInfoTextStyle
+import com.stephenmorgandevelopment.thelinuxmanual.utils.PreviewObjects
 import com.stephenmorgandevelopment.thelinuxmanual.utils.calculateScrollOffsetFor
 
 private val linkListener = object : LinkInteractionListener {
@@ -101,9 +101,9 @@ fun ManPageSection(
 
         SelectionContainer {
             Text(
-                modifier = Modifier.padding(matchDescriptionPadding),
+                modifier = Modifier.padding(standardInfoPadding),
                 text = annotatedString,
-                style = matchDescriptionTextStyle,
+                style = standardInfoTextStyle,
                 onTextLayout = { layout ->
                     singleTextMatch?.let {
                         onTextMatchedOffset?.invoke(
@@ -124,7 +124,7 @@ fun ManPageSection(
 private fun PreviewManPageSection() {
     ManPageSection(
         "Description",
-        MockObjects.longDescription,
+        PreviewObjects.longDescription,
         null,
         {}
     )
@@ -135,7 +135,7 @@ private fun PreviewManPageSection() {
 private fun PreviewManPageSectionWithTextMatch() {
     ManPageSection(
         "Description",
-        MockObjects.longDescription,
+        PreviewObjects.longDescription,
         SingleTextMatch(
             "Description",
             49,

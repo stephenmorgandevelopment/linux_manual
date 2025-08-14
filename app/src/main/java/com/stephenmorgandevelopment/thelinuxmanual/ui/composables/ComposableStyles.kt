@@ -23,6 +23,7 @@ object Colors {
     val indicatorColor = Color(0xFFdd9b1a)
     val searchForeground = Color(0xFFFBA700)
     val searchBackground = Color(0xFF1b1b1b)
+    val webLinkBlue = Color(0xFF1775c7)
 }
 
 @Composable
@@ -45,27 +46,29 @@ val defaultTextStyle = TextStyle(
 )
 
 val optionsMenuTextStyle = TextStyle(
-    fontSize = 14.sp,
-    fontWeight = FontWeight(550),
-    lineHeight = 20.sp,
+    fontSize = 18.sp,
+    fontWeight = FontWeight(600),
+    lineHeight = 22.sp,
     textAlign = TextAlign.Start,
 )
 
 val releaseMenuItemStyle = TextStyle(
-    fontSize = 16.sp,
-    fontWeight = FontWeight(400),
+    fontSize = 18.sp,
+    fontWeight = FontWeight(500),
+    textAlign = TextAlign.End,
+    lineHeight = 20.sp,
 )
 
 val optionButtonPadding = PaddingValues(vertical = 8.dp, horizontal = 1.dp)
 
 val releaseOptionsItemPadding = PaddingValues(
     horizontal = 12.dp,
-    vertical = 8.dp,
+    vertical = 9.dp,
 )
 
 val optionsMenuItemPadding = PaddingValues(vertical = 5.dp, horizontal = 3.dp)
 
-val toolbarHeight = 68.dp
+val toolbarHeight = 70.dp
 val appbarTitleStyle = TextStyle(
     fontWeight = FontWeight(625),
     fontSize = 29.sp,
@@ -77,6 +80,11 @@ val appbarSubtitleStyle = TextStyle(
     fontSize = 17.sp,
     textAlign = TextAlign.Start,
     textIndent = TextIndent(3.sp)
+)
+
+val sectionMenuItemStyle = TextStyle(
+    fontSize = 16.sp,
+    fontWeight = FontWeight(400),
 )
 
 /**
@@ -99,8 +107,8 @@ val matchTitleTextStyle = TextStyle(
     fontWeight = FontWeight(700),
 )
 
-val matchDescriptionPadding = PaddingValues(vertical = 3.dp, horizontal = 8.dp)
-val matchDescriptionTextStyle = TextStyle(fontSize = 16.sp)
+val standardInfoPadding = PaddingValues(vertical = 3.dp, horizontal = 8.dp)
+val standardInfoTextStyle = TextStyle(fontSize = 16.sp)
 
 /**
  * Privacy Policy styles
