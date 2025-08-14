@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -65,7 +64,6 @@ import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.LookupScreen
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.ManPageScreen
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.getManPageViewModel
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.strategies.ManPageSectionPrefetchStrategy
-import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchInCompletable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -280,10 +278,6 @@ fun PagerNavHost(
             val title = backStackEntry.arguments?.getString(TITLE_KEY) ?: ""
             val id = backStackEntry.arguments?.getLong(ITEM_ID_KEY)
                 ?: throw RuntimeException("Navigation api failed to populate arguments.")
-
-            var waitingForPremeasure by remember(id) { mutableStateOf(true) }
-
-            javaClass.ilog("destination id for $title - ${backStackEntry.destination.id}")
 
             BackHandler(screenState.selectedTabIndex != 0) {
                 if (screenState.selectedTabIndex != 0) {
