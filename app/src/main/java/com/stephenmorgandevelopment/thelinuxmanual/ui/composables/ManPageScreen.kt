@@ -39,8 +39,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.models.Command
 import com.stephenmorgandevelopment.thelinuxmanual.models.TextSearchResult
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageOptionsMenuAction.JumpTo
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageSearchState
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.ManPageViewModel
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageScreenState
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.LoadingIndicator
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.ManPageSection
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.SearchBarWithButton
@@ -53,49 +52,36 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.serialization.ExperimentalSerializationApi
 
-@Composable
-fun getManPageViewModel(
-    title: String,
-    manPageId: Long,
-    viewModel: ManPageViewModel = hiltViewModel<ManPageViewModel>(
-        key = "$title-$manPageId",
-    ),
-): ManPageViewModel {
-    return remember("$title-$manPageId") { viewModel }
-}
-
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun ManPageScreen(
     title: String,
     listState: LazyListState?,
-    searchState: ManPageSearchState,
-    command: Command?,
-    loading: Boolean,
+    state: ManPageScreenState,
     onJumpTo: (JumpTo) -> Unit,
     onAction: (ManPageAction) -> Unit,
     showOfflineDialog: () -> Unit,
 ) {
 
     when {
-        command?.id == -1L -> {
+        state.command?.id == -1L -> {
             LaunchedEffect(1) {
                 delay(125)
                 showOfflineDialog()
             }
         }
 
-        command == null -> LoadingIndicator()
+        state.command == null -> LoadingIndicator()
 
         else -> listState?.let {
             ManPageScreenContent(
                 title = title,
-                searchText = searchState.query,
-                searchVisible = searchState.visible,
-                searchResults = searchState.results,
-                searchIndex = searchState.index,
-                command = command,
-                loading = loading,
+                searchText = state.searchState.query,
+                searchVisible = state.searchState.visible,
+                searchResults = state.searchState.results,
+                searchIndex = state.searchState.index,
+                command = state.command,
+                loading = state.loading,
                 listState = it,
                 onJumpTo = onJumpTo,
                 onAction = onAction,
@@ -288,12 +274,16 @@ private fun ManPageScreenContent(
 @Preview
 @Composable
 private fun PreviewManPageScreen() {
-    ManPageScreen(
-        title = "Anything",
+    val state = ManPageScreenState(
         searchState = MockObjects.mockSearchState,
         command = Command(27L, MockObjects.commandData),
-        listState = rememberLazyListState(),
         loading = false,
+    )
+
+    ManPageScreen(
+        title = "Anything",
+        state = state,
+        listState = rememberLazyListState(),
         onAction = {},
         showOfflineDialog = {},
         onJumpTo = {},
@@ -303,15 +293,19 @@ private fun PreviewManPageScreen() {
 @Preview
 @Composable
 private fun PreviewManPageNoSearch() {
-    ManPageScreen(
-        title = "Something",
+    val state = ManPageScreenState(
         searchState = MockObjects.mockSearchState.copy(
             visible = false,
             results = null,
         ),
         command = Command(27L, MockObjects.commandData),
+        loading = false,
+    )
+
+    ManPageScreen(
+        title = "Something",
+        state = state,
         listState = rememberLazyListState(),
-        loading = true,
         onAction = {},
         showOfflineDialog = {},
         onJumpTo = {},
@@ -321,15 +315,19 @@ private fun PreviewManPageNoSearch() {
 @Preview
 @Composable
 private fun PreviewManPageLoadingScreen() {
-    ManPageScreen(
-        title = "Nothing",
+    val state = ManPageScreenState(
         searchState = MockObjects.mockSearchState.copy(
             visible = true,
             results = null,
         ),
         command = Command(27L, MockObjects.commandData),
-        listState = rememberLazyListState(),
         loading = false,
+    )
+
+    ManPageScreen(
+        title = "Something",
+        state = state,
+        listState = rememberLazyListState(),
         onAction = {},
         showOfflineDialog = {},
         onJumpTo = {},

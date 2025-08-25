@@ -127,6 +127,9 @@
     <string name="privacy_policy_three">All permissions requested are used to connect to \"https://manpages.ubuntu.com/manpages/\" and acquire man(ual) page data.  The first thing the app does, is pull the name and url of all man pages available for the latest LTS release, and saves the data in app private storage.  As you type in the search bar, any pages with a partially matching name will be displayed and partial descriptions will be pulled and saved from ubuntu.com.  After clicking on a tab, the app will pull the entire man page and save it in the app\'s private data, for later viewing, allowing you to view the man page without internet.  They are rather small and it would take a while for them to total more than 5\-10MB.</string>
     <string name="privacy_policy_four">This is the extent of the apps functionality as far as internet and storage is concerned.  Everything else is purely related to the UI.</string>
     <string name="privacy_policy_five">ReSyncing or changing versions, will wipe everything that has been saved thus far.  The app will need to run the initial sync again, and app data will repopulate as described earlier.</string>
+    <string name="ubuntu_privacy_policy_more_info">For more information about Ubuntu\'s Privacy Policy, click here.</string>
+    <string name="no_web_browser_found">Must have a web browser to view Ubuntu\'s privacy policy.</string>
+
 
     <string name="query_change_content_description">Currently searching for %s, tap to show search bar.</string>
 </resources>

@@ -3,6 +3,8 @@
 package com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -13,56 +15,51 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
-import androidx.navigation.navArgument
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.JUMP_TO_OPTIONS_MENU_OFFSET
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.JUMP_TO_RENDERING_OFFSET
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.JumpToData
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.LookupAction.UpdateSearchText
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.ShowOfflineDialog
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageOptionsMenuAction
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageOptionsMenuAction.JumpTo
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageSearchState
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ShowDialogEvents
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.navigation.Lookup
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.navigation.ManPage
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.navigation.Offline
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.navigation.PrivacyPolicy
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.navigation.routeDef
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.navigation.toRoutePath
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.ActivityViewModel
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.LookupViewModel
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.ManPageViewModel.Companion.ITEM_ID_KEY
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.ManPageViewModel.Companion.TITLE_KEY
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.ManPageViewModel
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.BaseScreen
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.Colors
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.LookupScreen
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.ManPageScreen
-import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.getManPageViewModel
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.strategies.ManPageSectionPrefetchStrategy
-import com.stephenmorgandevelopment.thelinuxmanual.utils.isNull
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchInCompletable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -70,6 +67,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -78,16 +76,16 @@ import kotlinx.coroutines.flow.onEach
 fun PagerNavHost(
     activityViewModel: ActivityViewModel = viewModel(),
     lookupViewModel: LookupViewModel = viewModel(),
-    navController: NavHostController,
     searchStates: Map<Long, ManPageSearchState>,
+    listStateMap: Map<Long, LazyListState>,
     onFinish: () -> Unit,
     updateSearchState: (ManPageSearchState) -> Unit,
+    updateListMap: (Long, LazyListState) -> Unit,
 ) {
     val screenState by activityViewModel.state.collectAsStateWithLifecycle(lifecycleOwner = LocalActivity.current as ComponentActivity)
     val lookupState by lookupViewModel.state.collectAsStateWithLifecycle(lifecycleOwner = LocalActivity.current as ComponentActivity)
-    val tabScrollState = rememberScrollState()
-    val listStateMap: MutableMap<Long, LazyListState> = remember(1) { mutableStateMapOf() }
-
+    val navController = rememberNavController()
+    val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
     val coroutineScope = rememberCoroutineScope()
 
     (LocalActivity.current as ComponentActivity?)?.let {
@@ -109,8 +107,12 @@ fun PagerNavHost(
         activityViewModel.showDialogEvent
             .onEach {
                 when (it) {
-                    ShowDialogEvents.PrivacyPolicy -> navController.navigate(PrivacyPolicy)
-                    ShowDialogEvents.NoInternet -> navController.navigate(Offline)
+                    ShowDialogEvents.PrivacyPolicy -> navController.navigate(PrivacyPolicy) {
+                        launchSingleTop = true
+                    }
+                    ShowDialogEvents.NoInternet -> navController.navigate(Offline) {
+                        launchSingleTop = true
+                    }
                 }
             }.launchIn(coroutineScope)
     }
@@ -144,7 +146,12 @@ fun PagerNavHost(
                         //  values in their path segments.  Therefore we cannot use restoreState, as
                         //  doing so will give us the same tab first navigated to.
                         with(screenState.tabs[screenState.selectedTabIndex]) {
-                            navController.navigate(ManPage(title, manPageId).toRoutePath()) {
+                            navController.navigate(ManPage(title, manPageId)) {
+                                popUpTo(ManPage(title, manPageId)) {
+                                    inclusive = true
+//                                    saveState = true
+                                }
+                                launchSingleTop = true
                                 restoreState = false
                             }
                         }
@@ -202,35 +209,35 @@ fun PagerNavHost(
             exitTransition = { null },
         ) {
             BackHandler(enabled = false) {}
-            if (listStateMap[-700L].isNull()) listStateMap[-700L] = rememberLazyListState()
+            val listState = listStateMap[-700L]
+                ?: rememberLazyListState().also {
+                    updateListMap(-700L, it)
+                }
 
-            listStateMap[-700L]?.let { listState ->
-                BaseScreen(
-                    title = screenState.title,
-                    subtitle = screenState.subtitle,
-                    tabsOnBottom = screenState.tabsOnBottom,
+            BaseScreen(
+                title = screenState.title,
+                subtitle = screenState.subtitle,
+                tabsOnBottom = screenState.tabsOnBottom,
+                searchOnBottom = screenState.searchOnBottom,
+                selectedTabIndex = screenState.selectedTabIndex,
+                tabs = screenState.tabs,
+                syncProgress = screenState.syncProgress,
+                clearLookupQuery = { lookupViewModel.onAction(UpdateSearchText("")) },
+                onActivityAction = activityViewModel::onAction,
+                onOptionsMenuAction = activityViewModel::onOptionMenuAction,
+            ) {
+                LookupScreen(
                     searchOnBottom = screenState.searchOnBottom,
-                    selectedTabIndex = screenState.selectedTabIndex,
-                    tabs = screenState.tabs,
-                    tabScrollState = tabScrollState,
-                    syncProgress = screenState.syncProgress,
-                    clearLookupQuery = { lookupViewModel.onAction(UpdateSearchText("")) },
-                    onActivityAction = activityViewModel::onAction,
-                    onOptionsMenuAction = activityViewModel::onOptionMenuAction,
-                ) {
-                    LookupScreen(
-                        searchOnBottom = screenState.searchOnBottom,
-                        state = lookupState,
-                        onAction = lookupViewModel::onAction,
-                        lazyListState = listState
-                    ) { title, manPageId ->
-                        activityViewModel.onAction(
-                            MainScreenAction.AddTab(
-                                title,
-                                manPageId
-                            )
+                    state = lookupState,
+                    onAction = lookupViewModel::onAction,
+                    lazyListState = listState
+                ) { title, manPageId ->
+                    activityViewModel.onAction(
+                        MainScreenAction.AddTab(
+                            title,
+                            manPageId
                         )
-                    }
+                    )
                 }
             }
         }
@@ -239,12 +246,7 @@ fun PagerNavHost(
         /**
          *  ManPage composable
          */
-        composable(
-            route = ManPage.Companion.routeDef,
-            arguments = listOf(
-                navArgument(TITLE_KEY) { type = NavType.StringType },
-                navArgument(ITEM_ID_KEY) { type = NavType.LongType },
-            ),
+        composable<ManPage>(
             enterTransition = {
                 fadeIn(
                     initialAlpha = .4f,
@@ -254,9 +256,9 @@ fun PagerNavHost(
             exitTransition = { null }
         ) { backStackEntry ->
 
-            val title = backStackEntry.arguments?.getString(TITLE_KEY) ?: ""
-            val id = backStackEntry.arguments?.getLong(ITEM_ID_KEY)
-                ?: throw RuntimeException("Navigation api failed to populate arguments.")
+            val route = backStackEntry.toRoute<ManPage>()
+            val title = route.title
+            val id = route.manPageId
 
             BackHandler(screenState.selectedTabIndex != 0) {
                 if (screenState.selectedTabIndex != 0) {
@@ -264,10 +266,12 @@ fun PagerNavHost(
                 }
             }
 
-            val vm = getManPageViewModel(title, id)
-            val state by vm.state.collectAsStateWithLifecycle()
-            val searchState by vm.searchState.collectAsStateWithLifecycle()
+            LocalViewModelStoreOwner.current.also {
+                Log.i("ManPageViewModel-getter", "Current ViewModelStoreOwner: $it")
+            }
 
+            val vm = hiltViewModel<ManPageViewModel>(key = "$title-$id")
+            val state by vm.state.collectAsStateWithLifecycle()
             val manPageScope = rememberCoroutineScope()
 
             /**
@@ -276,34 +280,29 @@ fun PagerNavHost(
              *  We are actually creating a new composable when we go back to a previous tab, so
              *  we hoist the scroll state for each tab.
              */
-            state.command?.let {
-                listStateMap[id].let { savedListState ->
-                    if (savedListState == null) {
-                        listStateMap[id] = rememberLazyListState(
-                            prefetchStrategy = ManPageSectionPrefetchStrategy(
-                                id = id,
-                                listSize = it.data.size,
-                                onAction = vm::onAction,
-                                tabLifecycle = backStackEntry.lifecycle,
-                            )
-                        )
-                    } else {
-                        listStateMap[id] = remember {
-                            LazyListState(
-                                firstVisibleItemIndex = savedListState.firstVisibleItemIndex,
-                                firstVisibleItemScrollOffset = savedListState.firstVisibleItemScrollOffset,
-                                prefetchStrategy = ManPageSectionPrefetchStrategy(
-                                    id = id,
-                                    listSize = it.data.size,
-                                    onAction = vm::onAction,
-                                    tabLifecycle = backStackEntry.lifecycle,
-                                )
-                            )
-                        }
-                    }
+            val listState = state.command?.let { command ->
+                val manPrefetchStrat = remember(id, isPortrait) {
+                    ManPageSectionPrefetchStrategy(
+                        id = id,
+                        listSize = command.data.size,
+                        updateSection = { sectionName ->
+                            vm.onAction(ManPageAction.OnScroll(sectionName))
+                        },
+                        tabLifecycle = backStackEntry.lifecycle,
+                    )
                 }
+
+                listStateMap[id]?.let { prevState ->
+                    remember {
+                        LazyListState(
+                            firstVisibleItemIndex = prevState.firstVisibleItemIndex,
+                            firstVisibleItemScrollOffset = prevState.firstVisibleItemScrollOffset,
+                            prefetchStrategy = manPrefetchStrat,
+                        ).also { updateListMap(id, it) }
+                    }
+                } ?: rememberLazyListState(prefetchStrategy = manPrefetchStrat)
+                    .also { updateListMap(id, it) }
             }
-            val listState = listStateMap[id]
 
 
             /**
@@ -383,7 +382,6 @@ fun PagerNavHost(
             BaseScreen(
                 title = title,
                 subtitle = state.currentSection,
-                tabScrollState = tabScrollState,
                 tabsOnBottom = screenState.tabsOnBottom,
                 searchOnBottom = screenState.searchOnBottom,
                 selectedTabIndex = screenState.selectedTabIndex,
@@ -401,9 +399,7 @@ fun PagerNavHost(
                 ManPageScreen(
                     title = title,
                     listState = listState,
-                    searchState = searchState,
-                    command = state.command,
-                    loading = state.loading,
+                    state = state,
                     onJumpTo = vm::onOptionMenuAction,
                     onAction = vm::onAction,
                     showOfflineDialog = {
@@ -415,18 +411,10 @@ fun PagerNavHost(
             LifecycleEventEffect(
                 Lifecycle.Event.ON_RESUME,
             ) {
-                // Needed to trigger rendering of ManPageSection containing current search result,
-                // when navigating back to the tab.
-                searchState.results?.let { results ->
-                    if (searchState.visible) {
-                        results.getSectionAt(searchState.index)?.let { section ->
-                            vm.onOptionMenuAction(JumpTo(section, JUMP_TO_RENDERING_OFFSET))
-                        }
-                    }
-                }
-
                 // Update searchState held at the activity level
-                vm.searchState
+                vm.state
+                    .distinctUntilChanged { one, two -> one.searchState == two.searchState }
+                    .map { it.searchState }
                     .onEach { updateSearchState(it) }
                     .flowOn(Dispatchers.Default)
                     .launchIn(manPageScope)

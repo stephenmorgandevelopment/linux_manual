@@ -56,7 +56,7 @@ import kotlinx.coroutines.withContext
 class ManPageSectionPrefetchStrategy(
     val id: Long,
     private val listSize: Int,
-    private val onAction: (ManPageAction) -> Unit,
+    private val updateSection: (String) -> Unit,
     private val tabLifecycle: Lifecycle,
 ) : LazyListPrefetchStrategy {
     private val coroutineScope = coroutineScopeFor(tabLifecycle)
@@ -172,7 +172,7 @@ class ManPageSectionPrefetchStrategy(
     override fun LazyListPrefetchScope.onVisibleItemsUpdated(layoutInfo: LazyListLayoutInfo) {
         layoutInfo.visibleItemsInfo
             .firstNotNullOfOrNull { it.key as? String }
-            ?.let { onAction(ManPageAction.OnScroll(it)) }
+            ?.let { updateSection(it) }
 
         if (indexToPrefetch != -1 && layoutInfo.visibleItemsInfo.isNotEmpty()) {
             val expectedPrefetchIndex =

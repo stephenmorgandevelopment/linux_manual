@@ -2,13 +2,16 @@
 
 package com.stephenmorgandevelopment.thelinuxmanual.ui.composables
 
+import android.content.res.Configuration
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -20,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,16 +49,19 @@ fun BaseScreen(
     searchOnBottom: Boolean,
     selectedTabIndex: Int,
     tabs: List<TabInfo>,
-    tabScrollState: ScrollState,
     syncProgress: String? = null,
     clearLookupQuery: () -> Unit = {},
     onActivityAction: (MainScreenAction) -> Unit,
     onOptionsMenuAction: (OptionsMenuAction) -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val orientation = LocalConfiguration.current.orientation
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets.navigationBars,
+        contentWindowInsets =
+            if (orientation == Configuration.ORIENTATION_PORTRAIT)  WindowInsets.navigationBars
+            else WindowInsets.navigationBars.add(WindowInsets.displayCutout),
         topBar = {
             AppToolbar(title, subtitle) {
                 if (selectedTabIndex == 0) {
@@ -102,7 +109,6 @@ fun BaseScreen(
                 selectedTabIndex = selectedTabIndex,
                 tabs = tabs,
                 paddingValues = paddingValues,
-                tabScrollState = tabScrollState,
                 onAction = onActivityAction,
                 content = content,
             )
@@ -116,10 +122,10 @@ private fun CompletePager(
     selectedTabIndex: Int,
     tabs: List<TabInfo>,
     paddingValues: PaddingValues,
-    tabScrollState: ScrollState,
     onAction: (MainScreenAction) -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val tabScrollState: ScrollState = rememberScrollState()
 
     ConstraintLayout(
         modifier = Modifier

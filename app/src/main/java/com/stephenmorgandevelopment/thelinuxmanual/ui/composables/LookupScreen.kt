@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -52,6 +54,9 @@ private fun LookupScreenContent(
     onAction: (LookupAction) -> Unit,
     onItemClick: (String, Long) -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
+    val imeManager = LocalSoftwareKeyboardController.current
+
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
@@ -88,6 +93,8 @@ private fun LookupScreenContent(
             ) {
 
                 MatchingListItem(it.name, it.descriptionPreview) {
+                    focusManager.clearFocus(true)
+                    imeManager?.hide()
                     onItemClick(it.name, it.id)
                 }
 

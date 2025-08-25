@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.navigation.compose.rememberNavController
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.LazyListStateWithId
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageSearchState
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.ActivityViewModel
@@ -41,6 +42,28 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
+    private val lazyListStateMapSavable =
+        Saver<Map<Long, LazyListState>, Array<LazyListStateWithId>>(
+            save = {
+                it.map { entry ->
+                    LazyListStateWithId(
+                        id = entry.key,
+                        firstVisibleItemIndex = entry.value.firstVisibleItemIndex,
+                        firstVisibleItemScrollOffset = entry.value.firstVisibleItemScrollOffset,
+                    )
+                }.toTypedArray()
+            },
+            restore = {
+                it.associateBy { stateWithId -> stateWithId.id }
+                    .mapValues { entry ->
+                        LazyListState(
+                            entry.value.firstVisibleItemIndex,
+                            entry.value.firstVisibleItemScrollOffset,
+                        )
+                    }
+            }
+        )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -49,13 +72,13 @@ class MainActivity : AppCompatActivity() {
                 statusBarStyle = SystemBarStyle.dark(0xededed)
             )
 
-            val navController = rememberNavController()
-
             var searchStates: Map<Long, ManPageSearchState> by rememberSaveable(
                 stateSaver = parcelableMapSaver,
-            ) {
-                mutableStateOf(mapOf())
-            }
+            ) { mutableStateOf(mapOf()) }
+
+            var listStateMap: Map<Long, LazyListState> by rememberSaveable(
+                stateSaver = lazyListStateMapSavable,
+            ) { mutableStateOf(mapOf()) }
 
             CompositionLocalProvider(
                 LocalLifecycleOwner provides this,
@@ -64,17 +87,23 @@ class MainActivity : AppCompatActivity() {
             ) {
                 UbuntuManPageTheme {
                     PagerNavHost(
-                        activityViewModel,
-                        lookupViewModel,
-                        navController,
-                        searchStates.toMap(),
+                        activityViewModel = activityViewModel,
+                        lookupViewModel = lookupViewModel,
+                        searchStates = searchStates.toMap(),
+                        listStateMap = listStateMap,
                         onFinish = { finish() },
                         updateSearchState = {
                             searchStates.toMutableMap().let { mutableMap ->
                                 mutableMap[it.id] = it
                                 searchStates = mutableMap
                             }
-                        }
+                        },
+                        updateListMap = { id, listState ->
+                            listStateMap.toMutableMap().let { mutableMap ->
+                                mutableMap[id] = listState
+                                listStateMap = mutableMap.toMap()
+                            }
+                        },
                     )
                 }
             }

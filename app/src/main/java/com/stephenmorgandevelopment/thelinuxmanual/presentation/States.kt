@@ -30,9 +30,10 @@ data class LookupState(
 
 @Parcelize
 @Immutable
-data class ManPageTabState(
+data class ManPageScreenState(
     val command: Command? = null,
     val loading: Boolean = false,
+    val searchState: ManPageSearchState,
     val currentSection: String = "",
 ) : State {
     fun getSectionIndexByName(sectionName: String?): Int? {
@@ -47,6 +48,14 @@ data class ManPageTabState(
         return null
     }
 }
+
+@Parcelize
+@Immutable
+data class LazyListStateWithId(
+    val id: Long,
+    val firstVisibleItemIndex: Int,
+    val firstVisibleItemScrollOffset: Int,
+) : State
 
 @Parcelize
 @Immutable

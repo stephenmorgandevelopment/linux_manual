@@ -23,6 +23,7 @@ object Colors {
     val indicatorColor = Color(0xFFdd9b1a)
     val searchForeground = Color(0xFFFBA700)
     val searchBackground = Color(0xFF1b1b1b)
+    val webLinkBlue = Color(0xFF1775c7)
 }
 
 @Composable
@@ -101,6 +102,9 @@ val matchTitleTextStyle = TextStyle(
 
 val matchDescriptionPadding = PaddingValues(vertical = 3.dp, horizontal = 8.dp)
 val matchDescriptionTextStyle = TextStyle(fontSize = 16.sp)
+
+val standardInfoPadding = PaddingValues(vertical = 3.dp, horizontal = 8.dp)
+val standardInfoTextStyle = TextStyle(fontSize = 16.sp)
 
 /**
  * Privacy Policy styles
