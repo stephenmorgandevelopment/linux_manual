@@ -17,18 +17,8 @@ class AppBindingModule {
     fun roomDatabase(
         @ApplicationContext applicationContext: Context,
     ): SimpleCommandsDatabase = Room.databaseBuilder(
-        applicationContext,
-        SimpleCommandsDatabase::class.java,
-        "simple_commands",
+        context = applicationContext,
+        klass = SimpleCommandsDatabase::class.java,
+        name = "simple_commands",
     ).build()
 }
-
-//@InstallIn(ViewModelComponent::class)
-//@Module
-//class ManPageBindingModule {
-//
-//    @Provides
-//    fun manPageViewModel(
-//
-//    )
-//}

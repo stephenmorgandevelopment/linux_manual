@@ -1,10 +1,10 @@
 package com.stephenmorgandevelopment.thelinuxmanual.repos
 
-import android.content.Intent
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.fromHtml
-import androidx.lifecycle.asFlow
-import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkManager
 import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage
 import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase
@@ -12,7 +12,9 @@ import com.stephenmorgandevelopment.thelinuxmanual.distros.ubuntu.UbuntuHtmlApiC
 import com.stephenmorgandevelopment.thelinuxmanual.models.Command
 import com.stephenmorgandevelopment.thelinuxmanual.models.MatchingItem
 import com.stephenmorgandevelopment.thelinuxmanual.network.HttpClient
+import com.stephenmorgandevelopment.thelinuxmanual.sync.CommandSyncWorker
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
+import com.stephenmorgandevelopment.thelinuxmanual.utils.dlog
 import com.stephenmorgandevelopment.thelinuxmanual.utils.ilog
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNotNull
 import com.stephenmorgandevelopment.thelinuxmanual.utils.stringFromRes
@@ -23,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.rx2.await
 import kotlinx.coroutines.withContext
@@ -76,19 +77,24 @@ class UbuntuRepository @Inject constructor(
         }
     }
 
-    fun launchSyncService(): Flow<String> {
-        if (!CommandSyncService.isWorking()) {
-            val intent = Intent().apply {
-                putExtra(CommandSyncService.DISTRO, UbuntuHtmlApiConverter.NAME)
+    private val syncRequest
+        get() = OneTimeWorkRequestBuilder<CommandSyncWorker>()
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .build().also {
+                javaClass.ilog("Creating new instance of sync request.")
             }
 
-            return CommandSyncService.enqueueWork(
-                Helpers.getApplicationContext(),
-                intent
-            ).asFlow().flowOn(Dispatchers.Main)
+    internal fun startSync(): Unit {
+        WorkManager.getInstance(Helpers.getApplicationContext())
+            .enqueue(syncRequest)
+    }
+
+    fun launchSyncWorker(): Flow<String> {
+        if (!CommandSyncWorker.working) {
+            startSync()
         }
 
-        return CommandSyncService.getProgress().asFlow()
+        return CommandSyncWorker.progress
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -100,7 +106,7 @@ class UbuntuRepository @Inject constructor(
                 )
             }
         }.invokeOnCompletion { e ->
-            if (e.isNotNull()) javaClass.ilog("Encountered error saving $id - ${e?.message}")
+            if (e.isNotNull()) javaClass.dlog("Encountered error saving $id - ${e?.message}")
         }
     }
 

@@ -11,11 +11,12 @@ sealed interface MainScreenAction : Action {
     data class TabSelected(val tabIndex: Int) : MainScreenAction
     data object CloseDatabase : MainScreenAction
     data class AddTab(val title: String, val itemId: Long) : MainScreenAction
-    data object CloseTab : MainScreenAction, OptionsMenuAction
     data class ShowOfflineDialog(val manPageId: Long) : MainScreenAction
+    data class UpdateSubtitle(val subtitle: String) : MainScreenAction
 }
 
 sealed interface MainScreenOptionsMenuAction : OptionsMenuAction {
+    data object CloseTab : MainScreenOptionsMenuAction
     data object ReSync : MainScreenOptionsMenuAction
     data class ChangeVersion(val version: String) : MainScreenOptionsMenuAction
     data object ToggleTabsOnBottom : MainScreenOptionsMenuAction
@@ -28,7 +29,6 @@ sealed interface ManPageAction : Action {
     data class OnSearchTextUpdated(val text: String) : ManPageAction
     data object OnNextPressed : ManPageAction
     data object OnPrevPressed : ManPageAction
-    data class OnScroll(val sectionName: String) : ManPageAction
 }
 
 sealed interface ManPageOptionsMenuAction : OptionsMenuAction {
@@ -37,7 +37,19 @@ sealed interface ManPageOptionsMenuAction : OptionsMenuAction {
     data object Close : ManPageOptionsMenuAction
 }
 
-sealed interface ShowDialogEvents {
-    data object PrivacyPolicy : ShowDialogEvents
-    data object NoInternet : ShowDialogEvents
+sealed interface DialogEvent {
+    data object PrivacyPolicy : DialogEvent
+    data object NoInternet : DialogEvent
+}
+
+sealed interface MenuOptions {
+    data object CloseTab : MenuOptions
+    data object ReSync : MenuOptions
+    data object ToggleTabsOnBottom : MenuOptions
+    data object ToggleSearchOnBottom : MenuOptions
+    data object ShowPrivacyPolicyDialog : MenuOptions
+    data object ToggleSearch : MenuOptions
+    data object Close : MenuOptions
+    data class ChangeVersion(val version: String) : MenuOptions
+    data class JumpTo(val section: String, val offset: Int) : MenuOptions
 }

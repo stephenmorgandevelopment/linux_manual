@@ -13,6 +13,8 @@ import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+internal const val systemScrimHex = 0xededed
+
 object Colors {
     val transparent = Color(0x00000000)
     val offWhite = Color(0xFFe0e0e0)

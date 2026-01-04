@@ -9,13 +9,12 @@ import com.stephenmorgandevelopment.thelinuxmanual.presentation.JumpToData
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction.OnNextPressed
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction.OnPrevPressed
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction.OnScroll
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction.OnSearchPressed
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction.OnSearchTextUpdated
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageOptionsMenuAction.JumpTo
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageOptionsMenuAction.ToggleSearch
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageSearchState
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageScreenState
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageSearchState
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.OptionsMenuAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.navigation.ManPage
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository
@@ -49,14 +48,14 @@ class ManPageViewModel @Inject constructor(
     private val initialState = savedStateHandle.get<ManPageScreenState>(FULL_STATE_KEY)
         ?: ManPageScreenState(searchState = initialSearchState)
 
-   private val _state = MutableStateFlow(initialState)
+    private val _state = MutableStateFlow(initialState)
     override val state = _state.asStateFlow()
 
     private val _jumpToEvents = MutableSharedFlow<JumpToData>(2, 1, BufferOverflow.DROP_OLDEST)
     val jumpToEvents: SharedFlow<JumpToData> = _jumpToEvents.asSharedFlow()
 
     init {
-        if (st8.command.isNull()) loadCommand().start()
+        if (state.value.command.isNull()) loadCommand().start()
     }
 
     override fun onAction(action: ManPageAction) {
@@ -67,7 +66,7 @@ class ManPageViewModel @Inject constructor(
             }
 
             OnPrevPressed -> {
-                val index = if (st8.searchState.results?.textMatches?.count() == 0) 0
+                val index = if (state.value.searchState.results?.textMatches?.count() == 0) 0
                 else if (search.index <= 0) search.results?.textMatches?.lastIndex ?: 0
                 else search.index.minus(1)
 
@@ -93,8 +92,6 @@ class ManPageViewModel @Inject constructor(
             is OnSearchTextUpdated -> _state.update {
                 it.copy(searchState = it.searchState.copy(query = sanitizeInput(action.text)))
             }
-
-            is OnScroll -> _state.update { it.copy(currentSection = action.sectionName) }
         }
     }
 
@@ -123,19 +120,20 @@ class ManPageViewModel @Inject constructor(
     private fun searchFor() = viewModelScope.async {
         withContext(Dispatchers.IO) {
             if (search.results?.query != search.query) {
-                _state.update {
-                    it.copy(
-                        searchState = it.searchState.copy(
+                _state.update { oldState ->
+                    oldState.copy(
+                        searchState = oldState.searchState.copy(
                             index = 0,
-                            results = state.value.command?.searchDataForTextMatch(search.query).also {
-                                if (it.isNull() || it?.count == 0) clearLoading()
-                            }?.also { allResults ->
-                                allResults.getMatch(search.index)?.section?.let {
-                                    _jumpToEvents.tryEmit(
-                                        JumpToData(section = it, JUMP_TO_RENDERING_OFFSET)
-                                    )
-                                }
-                            },
+                            results = state.value.command?.searchDataForTextMatch(search.query)
+                                .also { searchResult ->
+                                    if (searchResult.isNull() || searchResult?.count == 0) clearLoading()
+                                }?.also { allResults ->
+                                    allResults.getMatch(search.index)?.section?.let {
+                                        _jumpToEvents.tryEmit(
+                                            JumpToData(section = it, JUMP_TO_RENDERING_OFFSET)
+                                        )
+                                    }
+                                },
                         )
                     )
                 }
@@ -154,7 +152,7 @@ class ManPageViewModel @Inject constructor(
                     ubuntuRepository.getCommandData(matchingItem)
                         .takeIf { it.isNotEmpty() }
                         ?.let { data ->
-                            _state.update { it.copy(command =  Command(manPageId, data)) }
+                            _state.update { it.copy(command = Command(manPageId, data)) }
                         }
                         ?: also {
                             _state.update { it.copy(command = Command(-1L, emptyMap())) }
@@ -165,7 +163,6 @@ class ManPageViewModel @Inject constructor(
 
     private fun searchResultAt(index: Int) = search.results?.getMatch(index)
 
-    private val st8 get() = state.value
     private val search get() = state.value.searchState
 
     companion object {

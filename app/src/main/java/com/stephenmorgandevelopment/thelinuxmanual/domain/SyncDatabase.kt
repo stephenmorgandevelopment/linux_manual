@@ -1,10 +1,9 @@
 package com.stephenmorgandevelopment.thelinuxmanual.domain
 
-//import com.stephenmorgandevelopment.thelinuxmanual.data.DatabaseHelper
-import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService
 import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage
 import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository
+import com.stephenmorgandevelopment.thelinuxmanual.sync.COMPLETE_TAG
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchCompletable
@@ -46,7 +45,7 @@ class SyncDatabase @Inject constructor(
                     localStorage.wipeAll()
                     sync()
                 } else {
-                    _progress.emit(CommandSyncService.COMPLETE_TAG)
+                    _progress.emit(COMPLETE_TAG)
                 }
             }
         }
@@ -64,10 +63,10 @@ class SyncDatabase @Inject constructor(
 
     private suspend fun sync() {
         withContext(Dispatchers.Main) {
-            ubuntuRepository.launchSyncService()
+            ubuntuRepository.launchSyncWorker()
                 .onEach { text ->
                     _progress.emit(text)
-                    if (text == CommandSyncService.COMPLETE_TAG) {
+                    if (text == COMPLETE_TAG) {
                         syncJob?.complete()
                     }
                 }.collect()

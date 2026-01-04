@@ -24,7 +24,7 @@
 
 @file:OptIn(ExperimentalFoundationApi::class)
 
-package com.stephenmorgandevelopment.thelinuxmanual.ui.composables.strategies
+package com.stephenmorgandevelopment.thelinuxmanual.ui.composables.misc
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
@@ -32,10 +32,10 @@ import androidx.compose.foundation.lazy.LazyListPrefetchScope
 import androidx.compose.foundation.lazy.LazyListPrefetchStrategy
 import androidx.compose.foundation.lazy.layout.LazyLayoutPrefetchState
 import androidx.compose.foundation.lazy.layout.NestedPrefetchScope
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageAction
 import com.stephenmorgandevelopment.thelinuxmanual.utils.coroutineScopeFor
 import com.stephenmorgandevelopment.thelinuxmanual.utils.isNotNull
 import kotlinx.coroutines.CancellationException
@@ -45,21 +45,35 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private const val UnspecifiedNestedPrefetchCount = -1
+private const val UnsetItemCount = -1
+private const val initialNestedPrefetchItemCount: Int = 2
+
 /**
- *  Most of this class was copied over from DefaultLazyListPrefetchStrategy.
+ *  A lot of this class was copied over from DefaultLazyListPrefetchStrategy inside
+ *  of LazyListPrefetchStrategy.kt.
  *
- *  There is an addition to add prefetching for all items, allowing them to be pinned
- *  asap.  This is a tradeoff placing higher demands on device memory with the potential for
- *  more jank early on in the screen loading versus continual jank when recomposing large
- *  character counts inside Text composables.
+ * Very large man pages (ie ffmpeg, rsync, etc) have such large text sections that
+ * Compose has difficulty measuring and laying them, in a lazy column, due to the
+ * large amount of text in one item.
+ *
+ * Since this is primarily a limitation of Compose itself, and because I have limited time
+ * to work on this project, I'm not going to implement text premeasuring or other work arounds.
+ * This was the most time efficient method for allowing somewhat smooth scrolling on these
+ * larger man pages.
+ *
+ * The idea is to schedule all items in the lazy list for prefetching.
+ * On the ManPageScreen, items are pinned.  This eliminates long Text reneder times
+ * when scrolled off screen and back again.
  */
-class ManPageSectionPrefetchStrategy(
+@OptIn(ExperimentalFoundationApi::class)
+@Stable
+class ManPagePrefetchStrategy(
     val id: Long,
     private val listSize: Int,
     private val updateSection: (String) -> Unit,
     private val tabLifecycle: Lifecycle,
 ) : LazyListPrefetchStrategy {
-    private val coroutineScope = coroutineScopeFor(tabLifecycle)
 
     /**
      * The index scheduled to be prefetched (or the last prefetched index if the prefetch is done).
@@ -74,6 +88,11 @@ class ManPageSectionPrefetchStrategy(
      * the scrolling direction change.
      */
     private var wasScrollingForward = false
+
+    private var previousPassItemCount = UnsetItemCount
+    private var previousPassDelta = 0f
+
+    private val coroutineScope = coroutineScopeFor(tabLifecycle)
 
     private var hasRanOnce = false
 
@@ -100,7 +119,7 @@ class ManPageSectionPrefetchStrategy(
 
     /**
      * Adds all items in lazy list to be scheduled for prefetching.  When they are
-     * prefetched the ManPageScreen pins them so they can scroll smoothly.
+     * prefetched the ManPageScreen pins them so they can scroll relatively smoothly.
      *
      * I had also experimented with using a character breakpoint to only prefetch and pin
      * certain large items, but pinning all has a limited impact compared to pinning only the
@@ -126,47 +145,6 @@ class ManPageSectionPrefetchStrategy(
 
     override fun LazyListPrefetchScope.onScroll(delta: Float, layoutInfo: LazyListLayoutInfo) {
         schedulePersisted(::schedulePrefetch)
-
-        if (layoutInfo.visibleItemsInfo.isNotEmpty()) {
-            val scrollingForward = delta < 0
-            val indexToPrefetch =
-                if (scrollingForward) {
-                    layoutInfo.visibleItemsInfo.last().index + 1
-                } else {
-                    layoutInfo.visibleItemsInfo.first().index - 1
-                }
-            if (indexToPrefetch in 0 until layoutInfo.totalItemsCount) {
-                if (indexToPrefetch != this@ManPageSectionPrefetchStrategy.indexToPrefetch) {
-                    if (wasScrollingForward != scrollingForward) {
-                        // the scrolling direction has been changed which means the last prefetched
-                        // is not going to be reached anytime soon so it is safer to dispose it.
-                        // if this item is already visible it is safe to call the method anyway
-                        // as it will be no-op
-                        currentPrefetchHandle?.cancel()
-                    }
-                    this@ManPageSectionPrefetchStrategy.wasScrollingForward = scrollingForward
-                    this@ManPageSectionPrefetchStrategy.indexToPrefetch = indexToPrefetch
-                    currentPrefetchHandle = schedulePrefetch(indexToPrefetch)
-                }
-                if (scrollingForward) {
-                    val lastItem = layoutInfo.visibleItemsInfo.last()
-                    val spacing = layoutInfo.mainAxisItemSpacing
-                    val distanceToPrefetchItem =
-                        lastItem.offset + lastItem.size + spacing - layoutInfo.viewportEndOffset
-                    // if in the next frame we will get the same delta will we reach the item?
-                    if (distanceToPrefetchItem < -delta) {
-                        currentPrefetchHandle?.markAsUrgent()
-                    }
-                } else {
-                    val firstItem = layoutInfo.visibleItemsInfo.first()
-                    val distanceToPrefetchItem = layoutInfo.viewportStartOffset - firstItem.offset
-                    // if in the next frame we will get the same delta will we reach the item?
-                    if (distanceToPrefetchItem < delta) {
-                        currentPrefetchHandle?.markAsUrgent()
-                    }
-                }
-            }
-        }
     }
 
     override fun LazyListPrefetchScope.onVisibleItemsUpdated(layoutInfo: LazyListLayoutInfo) {
@@ -174,22 +152,61 @@ class ManPageSectionPrefetchStrategy(
             .firstNotNullOfOrNull { it.key as? String }
             ?.let { updateSection(it) }
 
-        if (indexToPrefetch != -1 && layoutInfo.visibleItemsInfo.isNotEmpty()) {
-            val expectedPrefetchIndex =
-                if (wasScrollingForward) {
-                    layoutInfo.visibleItemsInfo.last().index + 1
-                } else {
-                    layoutInfo.visibleItemsInfo.first().index - 1
-                }
-            if (indexToPrefetch != expectedPrefetchIndex) {
-                indexToPrefetch = -1
-                currentPrefetchHandle?.cancel()
-                currentPrefetchHandle = null
+        layoutInfo.evaluatePrefetchForCancellation(indexToPrefetch, wasScrollingForward)
+
+        val currentPassItemCount = layoutInfo.totalItemsCount
+        // total item count changed, re-trigger prefetch.
+        if (
+            previousPassItemCount != UnsetItemCount && // we already have info about the item count
+            previousPassDelta != 0.0f && // and scroll direction
+            previousPassItemCount != currentPassItemCount && // and the item count changed
+            layoutInfo.visibleItemsInfo.isNotEmpty()
+        ) {
+            val indexToPrefetch = layoutInfo.calculateIndexToPrefetch(previousPassDelta < 0)
+            if (indexToPrefetch in 0 until currentPassItemCount) {
+                this@ManPagePrefetchStrategy.indexToPrefetch = indexToPrefetch
+                currentPrefetchHandle = schedulePrefetch(indexToPrefetch)
             }
         }
+
+        previousPassItemCount = currentPassItemCount
     }
 
     override fun NestedPrefetchScope.onNestedPrefetch(firstVisibleItemIndex: Int) {
-        repeat(2) { i -> schedulePrefetch(firstVisibleItemIndex + i) }
+        val resolvedNestedPrefetchItemCount =
+            if (nestedPrefetchItemCount == UnspecifiedNestedPrefetchCount) {
+                initialNestedPrefetchItemCount
+            } else {
+                nestedPrefetchItemCount
+            }
+        repeat(resolvedNestedPrefetchItemCount) { i ->
+            schedulePrecomposition(firstVisibleItemIndex + i)
+        }
+    }
+
+    private fun resetPrefetchState() {
+        indexToPrefetch = -1
+        currentPrefetchHandle?.cancel()
+        currentPrefetchHandle = null
+    }
+
+    private fun LazyListLayoutInfo.calculateIndexToPrefetch(scrollingForward: Boolean): Int {
+        return if (scrollingForward) {
+            visibleItemsInfo.last().index + 1
+        } else {
+            visibleItemsInfo.first().index - 1
+        }
+    }
+
+    private fun LazyListLayoutInfo.evaluatePrefetchForCancellation(
+        currentPrefetchingIndex: Int,
+        scrollingForward: Boolean,
+    ) {
+        if (currentPrefetchingIndex != -1 && visibleItemsInfo.isNotEmpty()) {
+            val expectedPrefetchIndex = calculateIndexToPrefetch(scrollingForward)
+            if (currentPrefetchingIndex != expectedPrefetchIndex) {
+                resetPrefetchState()
+            }
+        }
     }
 }

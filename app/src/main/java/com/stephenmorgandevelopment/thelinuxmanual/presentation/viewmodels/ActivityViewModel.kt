@@ -2,31 +2,35 @@ package com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.stephenmorgandevelopment.thelinuxmanual.CommandSyncService
 import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.domain.GetSectionsById
 import com.stephenmorgandevelopment.thelinuxmanual.domain.SyncDatabase
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.DialogEvent
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.DialogEvent.NoInternet
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.AddTab
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.CloseDatabase
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.ShowOfflineDialog
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.TabSelected
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction.UpdateSubtitle
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenOptionsMenuAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenOptionsMenuAction.ShowPrivacyPolicyDialog
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.OptionsMenuAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ScreenState
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ShowDialogEvents
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.ShowDialogEvents.NoInternet
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.TabInfo
+import com.stephenmorgandevelopment.thelinuxmanual.sync.COMPLETE_TAG
+import com.stephenmorgandevelopment.thelinuxmanual.sync.CommandSyncWorker
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchInCompletable
 import com.stephenmorgandevelopment.thelinuxmanual.utils.stringFromRes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CompletableJob
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +39,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -52,6 +57,9 @@ class ActivityViewModel @Inject constructor(
     private val _selectedTab = MutableStateFlow(0)
     private val _tabs = MutableStateFlow(listOf(lookupTab))
     private val _syncProgress = MutableStateFlow<String?>(null)
+    private val _subtitle = MutableStateFlow(
+        preferences.currentRelease.replaceFirstChar { it.uppercase() },
+    )
 
     private val initialState = savedStateHandle[FULL_STATE_KEY] ?: ScreenState(
         title = stringFromRes(R.string.app_name),
@@ -64,13 +72,17 @@ class ActivityViewModel @Inject constructor(
     )
 
     private val _showDialogEvent =
-        MutableSharedFlow<ShowDialogEvents>(0, 1, BufferOverflow.DROP_OLDEST)
+        MutableSharedFlow<DialogEvent>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
 
     val showDialogEvent = _showDialogEvent.asSharedFlow()
 
     override val state: StateFlow<ScreenState> = combine(
-        _preferencesFlow, _selectedTab, _tabs, _syncProgress
-    ) { prefs, selectedTab, tabs, syncProgress ->
+        _preferencesFlow, _selectedTab, _tabs, _syncProgress, _subtitle
+    ) { prefs, selectedTab, tabs, syncProgress, subtitle ->
         val title =
             if (selectedTab == 0) {
                 stringFromRes(R.string.app_name)
@@ -80,7 +92,9 @@ class ActivityViewModel @Inject constructor(
 
         ScreenState(
             title = title,
-            subtitle = prefs.release.replaceFirstChar { it.uppercase() },
+            subtitle =
+                if (selectedTab == 0) prefs.release.replaceFirstChar { it.uppercase() }
+                else subtitle,
             selectedTabIndex = selectedTab,
             tabs = tabs,
             tabsOnBottom = prefs.tabsOnBottom,
@@ -98,7 +112,7 @@ class ActivityViewModel @Inject constructor(
             is TabSelected -> changeSelectedTabTo(action.tabIndex)
             CloseDatabase -> syncDatabase.closeDatabase().start()
             is AddTab -> addTab(action.title, action.itemId).start()
-            MainScreenAction.CloseTab -> closeTab().start()
+            is UpdateSubtitle -> _subtitle.update { action.subtitle }
             is ShowOfflineDialog -> {
                 if (currentTab.manPageId == action.manPageId) _showDialogEvent.tryEmit(NoInternet)
             }
@@ -107,11 +121,12 @@ class ActivityViewModel @Inject constructor(
 
     override fun onOptionMenuAction(action: OptionsMenuAction) {
         when (action) {
+            MainScreenOptionsMenuAction.CloseTab -> closeTab().start()
             MainScreenOptionsMenuAction.ReSync -> resyncCurrentRelease()
             is MainScreenOptionsMenuAction.ChangeVersion -> switchToVersion(action.version)
             MainScreenOptionsMenuAction.ToggleTabsOnBottom -> toggleTabsOnBottom().start()
             MainScreenOptionsMenuAction.ToggleSearchOnBottom -> toggleSearchOnBottom().start()
-            ShowPrivacyPolicyDialog -> _showDialogEvent.tryEmit(ShowDialogEvents.PrivacyPolicy)
+            ShowPrivacyPolicyDialog -> _showDialogEvent.tryEmit(DialogEvent.PrivacyPolicy)
         }
     }
 
@@ -124,14 +139,20 @@ class ActivityViewModel @Inject constructor(
         }
     }
 
-    private fun addTab(title: String, itemId: Long) = viewModelScope.async {
+    private fun addTab(title: String, itemId: Long): Deferred<Unit> = viewModelScope.async {
         withContext(Dispatchers.IO) {
             if (_tabs.value.none { it.manPageId == itemId }) {
-                _tabs.value =
-                    listOf(
-                        *_tabs.value.toTypedArray(),
-                        TabInfo(title, itemId, getSectionsById(itemId)),
-                    )
+                val sections = getSectionsById(itemId)
+                if (sections.isEmpty()) {
+                    delay(timeMillis = 75)
+                    addTab(title, itemId)
+                } else {
+                    _tabs.value =
+                        listOf(
+                            *_tabs.value.toTypedArray(),
+                            TabInfo(title, itemId, sections),
+                        )
+                }
             }
         }
     }
@@ -166,7 +187,7 @@ class ActivityViewModel @Inject constructor(
     }
 
     private suspend fun syncIfNoData() = withContext(Dispatchers.IO) {
-        if (!syncDatabase.hasData() && !CommandSyncService.isWorking()) {
+        if (!syncDatabase.hasData() && !CommandSyncWorker.working) {
             if (Helpers.hasInternet()) {
                 syncJob = sync().apply { invokeOnCompletion { syncJob = null } }
             } else {
@@ -178,7 +199,7 @@ class ActivityViewModel @Inject constructor(
     private fun trackSyncProgress(): CompletableJob =
         syncDatabase.progress.onEach { text ->
             withContext(Dispatchers.IO) {
-                if (text == CommandSyncService.COMPLETE_TAG) {
+                if (text == COMPLETE_TAG) {
                     _syncProgress.emit(null)
                     syncJob?.complete()
                 } else {

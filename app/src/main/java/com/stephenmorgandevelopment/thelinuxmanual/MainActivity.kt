@@ -11,19 +11,22 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import com.stephenmorgandevelopment.thelinuxmanual.presentation.LazyListStateWithId
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.MainScreenAction
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.ManPageSearchState
+import com.stephenmorgandevelopment.thelinuxmanual.presentation.OptionsMenuHandler
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.ActivityViewModel
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.viewmodels.LookupViewModel
+import com.stephenmorgandevelopment.thelinuxmanual.sync.CommandSyncWorker
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.BaseScreen
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.UbuntuManPageTheme
-import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.PagerNavHost
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.misc.lazyListStateMapSavable
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.misc.parcelableMapSaver
+import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.systemScrimHex
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -32,44 +35,12 @@ class MainActivity : AppCompatActivity() {
     private val activityViewModel: ActivityViewModel by viewModels()
     private val lookupViewModel: LookupViewModel by viewModels()
 
-    private val parcelableMapSaver =
-        Saver<Map<Long, ManPageSearchState>, Array<ManPageSearchState>>(
-            save = {
-                it.map { entry -> entry.value }.toTypedArray()
-            },
-            restore = {
-                it.associateBy { searchState -> searchState.id }
-            }
-        )
-
-    private val lazyListStateMapSavable =
-        Saver<Map<Long, LazyListState>, Array<LazyListStateWithId>>(
-            save = {
-                it.map { entry ->
-                    LazyListStateWithId(
-                        id = entry.key,
-                        firstVisibleItemIndex = entry.value.firstVisibleItemIndex,
-                        firstVisibleItemScrollOffset = entry.value.firstVisibleItemScrollOffset,
-                    )
-                }.toTypedArray()
-            },
-            restore = {
-                it.associateBy { stateWithId -> stateWithId.id }
-                    .mapValues { entry ->
-                        LazyListState(
-                            entry.value.firstVisibleItemIndex,
-                            entry.value.firstVisibleItemScrollOffset,
-                        )
-                    }
-            }
-        )
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.dark(0xededed)
+                statusBarStyle = SystemBarStyle.dark(systemScrimHex)
             )
 
             var searchStates: Map<Long, ManPageSearchState> by rememberSaveable(
@@ -80,18 +51,20 @@ class MainActivity : AppCompatActivity() {
                 stateSaver = lazyListStateMapSavable,
             ) { mutableStateOf(mapOf()) }
 
+            val optionsMenuHandler = OptionsMenuHandler()
+
             CompositionLocalProvider(
                 LocalLifecycleOwner provides this,
                 LocalActivity provides this,
                 LocalViewModelStoreOwner provides this as ViewModelStoreOwner,
             ) {
                 UbuntuManPageTheme {
-                    PagerNavHost(
+                    BaseScreen(
                         activityViewModel = activityViewModel,
                         lookupViewModel = lookupViewModel,
+                        optionsMenuHandler = optionsMenuHandler,
                         searchStates = searchStates.toMap(),
                         listStateMap = listStateMap,
-                        onFinish = { finish() },
                         updateSearchState = {
                             searchStates.toMutableMap().let { mutableMap ->
                                 mutableMap[it.id] = it
@@ -113,7 +86,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         if (isFinishing) {
-            if (!CommandSyncService.isWorking()) {
+            if (!CommandSyncWorker.working) {
                 activityViewModel.onAction(MainScreenAction.CloseDatabase)
             }
         }
