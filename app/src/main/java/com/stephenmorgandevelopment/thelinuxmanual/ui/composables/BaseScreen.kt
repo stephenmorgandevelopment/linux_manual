@@ -47,6 +47,8 @@ import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.components.Syn
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.menus.LookupOptionsMenu
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.menus.ManPageOptionsMenu
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.navigation.PagerNavHost
+import com.stephenmorgandevelopment.thelinuxmanual.utils.NULL_STRING
+import com.stephenmorgandevelopment.thelinuxmanual.utils.trim
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -140,8 +142,9 @@ fun BaseScreen(
                     else -> {
                         // Creating new instance every time we return to a tab.  This is happening
                         //  because the nav library can't differentiate routes, that have different
-                        //  values in their path segments.  Therefore we cannot use restoreState, as
+                        //  parameter values.  Therefore we cannot use restoreState, as
                         //  doing so will give us the same tab first navigated to.
+                        //  State is stored at the activity level manually and restored for each tab.
                         with(screenState.tabs[screenState.selectedTabIndex]) {
                             navController.navigate(ManPage(title, manPageId)) {
                                 popUpTo(ManPage(title, manPageId)) {
@@ -198,7 +201,7 @@ fun BaseScreen(
             screenState.syncProgress?.let { progress ->
                 SyncText(
                     padding = paddingValues,
-                    progressString = progress,
+                    progressString = progress.trim(NULL_STRING),
                 )
             }
         } else {

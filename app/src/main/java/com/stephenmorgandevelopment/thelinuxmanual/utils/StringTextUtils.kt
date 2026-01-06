@@ -8,8 +8,11 @@ import androidx.compose.ui.text.TextStyle
 import com.stephenmorgandevelopment.thelinuxmanual.R
 import com.stephenmorgandevelopment.thelinuxmanual.ui.composables.defaultTextStyle
 
-val loadingString = stringFromRes(R.string.fetching_data)
-val noInternedString = stringFromRes(R.string.offline_description_preview)
+internal val loadingString = stringFromRes(R.string.fetching_data)
+internal val noInternedString = stringFromRes(R.string.offline_description_preview)
+internal const val NULL_STRING = "null"
+
+internal fun String.trim(string: String) = this.trim(*string.toCharArray())
 
 private val charactersToSanitize = listOf(
     '!', ';', '&', '"', '#', '\'', '\\',
