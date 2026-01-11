@@ -2,7 +2,7 @@ package com.stephenmorgandevelopment.thelinuxmanual.utils
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import com.stephenmorgandevelopment.thelinuxmanual.R
@@ -32,14 +32,21 @@ internal fun stringFromRes(id: Int, vararg params: Any) =
     Helpers.getApplicationContext()?.resources?.getString(id, *params)
         ?: "Preview string" // Needed for previews to work correctly
 
+internal fun String.tailEndFrom(character: Char) : String {
+    val charIndex = this.indexOfLast { it == character }
+        .coerceAtLeast(0)
+
+    return this.substring(charIndex)
+}
+
 @Composable
 internal fun getString(id: Int): String {
-    return LocalContext.current.resources.getString(id)
+    return LocalResources.current.getString(id)
 }
 
 @Composable
 internal fun getString(id: Int, vararg params: Any): String {
-    return LocalContext.current.resources.getString(id, *params)
+    return LocalResources.current.getString(id, *params)
 }
 
 @Composable

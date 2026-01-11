@@ -33,7 +33,7 @@
     <string name="offline_header">Offline</string>
     <string name="you_are_offline">Can\'t find the internet, and this man page has not been visited yet.</string>
     <string name="offline_description_preview">Can\'t find the internet, and this description has not been fetched yet.</string>
-    <string name="offline_without_database">App needs internet to perform initial database sync.  Please relaunch app when connected to the internet.</string>
+    <string name="offline_without_database">App needs internet to perform database sync.  Please relaunch app when connected to the internet.</string>
 
     <!-- Content Descriptions -->
     <string name="app_settings">App Settings</string>

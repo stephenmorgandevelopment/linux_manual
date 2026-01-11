@@ -4,6 +4,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.data.LocalStorage
 import com.stephenmorgandevelopment.thelinuxmanual.data.SimpleCommandsDatabase
 import com.stephenmorgandevelopment.thelinuxmanual.repos.UbuntuRepository
 import com.stephenmorgandevelopment.thelinuxmanual.sync.COMPLETE_TAG
+import com.stephenmorgandevelopment.thelinuxmanual.sync.NO_INTERNET_TAG
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchCompletable
@@ -45,7 +46,7 @@ class SyncDatabase @Inject constructor(
                     localStorage.wipeAll()
                     sync()
                 } else {
-                    _progress.emit(COMPLETE_TAG)
+                    _progress.emit(NO_INTERNET_TAG)
                 }
             }
         }

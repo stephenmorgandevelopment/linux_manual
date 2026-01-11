@@ -20,7 +20,7 @@ import com.stephenmorgandevelopment.thelinuxmanual.presentation.ScreenState
 import com.stephenmorgandevelopment.thelinuxmanual.presentation.TabInfo
 import com.stephenmorgandevelopment.thelinuxmanual.sync.COMPLETE_TAG
 import com.stephenmorgandevelopment.thelinuxmanual.sync.CommandSyncWorker
-import com.stephenmorgandevelopment.thelinuxmanual.utils.Helpers
+import com.stephenmorgandevelopment.thelinuxmanual.sync.NO_INTERNET_TAG
 import com.stephenmorgandevelopment.thelinuxmanual.utils.Preferences
 import com.stephenmorgandevelopment.thelinuxmanual.utils.launchInCompletable
 import com.stephenmorgandevelopment.thelinuxmanual.utils.stringFromRes
@@ -158,16 +158,19 @@ class ActivityViewModel @Inject constructor(
     }
 
     private fun switchToVersion(version: String) {
-        _tabs.value = listOf(lookupTab)
         syncJob?.cancel()
-        syncDatabase(version)
-        syncJob = trackSyncProgress().apply { invokeOnCompletion { syncJob = null } }
+        syncJob = sync(version).apply { invokeOnCompletion { syncJob = null } }
     }
 
     private fun resyncCurrentRelease() {
-        _tabs.value = listOf(lookupTab)
         syncJob?.cancel()
         syncJob = sync().apply { invokeOnCompletion { syncJob = null } }
+    }
+
+    private suspend fun syncIfNoData() = withContext(Dispatchers.IO) {
+        if (!syncDatabase.hasData() && !CommandSyncWorker.working) {
+            syncJob = sync().apply { invokeOnCompletion { syncJob = null } }
+        }
     }
 
     private fun changeSelectedTabTo(tabIndex: Int) {
@@ -186,31 +189,35 @@ class ActivityViewModel @Inject constructor(
         }
     }
 
-    private suspend fun syncIfNoData() = withContext(Dispatchers.IO) {
-        if (!syncDatabase.hasData() && !CommandSyncWorker.working) {
-            if (Helpers.hasInternet()) {
-                syncJob = sync().apply { invokeOnCompletion { syncJob = null } }
-            } else {
-                _syncProgress.value = stringFromRes(R.string.offline_without_database)
-            }
-        }
-    }
-
+    private var textFilter: String? = null
     private fun trackSyncProgress(): CompletableJob =
         syncDatabase.progress.onEach { text ->
             withContext(Dispatchers.IO) {
-                if (text == COMPLETE_TAG) {
-                    _syncProgress.emit(null)
-                    syncJob?.complete()
-                } else {
-                    _syncProgress.emit(_syncProgress.value + text)
+                when (text) {
+                    COMPLETE_TAG -> {
+                        textFilter = null
+                        _syncProgress.emit("")
+                        _syncProgress.emit(null)
+                        syncJob?.complete()
+                    }
+
+                    NO_INTERNET_TAG -> {
+                        _syncProgress.emit(stringFromRes(R.string.offline_without_database))
+                    }
+
+                    else -> {
+                        if (text != textFilter) {
+                            textFilter = text
+                            _syncProgress.emit(_syncProgress.value + text)
+                        }
+                    }
                 }
             }
         }.launchInCompletable(viewModelScope)
 
-    private fun sync(): CompletableJob {
+    private fun sync(version: String? = null): CompletableJob {
         _tabs.value = listOf(lookupTab)
-        syncDatabase()
+        syncDatabase(version)
         return trackSyncProgress()
     }
 

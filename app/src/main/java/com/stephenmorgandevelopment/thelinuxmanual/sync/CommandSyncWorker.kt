@@ -28,6 +28,7 @@ import okhttp3.Request
 import okhttp3.Response
 
 internal const val COMPLETE_TAG = "complete"
+internal const val NO_INTERNET_TAG = "no_internet"
 
 @HiltWorker
 class CommandSyncWorker @AssistedInject constructor(
